@@ -1,0 +1,45 @@
+#version 430
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 1) in; //amd gpu size 64 wavefront
+
+layout(std430, binding = 0) buffer sampleBuffer
+{
+	float samples[]; //between -1 and 1
+};
+
+layout(std430, binding = 1) buffer harmonicValueBuffer
+{
+	float harmonicValues[]; //between 0 and 1
+};
+
+uniform int _currentSample;
+const int n = 4096; //number of samples to work with
+
+void main()
+{
+	float Pi = acos(-1);
+	uint k = gl_WorkGroupID.x * 64 + gl_LocalInvocationID.x * 8 + gl_LocalInvocationID.y; //go through harmonics 1 by 1 (up to n/2)
+	if (k >	int(n/2)){
+		return;
+	}
+	
+	float fourierIncrement = 1.0f / float(n);
+	float fourierTime = 0;
+	
+	float fourierSinReal;
+	float fourierSinImag;
+
+	float dpvx = 0;
+	float dpvy = 0;
+	
+	for (int s = _currentSample - n; s < _currentSample; s++) { //range over samples
+		fourierSinReal = cos(-2 * Pi * k * fourierTime); //real part of e^(-2PI * k * (n/N)), fourier time is n/N
+		fourierSinImag = sin(-2 * Pi * k * fourierTime); //imag part of ^^^^
+			
+		dpvx += fourierSinReal * samples[s];
+		dpvy += fourierSinImag * samples[s];
+		
+		fourierTime += fourierIncrement;
+	}
+	
+	harmonicValues[k] = sqrt(dpvx * dpvx + dpvy * dpvy) * fourierIncrement; //absolute value
+}
