@@ -142,6 +142,6 @@ void GLSLProgram::compileShader(const std::string& filepath, GLuint& id) {
 
 		// Provide the infolog in whatever manor you deem best.
 		std::printf("%s\n", &(errorLog[0])); //interprets vector of chars as a string
-		fatalError("shader " + filepath + "failed to compile");
+		fatalError("shader " + filepath + " failed to compile");
 	}
 }

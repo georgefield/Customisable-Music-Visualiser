@@ -1,5 +1,5 @@
 #include "ResourceManager.h"
-
+#include <cmath>
 
 TextureCache ResourceManager::_textureCache; //static variables must be declared in cpp file
 

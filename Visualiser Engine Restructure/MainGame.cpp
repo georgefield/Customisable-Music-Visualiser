@@ -23,7 +23,7 @@ MainGame::MainGame() :
 
 //RESTRUCTURE ENTIRE ENGINE, CLONE THIS PROJECT AS BACKUP
 
-const std::string musicFilepath = "Music/MPH - Nova.wav";
+const std::string musicFilepath = "Music/Gorillaz - On Melancholy Hill.wav";
 
 const int numFreq = 2048; //number of frequencies in the fourier transform (= half the number of samples included by nyquist)
 
@@ -96,7 +96,7 @@ void MainGame::initShaders() {
 	_eqProgram.linkShaders();
 
 	//compute shader
-	_eqCompute.attachShader("Compute/eq.compute");
+	_eqCompute.attachShader("Compute/bruteFourier.compute");
 
 
 	_drawFrameBufferProgram.compileShaders("Shaders/drawFrameBuffer.vert", "Shaders/drawFrameBuffer.frag");
@@ -148,8 +148,9 @@ void MainGame::gameLoop() {
 
 	MyTiming::startTimer(_globalTimer);
 
+	printf("NOW1");
 	PlaySound(musicFilepath.c_str() , NULL, SND_ASYNC);
-
+	printf("NOW2");
 
 	MyTiming::setNumSamplesForFPS(2);
 	while (_gameState != GameState::EXIT) {
@@ -160,8 +161,9 @@ void MainGame::gameLoop() {
 		//frame done first then get fps
 		MyTiming::frameDone();
 		if (MyTiming::getFrameCount() % 100 == 0) { //every 100 frames print fps
-			printf("%f\n", MyTiming::getFPS());
+			//printf("%f\n", MyTiming::getFPS());
 		}
+		//printf("%f\n",MyTiming::readTimer(_globalTimer));
 	}
 }
 
