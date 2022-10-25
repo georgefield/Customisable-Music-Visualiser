@@ -83,7 +83,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;glew32.lib;Winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;glew32.lib;Winmm.lib;libfftw3f-3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -126,6 +126,7 @@
     <ClCompile Include="ComputeShader.cpp" />
     <ClCompile Include="DrawFunctions.cpp" />
     <ClCompile Include="Errors.cpp" />
+    <ClCompile Include="FFTW.cpp" />
     <ClCompile Include="GLSLProgram.cpp" />
     <ClCompile Include="IOManager.cpp" />
     <ClCompile Include="main.cpp" />
@@ -140,6 +141,7 @@
     <ClInclude Include="ComputeShader.h" />
     <ClInclude Include="DrawFunctions.h" />
     <ClInclude Include="Errors.h" />
+    <ClInclude Include="FFTW.h" />
     <ClInclude Include="GLSLProgram.h" />
     <ClInclude Include="GLtexture.h" />
     <ClInclude Include="IOManager.h" />

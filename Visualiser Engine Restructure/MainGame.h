@@ -7,6 +7,8 @@
 #include "GLSLProgram.h"
 #include "GLtexture.h"
 #include "ComputeShader.h"
+#include "FFTW.h"
+
 
 enum class GameState {
 	PLAY,
@@ -33,9 +35,6 @@ private:
 
 	void initShaders();
 
-	Sprite _quad;
-	Sprite _quad2;
-	Sprite _quadDupe;
 	Sprite _screen;
 
 	GLuint* _frameBufferIDs;
@@ -49,8 +48,6 @@ private:
 
 
 	std::vector<float> _wavData;
-
-	//debug vector for testing stuff
 	std::vector<float> _harmonicData;
 
 	float* _negArr;
@@ -60,11 +57,12 @@ private:
 	bool _parity;
 
 	GLSLProgram _eqProgram;
-	ComputeShader _eqCompute;
 	GLSLProgram _drawFrameBufferProgram;
 	GLSLProgram _duplicateFrameProgram;
 	GLSLProgram _shrinkScreenProgram;
 	GLSLProgram _noShading;
+
+	FFTW _fft;
 
 	int _globalTimer;
 };

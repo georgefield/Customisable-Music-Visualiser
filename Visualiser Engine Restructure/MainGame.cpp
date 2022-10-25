@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <Windows.h>
+const int N = 4096; //number of frequencies in the fourier transform (= half the number of samples included by nyquist)
 
 MainGame::MainGame() :
 	_screenWidth(1024),
@@ -17,7 +18,8 @@ MainGame::MainGame() :
 	_currSample(0),
 	_prevSample(-44100),
 	_parity(true),
-	_globalTimer(-1)
+	_globalTimer(-1),
+	_fft(N)
 {
 }
 
@@ -25,16 +27,12 @@ MainGame::MainGame() :
 
 const std::string musicFilepath = "Music/Gorillaz - On Melancholy Hill.wav";
 
-const int numFreq = 2048; //number of frequencies in the fourier transform (= half the number of samples included by nyquist)
 
 void MainGame::run() {
 	initSystems();
 
 	//sprite init
-	_quad.init(-1, -1, 2, 2);
-	_quad2.init(-1, -1, 2, 2);
 	_screen.init(-1, -1, 2, 2);
-	_quadDupe.init(-1, -1, 2, 2); //little bit smaller
 	gameLoop();
 }
 
@@ -67,14 +65,19 @@ void MainGame::initSystems() {
 
 	IOManager::loadWAV(musicFilepath, _wavData, _sampleRate);
 
-	//create SSBOs
+	//create SSBO for waveform data (input entire file)
 	DrawFunctions::createSSBO(_ssboWavDataID, 0, &(_wavData[0]),  _wavData.size() * sizeof(float), GL_STATIC_COPY);
 
-	_negArr = new float[numFreq];
-	for (int i = 0; i < numFreq; i++) {
-		_negArr[i] = -1.0f;
+	//debug for when doing ft on cpu
+	_harmonicData.resize((N / 2) + 1);
+
+	//create harmonic amplitude array (fill with -1 for now, will be updated to current FFT every frame)
+	_negArr = new float[_harmonicData.size()];
+	//memset(_negArr, 0.5f, _harmonicData.size() * sizeof(float));
+	for (int i = 0; i < _harmonicData.size(); i++) {
+		_negArr[i] = 0.0f;
 	}
-	DrawFunctions::createSSBO(_ssboHarmonicDataID, 1, _negArr, numFreq * sizeof(float), GL_DYNAMIC_DRAW);
+	DrawFunctions::createSSBO(_ssboHarmonicDataID, 1, _negArr, _harmonicData.size() * sizeof(float), GL_DYNAMIC_DRAW);
 
 
 	_frameBufferIDs = new GLuint[_numFrameBuffers];
@@ -82,8 +85,7 @@ void MainGame::initSystems() {
 	//create 2 draw buffers
 	DrawFunctions::createDrawBuffers(_frameBufferIDs, _frameBufferTextureIDs, _screenWidth, _screenHeight, _numFrameBuffers);
 
-	//debug for when doing ft on cpu
-	_harmonicData.resize(numFreq);
+
 }
 
 void MainGame::initShaders() {
@@ -95,11 +97,7 @@ void MainGame::initShaders() {
 
 	_eqProgram.linkShaders();
 
-	//compute shader
-	_eqCompute.attachShader("Compute/bruteFourier.compute");
-
-
-	_drawFrameBufferProgram.compileShaders("Shaders/drawFrameBuffer.vert", "Shaders/drawFrameBuffer.frag");
+	/*_drawFrameBufferProgram.compileShaders("Shaders/drawFrameBuffer.vert", "Shaders/drawFrameBuffer.frag");
 	//attributes must be added in order they are parsed in sprite draw()
 	_drawFrameBufferProgram.addAttrib("vertexPosition");
 	_drawFrameBufferProgram.addAttrib("vertexColour");
@@ -129,7 +127,7 @@ void MainGame::initShaders() {
 	_noShading.addAttrib("vertexColour");
 	_noShading.addAttrib("vertexUV");
 
-	_noShading.linkShaders();
+	_noShading.linkShaders();*/
 }
 
 
@@ -148,11 +146,9 @@ void MainGame::gameLoop() {
 
 	MyTiming::startTimer(_globalTimer);
 
-	printf("NOW1");
 	PlaySound(musicFilepath.c_str() , NULL, SND_ASYNC);
-	printf("NOW2");
 
-	MyTiming::setNumSamplesForFPS(2);
+	MyTiming::setNumSamplesForFPS(100);
 	while (_gameState != GameState::EXIT) {
 
 		processInput();
@@ -161,9 +157,8 @@ void MainGame::gameLoop() {
 		//frame done first then get fps
 		MyTiming::frameDone();
 		if (MyTiming::getFrameCount() % 100 == 0) { //every 100 frames print fps
-			//printf("%f\n", MyTiming::getFPS());
+			printf("%f\n", MyTiming::getFPS());
 		}
-		//printf("%f\n",MyTiming::readTimer(_globalTimer));
 	}
 }
 
@@ -173,71 +168,19 @@ void MainGame::drawGame() {
 	float elapsed = MyTiming::readTimer(_globalTimer);
 	_currSample = (int)(elapsed * _sampleRate);
 
-	//ResourceManager::getFFT(_wavData, _currSample, _harmonicData);
-	//DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, &(_harmonicData[0]), _harmonicData.size() * sizeof(float));
-
-	_eqCompute.use();
-	GLuint sampleLocation = _eqCompute.getUniformLocation("_currentSample");
-	glUniform1i(sampleLocation, _currSample);
-	_eqCompute.run(32); //4096/64 workgroup size
-	glFinish();
-
-	///draw fb2 and eq to fb1
-	glBindFramebuffer(GL_FRAMEBUFFER, _frameBufferIDs[1]);
-	glViewport(0, 0, _screenWidth, _screenHeight);
-
-	_duplicateFrameProgram.use();
-	DrawFunctions::uploadTextureToShader(_duplicateFrameProgram, _frameBufferTextureIDs[2], "fb2"); //fb2
-
-	_quadDupe.draw(); //draws to frame buffer 1
-	_duplicateFrameProgram.unuse();
-
-	///draw fb1 shrunk to fb2
-	glBindFramebuffer(GL_FRAMEBUFFER, _frameBufferIDs[2]);
-	glViewport(0, 0, _screenWidth, _screenHeight);
-
-	_shrinkScreenProgram.use();
-
-	DrawFunctions::uploadTextureToShader(_shrinkScreenProgram, _frameBufferTextureIDs[1], "fb1");
-
-	GLint timeLocationSS = _shrinkScreenProgram.getUniformLocation("time");
-	glUniform1f(timeLocationSS, elapsed);
-
-	_quad2.draw();
-
-	_shrinkScreenProgram.unuse();
-
 	///draw fb1 to screen
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, _screenWidth, _screenHeight);
 
-	_drawFrameBufferProgram.use();
-
-	DrawFunctions::uploadTextureToShader(_drawFrameBufferProgram, _frameBufferTextureIDs[1], "fb1");
-
-	GLint timeLocationDFB = _drawFrameBufferProgram.getUniformLocation("time");
-	glUniform1f(timeLocationDFB, elapsed);
+	_eqProgram.use();
 
 	_screen.draw(); //draws to screen
 
-	_drawFrameBufferProgram.unuse();
+	_eqProgram.unuse();
 
 	SDL_GL_SwapWindow(_window); //swaps the buffer in double buffer
 
-	//DrawFunctions::updateSSBO(_ssboDotProductDataID, 2, _zeroArr, numFreq * 2 * sizeof(float));
+	_fft.getFFT(_wavData, _currSample, _harmonicData, 1000);
 
-	//printf("%i,%i\n", _prevSample, _currSample);
-	//system("PAUSE");
-	/*
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glViewport(0, 0, _screenWidth, _screenHeight);
-
-	_noShading.use();
-	glActiveTexture(GL_TEXTURE1);
-	GLint textureLocation = _noShading.getUniformLocation("tex");
-	glUniform1i(textureLocation, 1); //0 as active texture is GL_TEXTURE0
-	_quad2.draw();
-	_noShading.unuse();
-
-	SDL_GL_SwapWindow(_window); //swaps the buffer in double buffer*/
+	DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, &(_harmonicData[0]), _harmonicData.size() * sizeof(float));
 }

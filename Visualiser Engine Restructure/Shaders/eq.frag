@@ -6,7 +6,12 @@ in vec2 fragmentUV;
 out vec4 colour;
 
 const int n = 4096; //num samples (2 * num frequencies)
-const int numFreq = int(n/2);
+const int numFreq = int(n/2) + 1;
+
+layout(std430, binding = 0) buffer wavDataBuffer
+{
+	float wavData[]; //between 0 and 1
+};
 
 layout(std430, binding = 1) buffer harmonicValueBuffer
 {
@@ -17,10 +22,12 @@ layout(std430, binding = 1) buffer harmonicValueBuffer
 void main(){
 	
 	float hzFrac = (fragmentPosition.x + 1) * 0.5;
-	int index = int(hzFrac * 0.6 * hzFrac * numFreq);
+	int index = int(hzFrac * hzFrac * 0.6 * numFreq);
 
-	if (sqrt(harmonicValues[index] * 3.0f) > (fragmentPosition.y + 1) * 0.5){
-		float brightness = (fragmentPosition.y + 1) * 0.5/sqrt(harmonicValues[index] * 2.0f);
-		colour = vec4(1,1,1,1) * brightness;
+	if (harmonicValues[index] > (fragmentPosition.y + 1) * 0.5){
+		float brightness = (fragmentPosition.y + 1) * 0.5;
+		colour = vec4(1);
+	}else{
+		colour = vec4(0);
 	}
 }

@@ -51,6 +51,9 @@
     <ClCompile Include="MyTiming.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FFTW.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainGame.h">
@@ -90,6 +93,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MyTiming.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FFTW.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
