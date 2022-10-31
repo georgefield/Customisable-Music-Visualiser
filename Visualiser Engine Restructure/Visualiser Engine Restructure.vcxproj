@@ -123,6 +123,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Audio.cpp" />
     <ClCompile Include="ComputeShader.cpp" />
     <ClCompile Include="DrawFunctions.cpp" />
     <ClCompile Include="Errors.cpp" />
@@ -131,6 +132,7 @@
     <ClCompile Include="IOManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainGame.cpp" />
+    <ClCompile Include="Menu.cpp" />
     <ClCompile Include="MyTiming.cpp" />
     <ClCompile Include="picoPNG.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
@@ -138,6 +140,7 @@
     <ClCompile Include="TextureCache.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Audio.h" />
     <ClInclude Include="ComputeShader.h" />
     <ClInclude Include="DrawFunctions.h" />
     <ClInclude Include="Errors.h" />
@@ -146,6 +149,7 @@
     <ClInclude Include="GLtexture.h" />
     <ClInclude Include="IOManager.h" />
     <ClInclude Include="MainGame.h" />
+    <ClInclude Include="Menu.h" />
     <ClInclude Include="MyTiming.h" />
     <ClInclude Include="picoPNG.h" />
     <ClInclude Include="ResourceManager.h" />

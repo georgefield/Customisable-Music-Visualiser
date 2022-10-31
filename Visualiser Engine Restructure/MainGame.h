@@ -12,6 +12,7 @@
 
 enum class GameState {
 	PLAY,
+	MENU,
 	EXIT
 };
 
@@ -54,6 +55,8 @@ private:
 
 	int _currSample;
 	int _prevSample;
+	float _sampleOffsetToSound;
+
 	bool _parity;
 
 	GLSLProgram _eqProgram;

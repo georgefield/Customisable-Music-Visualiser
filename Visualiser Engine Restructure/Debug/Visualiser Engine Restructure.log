@@ -1,3 +1,4 @@
 ﻿  MainGame.cpp
-C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\MainGame.cpp(77,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\MainGame.cpp(79,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\MainGame.cpp(174,16): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
   Visualiser Engine Restructure.vcxproj -> C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Debug\Visualiser Engine Restructure.exe

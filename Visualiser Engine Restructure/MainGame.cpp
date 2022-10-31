@@ -4,6 +4,7 @@
 #include "DrawFunctions.h"
 #include "MyTiming.h"
 #include "ResourceManager.h"
+#include "Audio.h"
 
 #include <iostream>
 #include <string>
@@ -19,13 +20,14 @@ MainGame::MainGame() :
 	_prevSample(-44100),
 	_parity(true),
 	_globalTimer(-1),
-	_fft(N)
+	_fft(N),
+	_sampleOffsetToSound(-0.3f)
 {
 }
 
 //RESTRUCTURE ENTIRE ENGINE, CLONE THIS PROJECT AS BACKUP
 
-const std::string musicFilepath = "Music/Gorillaz - On Melancholy Hill.wav";
+const std::string musicFilepath = "Music/King Geedorah - Next Levels.wav";
 
 
 void MainGame::run() {
@@ -144,20 +146,28 @@ void MainGame::processInput() {
 
 void MainGame::gameLoop() {
 
-	MyTiming::startTimer(_globalTimer);
 
-	PlaySound(musicFilepath.c_str() , NULL, SND_ASYNC);
+	Audio test;
+	test.loadWav(musicFilepath);
+
+	MyTiming::startTimer(_globalTimer);
+	test.playSound();
 
 	MyTiming::setNumSamplesForFPS(100);
 	while (_gameState != GameState::EXIT) {
 
-		processInput();
-		drawGame();
+		if (_gameState == GameState::PLAY) {
+			processInput();
+			drawGame();
 
-		//frame done first then get fps
-		MyTiming::frameDone();
-		if (MyTiming::getFrameCount() % 100 == 0) { //every 100 frames print fps
-			printf("%f\n", MyTiming::getFPS());
+			//frame done first then get fps
+			MyTiming::frameDone();
+			if (MyTiming::getFrameCount() % 100 == 0) { //every 100 frames print fps
+				printf("%f\n", MyTiming::getFPS());
+			}
+		}
+		else if (_gameState == GameState::MENU) {
+
 		}
 	}
 }
@@ -166,7 +176,11 @@ void MainGame::drawGame() {
 
 	///compute current sample and run eq compute shader to find harmonic values
 	float elapsed = MyTiming::readTimer(_globalTimer);
-	_currSample = (int)(elapsed * _sampleRate);
+	_currSample = max((int)(elapsed * _sampleRate) + _sampleOffsetToSound*_sampleRate,0);
+
+	_fft.getFFT(_wavData, _currSample, _harmonicData, 1000);
+
+	DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, &(_harmonicData[0]), _harmonicData.size() * sizeof(float));
 
 	///draw fb1 to screen
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -174,13 +188,12 @@ void MainGame::drawGame() {
 
 	_eqProgram.use();
 
+	GLint nLocation = _eqProgram.getUniformLocation("n");
+	glUniform1i(nLocation, N);
+
 	_screen.draw(); //draws to screen
 
 	_eqProgram.unuse();
 
 	SDL_GL_SwapWindow(_window); //swaps the buffer in double buffer
-
-	_fft.getFFT(_wavData, _currSample, _harmonicData, 1000);
-
-	DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, &(_harmonicData[0]), _harmonicData.size() * sizeof(float));
 }
