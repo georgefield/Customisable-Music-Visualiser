@@ -73,6 +73,9 @@
     <IncludePath>$(SolutionDir)deps/include/;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)deps/lib/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <IncludePath>$(SolutionDir)deps\include;$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -126,6 +129,7 @@
     <ClCompile Include="Audio.cpp" />
     <ClCompile Include="ComputeShader.cpp" />
     <ClCompile Include="DrawFunctions.cpp" />
+    <ClCompile Include="DropdownMenu.cpp" />
     <ClCompile Include="Errors.cpp" />
     <ClCompile Include="FFTW.cpp" />
     <ClCompile Include="GLSLProgram.cpp" />
@@ -133,8 +137,10 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainGame.cpp" />
     <ClCompile Include="Menu.cpp" />
+    <ClCompile Include="MyFuncs.cpp" />
     <ClCompile Include="MyTiming.cpp" />
     <ClCompile Include="picoPNG.cpp" />
+    <ClCompile Include="Play.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="Sprite.cpp" />
     <ClCompile Include="TextureCache.cpp" />
@@ -143,6 +149,7 @@
     <ClInclude Include="Audio.h" />
     <ClInclude Include="ComputeShader.h" />
     <ClInclude Include="DrawFunctions.h" />
+    <ClInclude Include="DropdownMenu.h" />
     <ClInclude Include="Errors.h" />
     <ClInclude Include="FFTW.h" />
     <ClInclude Include="GLSLProgram.h" />
@@ -150,12 +157,15 @@
     <ClInclude Include="IOManager.h" />
     <ClInclude Include="MainGame.h" />
     <ClInclude Include="Menu.h" />
+    <ClInclude Include="MyFuncs.h" />
     <ClInclude Include="MyTiming.h" />
     <ClInclude Include="picoPNG.h" />
+    <ClInclude Include="Play.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="Sprite.h" />
     <ClInclude Include="TextureCache.h" />
     <ClInclude Include="Vertex.h" />
+    <ClInclude Include="WindowInfo.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

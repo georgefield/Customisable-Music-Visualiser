@@ -5,6 +5,7 @@
 #include "MyTiming.h"
 #include "ResourceManager.h"
 #include "Audio.h"
+#include "Menu.h"
 
 #include <iostream>
 #include <string>
@@ -12,16 +13,14 @@
 const int N = 4096; //number of frequencies in the fourier transform (= half the number of samples included by nyquist)
 
 MainGame::MainGame() :
-	_screenWidth(1024),
-	_screenHeight(768),
-	_window(nullptr),
-	_gameState(GameState::PLAY),
+	_windowInfo({ 1024, 768, nullptr }),
+	_gameState(GameState::MENU),
 	_currSample(0),
 	_prevSample(-44100),
 	_parity(true),
 	_globalTimer(-1),
 	_fft(N),
-	_sampleOffsetToSound(-0.3f)
+	_sampleOffsetToSound(-0.0f)
 {
 }
 
@@ -34,21 +33,22 @@ void MainGame::run() {
 	initSystems();
 
 	//sprite init
-	_screen.init(-1, -1, 2, 2);
+	_eq.init(-0.5, -0.5, 1, 1);
+	_background.init(-1, -1, 2, 2, "Textures/awwhellnah.png");
 	gameLoop();
 }
 
 void MainGame::initSystems() {
 
 	SDL_Init(SDL_INIT_EVERYTHING);
-	_window = SDL_CreateWindow("Game Engine", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, _screenWidth, _screenHeight, SDL_WINDOW_OPENGL);
+	_windowInfo.window = SDL_CreateWindow("Game Engine", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, _windowInfo.screenWidth, _windowInfo.screenHeight, SDL_WINDOW_OPENGL);
 
-	if (_window == nullptr) {
+	if (_windowInfo.window == nullptr) {
 		fatalError("SDL window could not be created");
 	}
 
 	//set up opengl context
-	SDL_GLContext glContext = SDL_GL_CreateContext(_window);
+	SDL_GLContext glContext = SDL_GL_CreateContext(_windowInfo.window);
 	if (glContext == nullptr) {
 		fatalError("SDL_GL context could not be created");
 	}
@@ -85,7 +85,7 @@ void MainGame::initSystems() {
 	_frameBufferIDs = new GLuint[_numFrameBuffers];
 	_frameBufferTextureIDs = new GLuint[_numFrameBuffers];
 	//create 2 draw buffers
-	DrawFunctions::createDrawBuffers(_frameBufferIDs, _frameBufferTextureIDs, _screenWidth, _screenHeight, _numFrameBuffers);
+	DrawFunctions::createDrawBuffers(_frameBufferIDs, _frameBufferTextureIDs, _windowInfo.screenWidth, _windowInfo.screenHeight, _numFrameBuffers);
 
 
 }
@@ -122,14 +122,14 @@ void MainGame::initShaders() {
 	_shrinkScreenProgram.addAttrib("vertexUV");
 
 	_shrinkScreenProgram.linkShaders();
-
+	*/
 	_noShading.compileShaders("Shaders/noshading.vert", "Shaders/noshading.frag");
 	//attributes must be added in order they are parsed in sprite draw()
 	_noShading.addAttrib("vertexPosition");
 	_noShading.addAttrib("vertexColour");
 	_noShading.addAttrib("vertexUV");
 
-	_noShading.linkShaders();*/
+	_noShading.linkShaders();
 }
 
 
@@ -154,6 +154,8 @@ void MainGame::gameLoop() {
 	test.playSound();
 
 	MyTiming::setNumSamplesForFPS(100);
+	Menu::init(_windowInfo);
+
 	while (_gameState != GameState::EXIT) {
 
 		if (_gameState == GameState::PLAY) {
@@ -168,6 +170,10 @@ void MainGame::gameLoop() {
 		}
 		else if (_gameState == GameState::MENU) {
 
+			if (Menu::processInput() == 2) {
+				_gameState = GameState::PLAY;
+			}
+			Menu::draw();
 		}
 	}
 }
@@ -182,18 +188,23 @@ void MainGame::drawGame() {
 
 	DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, &(_harmonicData[0]), _harmonicData.size() * sizeof(float));
 
-	///draw fb1 to screen
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glViewport(0, 0, _screenWidth, _screenHeight);
+	glViewport(0, 0, _windowInfo.screenWidth, _windowInfo.screenHeight);
+	///draw background to screen
+	_noShading.use();
+	
+	_background.draw();
 
+	_noShading.unuse();
+	///draw eq to screen
 	_eqProgram.use();
 
 	GLint nLocation = _eqProgram.getUniformLocation("n");
 	glUniform1i(nLocation, N);
 
-	_screen.draw(); //draws to screen
+	_eq.draw(); //draws to screen
 
 	_eqProgram.unuse();
 
-	SDL_GL_SwapWindow(_window); //swaps the buffer in double buffer
+	SDL_GL_SwapWindow(_windowInfo.window); //swaps the buffer in double buffer
 }

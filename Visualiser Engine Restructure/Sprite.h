@@ -18,6 +18,5 @@ private:
 	GLuint _vboID; //vertex buffer object id
 
 	GLtexture _texture;
-
 };
 

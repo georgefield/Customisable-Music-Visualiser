@@ -8,6 +8,7 @@
 #include "GLtexture.h"
 #include "ComputeShader.h"
 #include "FFTW.h"
+#include "WindowInfo.h"
 
 
 enum class GameState {
@@ -23,9 +24,8 @@ public:
 
 	void run();
 private:
-	SDL_Window* _window;
-	int _screenWidth;
-	int _screenHeight;
+	WindowInfo _windowInfo;
+
 	int _sampleRate;
 	GameState _gameState;
 
@@ -36,7 +36,8 @@ private:
 
 	void initShaders();
 
-	Sprite _screen;
+	Sprite _eq;
+	Sprite _background;
 
 	GLuint* _frameBufferIDs;
 	GLuint* _frameBufferTextureIDs;

@@ -20,13 +20,13 @@ uniform int n;
 void main(){
 	int numFreq = int(n/2) + 1;
 	
-	float hzFrac = (fragmentPosition.x + 1) * 0.5;
+	float hzFrac = fragmentUV.x;
 	float screenFrac = pow(numFreq,hzFrac - 1);
 	int index = int(screenFrac * numFreq);
 	
 
-	if (harmonicValues[index] > (fragmentPosition.y + 1) * 0.5){
-		float brightness = (fragmentPosition.y + 1) * 0.5;
+	if (harmonicValues[index] > fragmentUV.y){
+		float brightness = fragmentUV.y;
 		colour = vec4(1);
 	}else{
 		colour = vec4(0);

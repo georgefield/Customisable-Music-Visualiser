@@ -1,4 +1,10 @@
-﻿  MainGame.cpp
+﻿  DropdownMenu.cpp
+  MainGame.cpp
 C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\MainGame.cpp(79,20): warning C4018: '<': signed/unsigned mismatch
-C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\MainGame.cpp(174,16): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\MainGame.cpp(185,16): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+  Menu.cpp
+C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\Menu.cpp(38,65): warning C4305: 'argument': truncation from 'double' to 'float'
+  MyFuncs.cpp
+  Generating Code...
+C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\Menu.cpp(42): warning C4715: 'Menu::processInput': not all control paths return a value
   Visualiser Engine Restructure.vcxproj -> C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Debug\Visualiser Engine Restructure.exe
