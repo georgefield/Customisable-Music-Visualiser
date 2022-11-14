@@ -3,8 +3,9 @@
 #include <string>
 #include <SDL/SDL.h>
 
-#include "Sprite.h"
-#include "GLSLProgram.h"
+#include <Vengine/Sprite.h>
+#include <Vengine/GLSLProgram.h>
+
 #include "WindowInfo.h"
 
 class DropdownMenu
@@ -21,8 +22,8 @@ private:
 
 	float _x, _y, _sizeX, _sizeY;
 
-	GLSLProgram _singleColShading;
-	Sprite _backing;
+	Vengine::GLSLProgram _singleColShading;
+	Vengine::Sprite _backing;
 	WindowInfo _windowInfo;
 };
 

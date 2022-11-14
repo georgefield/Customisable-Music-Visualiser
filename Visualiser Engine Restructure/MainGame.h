@@ -2,13 +2,9 @@
 #include <SDL/SDL.h>
 #include <GL/glew.h>
 #include <vector>
+#include <Vengine/Vengine.h>
 
-#include "Sprite.h"
-#include "GLSLProgram.h"
-#include "GLtexture.h"
-#include "ComputeShader.h"
 #include "FFTW.h"
-#include "WindowInfo.h"
 
 
 enum class GameState {
@@ -24,7 +20,7 @@ public:
 
 	void run();
 private:
-	WindowInfo _windowInfo;
+	Vengine::Window _window;
 
 	int _sampleRate;
 	GameState _gameState;
@@ -36,8 +32,10 @@ private:
 
 	void initShaders();
 
-	Sprite _eq;
-	Sprite _background;
+	Vengine::Sprite _eq;
+	Vengine::Sprite _background;
+
+	Vengine::SpriteBatch _spriteBatch;
 
 	GLuint* _frameBufferIDs;
 	GLuint* _frameBufferTextureIDs;
@@ -48,7 +46,6 @@ private:
 	GLuint _ssboHarmonicDataID;
 	GLuint _ssboAllocFFTmemID;
 
-
 	std::vector<float> _wavData;
 	std::vector<float> _harmonicData;
 
@@ -58,13 +55,9 @@ private:
 	int _prevSample;
 	float _sampleOffsetToSound;
 
-	bool _parity;
 
-	GLSLProgram _eqProgram;
-	GLSLProgram _drawFrameBufferProgram;
-	GLSLProgram _duplicateFrameProgram;
-	GLSLProgram _shrinkScreenProgram;
-	GLSLProgram _noShading;
+	Vengine::GLSLProgram _eqProgram;
+	Vengine::GLSLProgram _noShading;
 
 	FFTW _fft;
 

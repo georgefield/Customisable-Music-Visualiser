@@ -23,6 +23,7 @@
     <ProjectGuid>{3eb8fefa-0f74-4c1d-b7ee-5e910a4f36c1}</ProjectGuid>
     <RootNamespace>Visualiser_Engine_Restructure</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Visualiser Engine Restructure</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -70,8 +71,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)deps/include/;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)deps/lib/;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)deps/include/;$(SolutionDir);$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)deps/lib/;$(SolutionDir)Debug/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(SolutionDir)deps\include;$(IncludePath)</IncludePath>
@@ -86,7 +87,7 @@
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;glew32.lib;Winmm.lib;libfftw3f-3.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;opengl32.lib;glew32.lib;Winmm.lib;libfftw3f-3.lib;Vengine.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -126,45 +127,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Audio.cpp" />
-    <ClCompile Include="ComputeShader.cpp" />
-    <ClCompile Include="DrawFunctions.cpp" />
     <ClCompile Include="DropdownMenu.cpp" />
-    <ClCompile Include="Errors.cpp" />
     <ClCompile Include="FFTW.cpp" />
-    <ClCompile Include="GLSLProgram.cpp" />
-    <ClCompile Include="IOManager.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainGame.cpp" />
-    <ClCompile Include="Menu.cpp" />
     <ClCompile Include="MyFuncs.cpp" />
-    <ClCompile Include="MyTiming.cpp" />
-    <ClCompile Include="picoPNG.cpp" />
-    <ClCompile Include="Play.cpp" />
-    <ClCompile Include="ResourceManager.cpp" />
-    <ClCompile Include="Sprite.cpp" />
-    <ClCompile Include="TextureCache.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Audio.h" />
-    <ClInclude Include="ComputeShader.h" />
-    <ClInclude Include="DrawFunctions.h" />
     <ClInclude Include="DropdownMenu.h" />
-    <ClInclude Include="Errors.h" />
     <ClInclude Include="FFTW.h" />
-    <ClInclude Include="GLSLProgram.h" />
-    <ClInclude Include="GLtexture.h" />
-    <ClInclude Include="IOManager.h" />
     <ClInclude Include="MainGame.h" />
-    <ClInclude Include="Menu.h" />
     <ClInclude Include="MyFuncs.h" />
-    <ClInclude Include="MyTiming.h" />
-    <ClInclude Include="picoPNG.h" />
-    <ClInclude Include="Play.h" />
-    <ClInclude Include="ResourceManager.h" />
-    <ClInclude Include="Sprite.h" />
-    <ClInclude Include="TextureCache.h" />
-    <ClInclude Include="Vertex.h" />
     <ClInclude Include="WindowInfo.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

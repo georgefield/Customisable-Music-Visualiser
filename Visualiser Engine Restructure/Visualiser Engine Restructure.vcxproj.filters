@@ -21,43 +21,7 @@
     <ClCompile Include="MainGame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Sprite.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GLSLProgram.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Errors.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="picoPNG.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DrawFunctions.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="IOManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ComputeShader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ResourceManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TextureCache.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MyTiming.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="FFTW.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Audio.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Menu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DropdownMenu.cpp">
@@ -66,57 +30,12 @@
     <ClCompile Include="MyFuncs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Play.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainGame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Sprite.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GLSLProgram.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Errors.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Vertex.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="picoPNG.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GLtexture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="DrawFunctions.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IOManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ComputeShader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ResourceManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TextureCache.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MyTiming.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="FFTW.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Audio.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Menu.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DropdownMenu.h">
@@ -126,9 +45,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MyFuncs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Play.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,5 +1,4 @@
 #include "MainGame.h"
-#include "MyTiming.h"
 
 #include <SDL/SDL.h>
 

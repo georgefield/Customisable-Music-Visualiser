@@ -1,5 +1,5 @@
 #include "FFTW.h"
-#include "Errors.h"
+#include <Vengine/Errors.h>
 
 FFTW::FFTW(int N) :
 	_p(nullptr),
@@ -12,7 +12,7 @@ FFTW::FFTW(int N) :
 void FFTW::getFFT(std::vector<float>& samples, int currentSample, std::vector<float>& harmonicValues, float divFac)
 {
 	if (harmonicValues.size() < ((_N / 2) + 1)) {
-		fatalError("Out vector not big enough for fourier transform");
+		Vengine::fatalError("Out vector not big enough for fourier transform");
 	}
 
 	_p = fftwf_plan_dft_r2c_1d(_N, &samples[currentSample], _out, FFTW_ESTIMATE);
