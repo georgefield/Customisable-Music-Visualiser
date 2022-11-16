@@ -61,7 +61,6 @@ bool IOManager::loadWAV(const std::string& filepath, std::vector<float>& buffer,
 }
 
 
-
 bool IOManager::readFileToBuffer(const std::string& filepath, std::vector<unsigned char>& buffer) {
 
 	std::ifstream file(filepath, std::ios::binary); //binary flag
@@ -84,6 +83,8 @@ bool IOManager::readFileToBuffer(const std::string& filepath, std::vector<unsign
 }
 
 
+
+///---OBSELETE CODE - USING SDL INCLUDED WAV DECODER (IN AUDIO.cpp)
 
 //error codes
 const int NOERROR = 0;
@@ -118,6 +119,8 @@ int IOManager::decodeWAV(std::vector<unsigned char>& in, std::vector<float>& out
 
 	if (!getPartOfFile(in, workingVec, 32, 2, true)) { return NODATA; }
 	blockAlign = byteVecToInt(workingVec);
+	printf("%i, block align", blockAlign);
+	system("PAUSE");
 
 	if (!getPartOfFile(in, workingVec, 34, 2, true)) { return NODATA; }
 	bitsPerSample = byteVecToInt(workingVec);
@@ -141,6 +144,8 @@ int IOManager::decodeWAV(std::vector<unsigned char>& in, std::vector<float>& out
 
 	//add more parameters to function---------
 	//temporary grab of mono left audio
+	out.resize(dataSize);
+
 	int it = 0;
 	while (it < dataSize) {
 		getPartOfFile(in, workingVec, it + 44, bitsPerSample / 8, true);
@@ -154,6 +159,8 @@ int IOManager::decodeWAV(std::vector<unsigned char>& in, std::vector<float>& out
 	//---------- make above code include stereo options & such
 	return 0;
 }
+
+///---
 
 
 

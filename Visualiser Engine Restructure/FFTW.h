@@ -6,7 +6,7 @@ class FFTW
 {
 public:
 	FFTW(int N);
-	void getFFT(std::vector<float>& samples, int currentSample, std::vector<float>& out, float divFac);
+	void getFFT(float* samples, int currentSample, std::vector<float>& out, float divFac);
 	~FFTW();
 private:
 	int _N;

@@ -9,13 +9,13 @@ FFTW::FFTW(int N) :
 	_out = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex) * ((_N / 2) + 1));
 }
 
-void FFTW::getFFT(std::vector<float>& samples, int currentSample, std::vector<float>& harmonicValues, float divFac)
+void FFTW::getFFT(float* samples, int currentSample, std::vector<float>& harmonicValues, float divFac)
 {
 	if (harmonicValues.size() < ((_N / 2) + 1)) {
 		Vengine::fatalError("Out vector not big enough for fourier transform");
 	}
 
-	_p = fftwf_plan_dft_r2c_1d(_N, &samples[currentSample], _out, FFTW_ESTIMATE);
+	_p = fftwf_plan_dft_r2c_1d(_N, &(samples[currentSample]), _out, FFTW_ESTIMATE);
 
 	fftwf_execute(_p);
 	fftwf_destroy_plan(_p);

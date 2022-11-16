@@ -33,7 +33,6 @@ private:
 	void initShaders();
 
 	Vengine::Sprite _eq;
-	Vengine::Sprite _background;
 
 	Vengine::SpriteBatch _spriteBatch;
 
@@ -46,7 +45,6 @@ private:
 	GLuint _ssboHarmonicDataID;
 	GLuint _ssboAllocFFTmemID;
 
-	std::vector<float> _wavData;
 	std::vector<float> _harmonicData;
 
 	float* _negArr;
@@ -58,8 +56,11 @@ private:
 
 	Vengine::GLSLProgram _eqProgram;
 	Vengine::GLSLProgram _noShading;
+	Vengine::GLSLProgram _wishyWashyProgram;
 
 	FFTW _fft;
+
+	Vengine::Audio _song;
 
 	int _globalTimer;
 };

@@ -12,13 +12,14 @@ MainGame::MainGame() :
 	_prevSample(-44100),
 	_globalTimer(-1),
 	_fft(N),
-	_sampleOffsetToSound(-0.0f)
+	_sampleOffsetToSound(-0.0f),
+	_song()
 {
 }
 
 //RESTRUCTURE ENTIRE ENGINE, CLONE THIS PROJECT AS BACKUP
 
-const std::string musicFilepath = "Music/King Geedorah - Next Levels.wav";
+const std::string musicFilepath = "Music/Gorillaz - On Melancholy Hill.wav";
 
 
 void MainGame::run() {
@@ -26,7 +27,7 @@ void MainGame::run() {
 
 	//sprite init
 	_eq.init(-1, -1, 2, 2);
-	_background.init(-1, -1, 2, 2, "Textures/awwhellnah.png");
+
 	gameLoop();
 }
 
@@ -42,10 +43,11 @@ void MainGame::initSystems() {
 
 	_spriteBatch.init();
 
-	Vengine::IOManager::loadWAV(musicFilepath, _wavData, _sampleRate);
+	//load song
+	_song.loadWav(musicFilepath, _sampleRate);
 
 	//create SSBO for waveform data (input entire file)
-	Vengine::DrawFunctions::createSSBO(_ssboWavDataID, 0, &(_wavData[0]),  _wavData.size() * sizeof(float), GL_STATIC_COPY);
+	Vengine::DrawFunctions::createSSBO(_ssboWavDataID, 0, _song.getNormalisedWavData(), _song.getWavLength(), GL_STATIC_COPY);
 
 	//debug for when doing ft on cpu
 	_harmonicData.resize((N / 2) + 1);
@@ -87,6 +89,15 @@ void MainGame::initShaders() {
 	_noShading.addAttrib("vertexUV");
 
 	_noShading.linkShaders();
+
+
+	_wishyWashyProgram.compileShaders("Shaders/wishyWashy.vert", "Shaders/wishyWashy.frag");
+	//attributes must be added in order they are parsed in sprite draw()
+	_wishyWashyProgram.addAttrib("vertexPosition");
+	_wishyWashyProgram.addAttrib("vertexColour");
+	_wishyWashyProgram.addAttrib("vertexUV");
+
+	_wishyWashyProgram.linkShaders();
 }
 
 
@@ -103,12 +114,9 @@ void MainGame::processInput() {
 
 void MainGame::gameLoop() {
 
-	Vengine::Audio test;
-	test.loadWav(musicFilepath);
-
 	Vengine::MyTiming::startTimer(_globalTimer);
 
-	test.playSound();
+	_song.playSound();
 
 	Vengine::MyTiming::setNumSamplesForFPS(100);
 
@@ -134,7 +142,7 @@ void MainGame::drawGame() {
 	float elapsed = Vengine::MyTiming::readTimer(_globalTimer);
 	_currSample = max((int)(elapsed * _sampleRate) + _sampleOffsetToSound * _sampleRate, 0);
 
-	_fft.getFFT(_wavData, _currSample, _harmonicData, 1000);
+	_fft.getFFT(_song.getNormalisedWavData(), _currSample, _harmonicData, 500);
 
 	Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, &(_harmonicData[0]), _harmonicData.size() * sizeof(float));
 
@@ -142,20 +150,25 @@ void MainGame::drawGame() {
 	glViewport(0, 0, _window.getScreenWidth(), _window.getScreenHeight());
 	
 	///sprite batch example
-	_noShading.use();
+	_wishyWashyProgram.use();
+
+	GLint timeLocation = _wishyWashyProgram.getUniformLocation("time");
+	glUniform1f(timeLocation, elapsed);
 
 	_spriteBatch.begin(); //--- add quads to draw between begin and end
 
 	//info of sprite to draw
 	glm::vec4 pos(-1.0f, -1.0f, 2.0f, 2.0f);
 	glm::vec4 uv(0, 0, 1.0f, 1.0f);
-	Vengine::GLtexture texture = Vengine::ResourceManager::getTexture("Textures/awwhellnah.png");
+	Vengine::GLtexture texture = Vengine::ResourceManager::getTexture("Textures/BlurryBackground.png");
 	Vengine::Colour col = { 255,255,255,255 };
 	//call draw command
 	_spriteBatch.draw(pos, uv, texture.id, 0.0f, col);
 	
+	
 	//randomised circles test -buggy interferes with eq vis somehow?????
-	int N = 100;
+	/*
+	int N = 50;
 	glm::vec4* posArr = new glm::vec4[N];
 	Vengine::Colour* colArr = new Vengine::Colour[N];
 
@@ -170,12 +183,12 @@ void MainGame::drawGame() {
 			(float(rand()) / RAND_MAX) * 2.0f - 1.0f);
 		_spriteBatch.draw(posArr[i], uvC, circTex.id, 0.0f, colC);
 	}
-	
+	*/
 	_spriteBatch.end(); //--- sorts glyphs, then creates render batches
 
 	_spriteBatch.renderBatch(); //draw all quads specified between begin and end to screen
 
-	_noShading.unuse();
+	_wishyWashyProgram.unuse();
 
 
 	///draw eq to screen

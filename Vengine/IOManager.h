@@ -2,6 +2,7 @@
 #include "GLtexture.h"
 #include <string>
 #include <vector>
+#include <SDL/SDL.h>
 
 namespace Vengine {
 
@@ -10,8 +11,9 @@ namespace Vengine {
 	public:
 		static GLtexture loadPNG(const std::string& filepath);
 		static bool loadWAV(const std::string& filepath, std::vector<float>& buffer, int& outSampleRate);
-	private:
+
 		static bool readFileToBuffer(const std::string& filepath, std::vector<unsigned char>& buffer);
+	private:
 
 		static int decodeWAV(std::vector<unsigned char>& in, std::vector<float>& out, int& outSampleRate);
 		static bool getPartOfFile(std::vector<unsigned char>& buffer, std::vector<unsigned char>& out, int start, int length, bool littleEndian = false);

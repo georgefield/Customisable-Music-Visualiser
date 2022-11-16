@@ -1,5 +1,5 @@
 ﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(534,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (Visualiser.vcxproj).  This can lead to incorrect clean and rebuild behavior.
   MainGame.cpp
-C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\MainGame.cpp(56,20): warning C4018: '<': signed/unsigned mismatch
-C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\MainGame.cpp(135,16): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\MainGame.cpp(58,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\MainGame.cpp(143,16): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
   Visualiser Engine Restructure.vcxproj -> C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Debug\Visualiser Engine Restructure.exe
