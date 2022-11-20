@@ -108,6 +108,21 @@ void MainGame::processInput() {
 		switch (evnt.type) { //look up SDL_Event documentation to see other options for events (mouse movement, keyboard, etc..)
 		case SDL_QUIT:
 			_gameState = GameState::EXIT;
+			break;
+		case SDL_KEYDOWN:
+			_inputManager.pressKey(evnt.key.keysym.sym);
+			break;
+		case SDL_KEYUP:
+			_inputManager.releaseKey(evnt.key.keysym.sym);
+			break;
+		case SDL_MOUSEBUTTONDOWN:
+			_inputManager.pressKey(evnt.button.button);
+			break;
+		case SDL_MOUSEBUTTONUP:
+			_inputManager.releaseKey(evnt.button.button);
+			break;
+		case SDL_MOUSEMOTION:
+			_inputManager.setMouseCoords(evnt.motion.x, evnt.motion.y);
 		}
 	}
 }
@@ -119,18 +134,19 @@ void MainGame::gameLoop() {
 	_song.playSound();
 
 	Vengine::MyTiming::setNumSamplesForFPS(100);
-
+	Vengine::MyTiming::setFPSlimit(120);
 
 	while (_gameState != GameState::EXIT) {
 
 		if (_gameState == GameState::PLAY) {
+			_inputManager.update();
 			processInput();
 			drawGame();
 
 			//frame done first then get fps
 			Vengine::MyTiming::frameDone();
-			if (Vengine::MyTiming::getFrameCount() % 100 == 0) { //every 100 frames print fps
-				printf("%f\n", Vengine::MyTiming::getFPS());
+			if (_inputManager.isKeyPressed(SDL_BUTTON_LEFT)) {
+				printf("%f fps, %f,%f\n", Vengine::MyTiming::getFPS(), _inputManager.getMouseCoords().x, _inputManager.getMouseCoords().y);
 			}
 		}
 	}
@@ -161,29 +177,29 @@ void MainGame::drawGame() {
 	glm::vec4 pos(-1.0f, -1.0f, 2.0f, 2.0f);
 	glm::vec4 uv(0, 0, 1.0f, 1.0f);
 	Vengine::GLtexture texture = Vengine::ResourceManager::getTexture("Textures/BlurryBackground.png");
-	Vengine::Colour col = { 255,255,255,255 };
+	Vengine::ColourRGBA8 col = { 255,255,255,255 };
 	//call draw command
 	_spriteBatch.draw(pos, uv, texture.id, 0.0f, col);
 	
 	
 	//randomised circles test -buggy interferes with eq vis somehow?????
-	/*
-	int N = 50;
-	glm::vec4* posArr = new glm::vec4[N];
-	Vengine::Colour* colArr = new Vengine::Colour[N];
+	if (_inputManager.isKeyDown(SDLK_w)) {
+		int N = 1000;
+		glm::vec4* posArr = new glm::vec4[N];
+		Vengine::ColourRGBA8* colArr = new Vengine::ColourRGBA8[N];
 
-	glm::vec4 uvC(0, 0, 1.0f, 1.0f);
-	Vengine::GLtexture circTex = Vengine::ResourceManager::getTexture("Textures/100x100 red outlined circle.png");
-	Vengine::Colour colC = { 255,255,255,255 };
-	for (int i = 0; i < N; i++) {
-		posArr[i] = glm::vec4(
-			(float(rand()) / RAND_MAX) * 2.0f - 1.0f,
-			(float(rand()) / RAND_MAX) * 2.0f - 1.0f,
-			(float(rand()) / RAND_MAX) * 2.0f - 1.0f,
-			(float(rand()) / RAND_MAX) * 2.0f - 1.0f);
-		_spriteBatch.draw(posArr[i], uvC, circTex.id, 0.0f, colC);
+		glm::vec4 uvC(0, 0, 1.0f, 1.0f);
+		Vengine::GLtexture circTex = Vengine::ResourceManager::getTexture("Textures/100x100 red outlined circle.png");
+		Vengine::ColourRGBA8 colC = { 255,255,255,255 };
+		for (int i = 0; i < N; i++) {
+			posArr[i] = glm::vec4(
+				(float(rand()) / RAND_MAX) * 2.0f - 1.0f,
+				(float(rand()) / RAND_MAX) * 2.0f - 1.0f,
+				(float(rand()) / RAND_MAX) * 2.0f - 1.0f,
+				(float(rand()) / RAND_MAX) * 2.0f - 1.0f);
+			_spriteBatch.draw(posArr[i], uvC, circTex.id, 0.0f, colC);
+		}
 	}
-	*/
 	_spriteBatch.end(); //--- sorts glyphs, then creates render batches
 
 	_spriteBatch.renderBatch(); //draw all quads specified between begin and end to screen

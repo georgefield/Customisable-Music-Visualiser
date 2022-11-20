@@ -139,6 +139,7 @@
     <ClCompile Include="DrawFunctions.cpp" />
     <ClCompile Include="Errors.cpp" />
     <ClCompile Include="GLSLProgram.cpp" />
+    <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="IOManager.cpp" />
     <ClCompile Include="MyTiming.cpp" />
     <ClCompile Include="picoPNG.cpp" />
@@ -155,6 +156,7 @@
     <ClInclude Include="Errors.h" />
     <ClInclude Include="GLSLProgram.h" />
     <ClInclude Include="GLtexture.h" />
+    <ClInclude Include="InputManager.h" />
     <ClInclude Include="IOManager.h" />
     <ClInclude Include="MyTiming.h" />
     <ClInclude Include="picoPNG.h" />

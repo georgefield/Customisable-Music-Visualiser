@@ -12,3 +12,4 @@
 #include "ResourceManager.h"
 #include "Audio.h"
 #include "SpriteBatch.h"
+#include "InputManager.h"

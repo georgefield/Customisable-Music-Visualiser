@@ -23,7 +23,7 @@ void DrawFunctions::createDrawBuffers(GLuint* bufferIDs, GLuint* textureIDs, int
 	// The texture we're going to render to
 	glGenTextures(num, textureIDs);
 	for (int i = 0; i < num; i++) {
-		printf("%u", bufferIDs[i]);
+		printf("created frame buffer %u\n", bufferIDs[i]);
 		glBindFramebuffer(GL_FRAMEBUFFER, bufferIDs[i]);
 
 		// "Bind" the newly created texture : all future texture functions will modify this texture

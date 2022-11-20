@@ -8,7 +8,10 @@ namespace Vengine {
 		float y;
 	};
 
-	struct Colour {
+	struct ColourRGBA8 {
+		ColourRGBA8() : r(0), b(0), g(0), a(255) {}
+		ColourRGBA8(GLubyte R, GLubyte G, GLubyte B, GLubyte A) : r(R), g(G), b(B), a(A) {}
+
 		GLubyte r = 0;
 		GLubyte g = 0;
 		GLubyte b = 0;
@@ -22,7 +25,7 @@ namespace Vengine {
 
 	struct Vertex {
 		Position position;
-		Colour colour;
+		ColourRGBA8 colour;
 		UV uv;
 
 		void setPosition(float x, float y) {

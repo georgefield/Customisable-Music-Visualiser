@@ -12,16 +12,20 @@ namespace Vengine {
 		static float getFPS();
 		static void setNumSamplesForFPS(int samples);
 		static int getFrameCount();
+		static void setFPSlimit(unsigned int limit);
 
 		static void startTimer(int& id);
 		static float readTimer(int id);
 	private:
-		static float getTicks();
+		static long long ticksSinceEpoch();
+		static float ticksToSeconds(long long ticks);
 
-		static const std::chrono::time_point<std::chrono::steady_clock> _constTimePoint;
+		static const std::chrono::time_point<std::chrono::steady_clock> _epochTimePoint;
 
-		static int _numSamples;
-		static std::vector<float> _frameTimings;
+		static float _minDeltaT; //calculated from fpslimit input
+		static float _deltaT;
+		static int _numFPSsamples;
+		static std::vector<long long> _frameTimings;
 		static int _frameCount;
 
 		static std::map<int, long long> _timerStartTicks; //used to store start timer time

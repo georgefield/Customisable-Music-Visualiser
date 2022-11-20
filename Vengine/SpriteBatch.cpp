@@ -29,7 +29,7 @@ void SpriteBatch::end() {
 	createRenderBatches();
 }
 
-void SpriteBatch::draw(const glm::vec4& destRect, const glm::vec4& uvRect, const GLuint& texture, const float& depth, const Colour& colour) { //adds glyph to vector of glyphs
+void SpriteBatch::draw(const glm::vec4& destRect, const glm::vec4& uvRect, const GLuint& texture, const float& depth, const ColourRGBA8& colour) { //adds glyph to vector of glyphs
 
 	Glyph* newGlyph = new Glyph;
 

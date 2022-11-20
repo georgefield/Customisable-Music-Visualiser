@@ -48,7 +48,7 @@ public:
 
 	void begin(GlyphSortType sortType = GlyphSortType::TEXTURE);
 	void end();
-	void draw(const glm::vec4& destRect, const glm::vec4& uvRect, const GLuint& texture, const float& depth, const Colour& colour);
+	void draw(const glm::vec4& destRect, const glm::vec4& uvRect, const GLuint& texture, const float& depth, const ColourRGBA8& colour);
 	void renderBatch();
 private:
 	void createRenderBatches();

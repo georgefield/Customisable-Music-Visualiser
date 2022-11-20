@@ -25,6 +25,8 @@ private:
 	int _sampleRate;
 	GameState _gameState;
 
+	Vengine::InputManager _inputManager;
+
 	void initSystems();
 	void processInput();
 	void gameLoop();
