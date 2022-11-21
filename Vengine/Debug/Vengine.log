@@ -1,2 +1,5 @@
-﻿  InputManager.cpp
+﻿  SpriteBatch.cpp
+C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Vengine\SpriteBatch.cpp(26,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Vengine\SpriteBatch.cpp(46,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Vengine\SpriteBatch.cpp(81,22): warning C4018: '<': signed/unsigned mismatch
   Vengine.vcxproj -> C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Debug\Vengine.lib

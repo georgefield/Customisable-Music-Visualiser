@@ -134,7 +134,7 @@ void MainGame::gameLoop() {
 	_song.playSound();
 
 	Vengine::MyTiming::setNumSamplesForFPS(100);
-	Vengine::MyTiming::setFPSlimit(120);
+	Vengine::MyTiming::setFPSlimit(500);
 
 	while (_gameState != GameState::EXIT) {
 
