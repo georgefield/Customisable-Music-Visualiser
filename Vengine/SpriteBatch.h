@@ -66,6 +66,7 @@ class SpriteBatch
 {
 public:
 	SpriteBatch();
+	~SpriteBatch();
 
 	void init();
 

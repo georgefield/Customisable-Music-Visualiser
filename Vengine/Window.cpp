@@ -1,6 +1,10 @@
 #include "Window.h"
 #include "Errors.h"
 
+#include <imgui.h>
+#include <imgui_impl_opengl3.h>
+#include <imgui_impl_sdl.h>
+
 using namespace Vengine;
 
 Window::Window() {
@@ -8,7 +12,9 @@ Window::Window() {
 }
 
 Window::~Window() {
-
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui_ImplSDL2_Shutdown();
+	ImGui::DestroyContext();
 }
 
 int Window::create(std::string windowName, int screenWidth, int screenHeight, Uint32 flags) {
@@ -28,8 +34,8 @@ int Window::create(std::string windowName, int screenWidth, int screenHeight, Ui
 	}
 
 	//set up opengl context
-	SDL_GLContext glContext = SDL_GL_CreateContext(_window);
-	if (glContext == nullptr) {
+	_glContext = SDL_GL_CreateContext(_window);
+	if (_glContext == nullptr) {
 		fatalError("SDL_GL context could not be created");
 	}
 
@@ -46,12 +52,38 @@ int Window::create(std::string windowName, int screenWidth, int screenHeight, Ui
 	SDL_GL_SetSwapInterval(0); //1 on, 0 off
 
 	//what colour the window clears to (rgba)
-	glClearColor(0.4f, 0.4f, 0.6f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+	//init imgui
+	initImgui();
 
 	return 0; //could return error code for now just return 0
 }
 
 
-void Window::swapBuffer() {
-	SDL_GL_SwapWindow(_window); //swaps the buffer in double buffer
+void Window::nextFrame() {
+	//clear last frame before rendering
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	//tell imgui next frame
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplSDL2_NewFrame();
+	ImGui::NewFrame();
+}
+
+void Vengine::Window::swapBuffer(){
+	//swaps the buffer in double buffer
+	SDL_GL_SwapWindow(_window);
+}
+
+void Vengine::Window::initImgui(){
+
+	//init IMGUI
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	ImGui::StyleColorsDark();
+	
+	ImGui_ImplSDL2_InitForOpenGL(_window, _glContext);
+	ImGui_ImplOpenGL3_Init("#version 430");
 }

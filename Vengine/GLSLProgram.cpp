@@ -14,6 +14,7 @@ GLSLProgram::GLSLProgram() : _programID(0), _vertexShaderID(0), _fragShaderID(0)
 
 GLSLProgram::~GLSLProgram()
 {
+	glDeleteProgram(_programID);
 }
 
 

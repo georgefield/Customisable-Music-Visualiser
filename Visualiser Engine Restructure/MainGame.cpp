@@ -4,6 +4,7 @@
 #include <string>
 #include <Windows.h>
 
+
 const int N = 4096; //number of frequencies in the fourier transform (= half the number of samples included by nyquist)
 
 MainGame::MainGame() :
@@ -13,7 +14,11 @@ MainGame::MainGame() :
 	_globalTimer(-1),
 	_fft(N),
 	_sampleOffsetToSound(-0.0f),
-	_song()
+	_song(),
+	_yMult(1.0f),
+	_showUi(true),
+	_showBackground(true),
+	_clearColour(0, 0, 0, 1)
 {
 }
 
@@ -24,7 +29,7 @@ const std::string musicFilepath = "Music/Gorillaz - On Melancholy Hill.wav";
 
 void MainGame::run() {
 	initSystems();
-
+	initData();
 	//sprite init
 	_eq.init(-1, -1, 2, 2);
 
@@ -72,6 +77,11 @@ void MainGame::initSystems() {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //blend entirely based on alpha
 }
 
+void MainGame::initData(){
+
+	Vengine::IOManager::getFilesInDir("Textures/", _texFileNames);
+}
+
 void MainGame::initShaders() {
 	_eqProgram.compileShaders("Shaders/eq.vert", "Shaders/eq.frag");
 	//attributes must be added in order they are parsed in sprite draw()
@@ -105,6 +115,9 @@ void MainGame::processInput() {
 
 	SDL_Event evnt;
 	while (SDL_PollEvent(&evnt)) {
+		
+		ImGui_ImplSDL2_ProcessEvent(&evnt); //pass events to imgui
+
 		switch (evnt.type) { //look up SDL_Event documentation to see other options for events (mouse movement, keyboard, etc..)
 		case SDL_QUIT:
 			_gameState = GameState::EXIT;
@@ -136,29 +149,47 @@ void MainGame::gameLoop() {
 	Vengine::MyTiming::setNumSamplesForFPS(100);
 	Vengine::MyTiming::setFPSlimit(500);
 
+
+	//main while loop
 	while (_gameState != GameState::EXIT) {
 
 		if (_gameState == GameState::PLAY) {
 			_inputManager.update();
-			processInput();
-			drawGame();
+			//clears background and tells imgui next frame
+			_window.nextFrame();
 
-			//frame done first then get fps
-			Vengine::MyTiming::frameDone();
+			processInput();
 			if (_inputManager.isKeyPressed(SDL_BUTTON_LEFT)) {
-				printf("%f fps, %f,%f\n", Vengine::MyTiming::getFPS(), _inputManager.getMouseCoords().x, _inputManager.getMouseCoords().y);
+				printf("%f fps\n", Vengine::MyTiming::getFPS());
 			}
+			if (_inputManager.isKeyPressed(SDLK_TAB)) {
+				_showUi = !_showUi;
+			}
+
+			drawVis(); //visualiser first to draw ui on top of visualiser
+			if (_showUi) {
+				drawUi();
+			}
+			//tell ImGui to render Ui (must do every frame)
+			ImGui::Render();
+			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+			//display what has just been drawn to screen
+			_window.swapBuffer();
+
+			//debug check fps
+			Vengine::MyTiming::frameDone();
 		}
 	}
 }
 
-void MainGame::drawGame() {
+void MainGame::drawVis() {
 
 	///compute current sample and run eq compute shader to find harmonic values
 	float elapsed = Vengine::MyTiming::readTimer(_globalTimer);
 	_currSample = max((int)(elapsed * _sampleRate) + _sampleOffsetToSound * _sampleRate, 0);
 
-	_fft.getFFT(_song.getNormalisedWavData(), _currSample, _harmonicData, 500);
+	_fft.getFFT(_song.getNormalisedWavData(), _currSample, _harmonicData, 500/_yMult);
 
 	Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, &(_harmonicData[0]), _harmonicData.size() * sizeof(float));
 
@@ -173,13 +204,15 @@ void MainGame::drawGame() {
 
 	_spriteBatch.begin(); //--- add quads to draw between begin and end
 
-	//info of sprite to draw
-	glm::vec4 pos(-1.0f, -1.0f, 2.0f, 2.0f);
-	glm::vec4 uv(0, 0, 1.0f, 1.0f);
-	Vengine::GLtexture texture = Vengine::ResourceManager::getTexture("Textures/BlurryBackground.png");
-	Vengine::ColourRGBA8 col = { 255,255,255,255 };
-	//call draw command
-	_spriteBatch.draw(pos, uv, texture.id, 0.0f, col);
+	if (_showBackground) {
+		//info of sprite to draw
+		glm::vec4 pos(-1.0f, -1.0f, 2.0f, 2.0f);
+		glm::vec4 uv(0, 0, 1.0f, 1.0f);
+		Vengine::GLtexture texture = Vengine::ResourceManager::getTexture("Textures/BlurryBackground.png");
+		Vengine::ColourRGBA8 col = { 255,255,255,255 };
+		//call draw command
+		_spriteBatch.draw(pos, uv, texture.id, 0.0f, col);
+	}
 	
 	
 	//randomised circles test -buggy interferes with eq vis somehow?????
@@ -216,6 +249,38 @@ void MainGame::drawGame() {
 	_eq.draw(); //draws to screen
 
 	_eqProgram.unuse();
+}
 
-	_window.swapBuffer();
+void MainGame::drawUi(){
+
+	//create window
+	ImGui::Begin("Tab to toggle UI");
+
+	ImGui::Text("WIP menu");
+	ImGui::SliderFloat("Y mult", &_yMult, 0.1f, 2.0f, "%f");
+	ImGui::Checkbox("Show texture background", &_showBackground);
+
+	//file chooser menu
+	ImGui::BeginChild("ChildL", ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 130), true, ImGuiWindowFlags_HorizontalScrollbar);
+	if (ImGui::Button("Refresh")) {
+		Vengine::IOManager::getFilesInDir("Textures/", _texFileNames);
+	}
+	int fileIndex = -1;
+	for (int i = 0; i < _texFileNames.size(); i++) {
+		if (ImGui::SmallButton(_texFileNames[i].c_str())) { //<- explore arrow button option, might be included directory chooser?, slows down program, maybe get user to type filename (still show list)
+			fileIndex = i;
+			printf("%i\n", fileIndex);
+		}
+	}
+	ImGui::EndChild();
+	//--
+
+	//background colour picker
+	ImGui::ColorPicker4("Clear Colour", (float*)&_clearColour, ImGuiColorEditFlags_NoAlpha);
+	glClearColor(_clearColour.x, _clearColour.y, _clearColour.z, 1.0f);
+
+	//end of window
+	ImGui::End();
+	
+	ImGui::ShowDemoWindow();
 }

@@ -3,6 +3,7 @@
 #include <GL/glew.h>
 #include <vector>
 #include <Vengine/Vengine.h>
+#include <Vengine/MyImgui.h>
 
 #include "FFTW.h"
 
@@ -28,11 +29,21 @@ private:
 	Vengine::InputManager _inputManager;
 
 	void initSystems();
+	void initData();
 	void processInput();
 	void gameLoop();
-	void drawGame();
+	void drawVis();
+	void drawUi();
 
 	void initShaders();
+
+	//ImGui variables
+	float _yMult;
+	bool _showUi;
+	bool _showBackground;
+	ImVec4 _clearColour;
+	std::vector<std::string> _texFileNames;
+	//--
 
 	Vengine::Sprite _eq;
 

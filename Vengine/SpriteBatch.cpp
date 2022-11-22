@@ -8,6 +8,15 @@ using namespace Vengine;
 SpriteBatch::SpriteBatch() : _vbo(0), _vao(0)
 {}
 
+SpriteBatch::~SpriteBatch(){
+	if (_vao != 0) {
+		glDeleteVertexArrays(1, &_vao); //remove all data associated with vao from GPU
+	}
+	if (_vbo != 0) {
+		glDeleteBuffers(1, &_vbo); //remove all data associated with vbo from GPU
+	}
+}
+
 
 void SpriteBatch::init() {
 
@@ -56,7 +65,7 @@ void SpriteBatch::renderBatch() {
 void SpriteBatch::createRenderBatches() {
 
 	if (_glyphPtrs.empty()) {
-		fatalError("No glyphs stored in vector, nothing to render");
+		return;
 	}
 
 	std::vector<Vertex> vertices;
