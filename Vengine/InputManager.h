@@ -18,6 +18,7 @@ namespace Vengine {
 
 		bool isKeyDown(unsigned int keyID); //true if key held down
 		bool isKeyPressed(unsigned int keyID); //true if key just pressed
+		bool isKeyReleased(unsigned int keyID);
 
 		//getters
 		glm::vec2 getMouseCoords() { return _mouseCoords; }

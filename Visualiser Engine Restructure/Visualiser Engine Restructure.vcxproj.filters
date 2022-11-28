@@ -24,10 +24,16 @@
     <ClCompile Include="FFTW.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DropdownMenu.cpp">
+    <ClCompile Include="MyFuncs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="MyFuncs.cpp">
+    <ClCompile Include="BetterSprite.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CustomisableSprite.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SpriteManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -38,13 +44,16 @@
     <ClInclude Include="FFTW.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DropdownMenu.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="WindowInfo.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MyFuncs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BetterSprite.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CustomisableSprite.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SpriteManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

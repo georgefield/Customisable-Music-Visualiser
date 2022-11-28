@@ -15,4 +15,13 @@ namespace Vengine {
 		exit(420);
 	}
 
+	void warning(std::string warningMessage, bool pause)
+	{
+		std::cout << warningMessage << std::endl;
+		if (pause) {
+			std::cout << "Enter any key to resume: ";
+			int tmp;
+			std::cin >> tmp;
+		}
+	}
 }

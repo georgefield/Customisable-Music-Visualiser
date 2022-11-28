@@ -47,6 +47,17 @@ bool InputManager::isKeyPressed(unsigned int keyID){
 	return false;
 }
 
+
+bool InputManager::isKeyReleased(unsigned int keyID) {
+	if (!isKeyDown(keyID)) {
+		if (wasKeyDown(keyID)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+
 bool InputManager::wasKeyDown(unsigned int keyID)
 {
 	auto it = _prevKeyMap.find(keyID);

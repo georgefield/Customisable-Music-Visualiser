@@ -6,7 +6,7 @@
 #include <Vengine/MyImgui.h>
 
 #include "FFTW.h"
-
+#include "SpriteManager.h"
 
 enum class GameState {
 	PLAY,
@@ -43,9 +43,11 @@ private:
 	bool _showBackground;
 	ImVec4 _clearColour;
 	std::vector<std::string> _texFileNames;
+	bool _showDragableBox;
 	//--
 
 	Vengine::Sprite _eq;
+	SpriteManager _spriteManager;
 
 	Vengine::SpriteBatch _spriteBatch;
 

@@ -8,7 +8,7 @@ using namespace Vengine;
 SpriteBatch::SpriteBatch() : _vbo(0), _vao(0)
 {}
 
-SpriteBatch::~SpriteBatch(){
+SpriteBatch::~SpriteBatch() {
 	if (_vao != 0) {
 		glDeleteVertexArrays(1, &_vao); //remove all data associated with vao from GPU
 	}
@@ -45,7 +45,7 @@ void SpriteBatch::draw(const glm::vec4& destRect, const glm::vec4& uvRect, const
 }
 
 void SpriteBatch::renderBatch() {
-		
+
 	if (_vao == 0) {
 		fatalError("VAO not initialised so cannot render batch");
 	}
@@ -54,7 +54,7 @@ void SpriteBatch::renderBatch() {
 
 	for (int i = 0; i < _renderBatches.size(); i++) {
 		glBindTexture(GL_TEXTURE_2D, _renderBatches[i].texture);
-		
+
 		glDrawArrays(GL_TRIANGLES, _renderBatches[i].offset, _renderBatches[i].numVertices);
 	}
 
@@ -168,6 +168,10 @@ void SpriteBatch::sortGlyphs() {
 		break;
 	case GlyphSortType::TEXTURE:
 		std::stable_sort(_glyphPtrs.begin(), _glyphPtrs.end(), compareTexture);
+		break;
+	case GlyphSortType::BACK_TO_FRONT_BUT_GROUP_TEXTURE:
+		std::stable_sort(_glyphPtrs.begin(), _glyphPtrs.end(), compareTexture);
+		std::stable_sort(_glyphPtrs.begin(), _glyphPtrs.end(), compareBackToFront);
 		break;
 	}
 }

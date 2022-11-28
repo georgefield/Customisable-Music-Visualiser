@@ -1,8 +1,11 @@
 #pragma once
 #include <GL/glew.h>
 #include <string>
+#include <glm/glm.hpp>
 
 #include "GLtexture.h"
+#include "Vertex.h"
+
 
 namespace Vengine {
 
@@ -12,14 +15,20 @@ namespace Vengine {
 		Sprite();
 		~Sprite();
 
-		void init(float x, float y, float width, float height, std::string textureFilepath = "");
+		virtual void init(glm::vec2 pos, glm::vec2 dim, std::string textureFilepath = "", GLuint glDrawType = GL_STATIC_DRAW);
 
-		void draw();
-	private:
-		float _x, _y, _width, _height;
+		virtual void draw();
+
+	protected:
+		glm::vec2 _pos;
+		glm::vec2 _dim;
 		GLuint _vboID; //vertex buffer object id
 
 		GLtexture _texture;
+
+		Vertex _vertexData[6];
+
+		void setRect(glm::vec2 pos, glm::vec2 dim);
 	};
 
 }

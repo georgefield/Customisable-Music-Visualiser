@@ -75,7 +75,8 @@
     <LibraryPath>$(SolutionDir)deps/lib/;$(SolutionDir)Debug/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)deps\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(SolutionDir)deps/include/;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)deps/lib/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -99,6 +100,9 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
+    <Link>
+      <AdditionalDependencies>glew32.lib;opengl32.lib;libfftw3f-3.lib;SDL2.lib;SDL2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -129,18 +133,21 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="DropdownMenu.cpp" />
+    <ClCompile Include="BetterSprite.cpp" />
+    <ClCompile Include="CustomisableSprite.cpp" />
     <ClCompile Include="FFTW.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainGame.cpp" />
     <ClCompile Include="MyFuncs.cpp" />
+    <ClCompile Include="SpriteManager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DropdownMenu.h" />
+    <ClInclude Include="BetterSprite.h" />
+    <ClInclude Include="CustomisableSprite.h" />
     <ClInclude Include="FFTW.h" />
     <ClInclude Include="MainGame.h" />
     <ClInclude Include="MyFuncs.h" />
-    <ClInclude Include="WindowInfo.h" />
+    <ClInclude Include="SpriteManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

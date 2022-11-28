@@ -40,7 +40,7 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
@@ -71,6 +71,10 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <IncludePath>$(SolutionDir)deps/include/;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)deps/lib/;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(SolutionDir)deps/include/;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)deps/lib/;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
@@ -143,6 +147,7 @@
     <ClCompile Include="..\deps\myImgui\imgui_tables.cpp" />
     <ClCompile Include="..\deps\myImgui\imgui_widgets.cpp" />
     <ClCompile Include="Audio.cpp" />
+    <ClCompile Include="BetterSpriteBatch.cpp" />
     <ClCompile Include="ComputeShader.cpp" />
     <ClCompile Include="DrawFunctions.cpp" />
     <ClCompile Include="Errors.cpp" />
@@ -159,6 +164,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Audio.h" />
+    <ClInclude Include="BetterSpriteBatch.h" />
     <ClInclude Include="ComputeShader.h" />
     <ClInclude Include="DrawFunctions.h" />
     <ClInclude Include="Errors.h" />

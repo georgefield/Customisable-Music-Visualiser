@@ -4,6 +4,7 @@
 #include <string>
 #include <Windows.h>
 
+#include "MyFuncs.h"
 
 const int N = 4096; //number of frequencies in the fourier transform (= half the number of samples included by nyquist)
 
@@ -18,7 +19,8 @@ MainGame::MainGame() :
 	_yMult(1.0f),
 	_showUi(true),
 	_showBackground(true),
-	_clearColour(0, 0, 0, 1)
+	_clearColour(0, 0, 0, 1),
+	_showDragableBox(false)
 {
 }
 
@@ -31,7 +33,7 @@ void MainGame::run() {
 	initSystems();
 	initData();
 	//sprite init
-	_eq.init(-1, -1, 2, 2);
+	_eq.init(glm::vec2(-1), glm::vec2(2));
 
 	gameLoop();
 }
@@ -41,6 +43,7 @@ void MainGame::initSystems() {
 	//use Vengine to create window
 	_window.create("visualiser", 1024, 768, SDL_WINDOW_OPENGL);
 
+	_spriteManager.init(&_window);
 
 	///---shader stuff
 
@@ -80,6 +83,7 @@ void MainGame::initSystems() {
 void MainGame::initData(){
 
 	Vengine::IOManager::getFilesInDir("Textures/", _texFileNames);
+	MyFuncs::SetGlobalWindow(_window); //can be used everywhere now to get working window
 }
 
 void MainGame::initShaders() {
@@ -138,6 +142,8 @@ void MainGame::processInput() {
 			_inputManager.setMouseCoords(evnt.motion.x, evnt.motion.y);
 		}
 	}
+
+	_spriteManager.processInput(&_inputManager);
 }
 
 void MainGame::gameLoop() {
@@ -147,7 +153,7 @@ void MainGame::gameLoop() {
 	_song.playSound();
 
 	Vengine::MyTiming::setNumSamplesForFPS(100);
-	Vengine::MyTiming::setFPSlimit(500);
+	Vengine::MyTiming::setFPSlimit(2500);
 
 
 	//main while loop
@@ -215,7 +221,7 @@ void MainGame::drawVis() {
 	}
 	
 	
-	//randomised circles test -buggy interferes with eq vis somehow?????
+	//randomised circles test
 	if (_inputManager.isKeyDown(SDLK_w)) {
 		int N = 1000;
 		glm::vec4* posArr = new glm::vec4[N];
@@ -233,12 +239,22 @@ void MainGame::drawVis() {
 			_spriteBatch.draw(posArr[i], uvC, circTex.id, 0.0f, colC);
 		}
 	}
+	//--
+
 	_spriteBatch.end(); //--- sorts glyphs, then creates render batches
 
 	_spriteBatch.renderBatch(); //draw all quads specified between begin and end to screen
 
 	_wishyWashyProgram.unuse();
 
+	
+	//test better sprite
+	_noShading.use();
+	
+	_spriteManager.draw();
+
+	_noShading.unuse();
+	//--
 
 	///draw eq to screen
 	_eqProgram.use();
@@ -261,15 +277,17 @@ void MainGame::drawUi(){
 	ImGui::Checkbox("Show texture background", &_showBackground);
 
 	//file chooser menu
-	ImGui::BeginChild("ChildL", ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 130), true, ImGuiWindowFlags_HorizontalScrollbar);
+	ImGui::BeginChild("Texture options", ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 130), true, ImGuiWindowFlags_HorizontalScrollbar);
 	if (ImGui::Button("Refresh")) {
 		Vengine::IOManager::getFilesInDir("Textures/", _texFileNames);
 	}
 	int fileIndex = -1;
 	for (int i = 0; i < _texFileNames.size(); i++) {
 		if (ImGui::SmallButton(_texFileNames[i].c_str())) { //<- explore arrow button option, might be included directory chooser?, slows down program, maybe get user to type filename (still show list)
+			
 			fileIndex = i;
-			printf("%i\n", fileIndex);
+			_spriteManager.addSprite(std::to_string(fileIndex).c_str());
+			_spriteManager.initSprite(std::to_string(fileIndex).c_str(), glm::vec2(-0.5), glm::vec2(1));
 		}
 	}
 	ImGui::EndChild();
@@ -281,6 +299,4 @@ void MainGame::drawUi(){
 
 	//end of window
 	ImGui::End();
-	
-	ImGui::ShowDemoWindow();
 }

@@ -1,5 +1,4 @@
 #include "Sprite.h"
-#include "Vertex.h"
 #include "ResourceManager.h"
 #include "Errors.h"
 
@@ -7,7 +6,9 @@
 
 using namespace Vengine;
 
-Sprite::Sprite()
+Sprite::Sprite() :
+	_pos(0,0),
+	_dim(0,0)
 {
 	_vboID = 0;
 }
@@ -21,11 +22,7 @@ Sprite::~Sprite()
 }
 
 
-void Sprite::init(float x, float y, float width, float height, std::string textureFilepath) {
-	_x = x; //bottom left
-	_y = y;
-	_width = width;
-	_height = height;
+void Sprite::init(glm::vec2 pos, glm::vec2 dim, std::string textureFilepath, GLuint glDrawType) {
 
 	if (textureFilepath != "") {
 		_texture = ResourceManager::getTexture(textureFilepath);
@@ -39,33 +36,20 @@ void Sprite::init(float x, float y, float width, float height, std::string textu
 	}
 
 	//create quad (two triangles) (hard coded)
-	Vertex vertexData[6];
-	vertexData[0].setPosition(_x, _y + _height);//top left
-	vertexData[0].setUV(0, 1); //uv is for texture mapping, range from 0 to 1, u is x axis, v is y axis, u,v = 0 is bottom left
-
-	vertexData[1].setPosition(_x + _width, _y + _height);//top right
-	vertexData[1].setUV(1, 1);
-
-	vertexData[2].setPosition(_x,_y);//bottom left
-	vertexData[2].setUV(0, 0);
-
-	vertexData[3].setPosition(_x + _width, _y + _height);//top right
-	vertexData[3].setUV(1, 1);
-
-	vertexData[4].setPosition(_x, _y);//bottom left
-	vertexData[4].setUV(0, 0);
-
-	vertexData[5].setPosition(_x + _width, _y);//bottom right
-	vertexData[5].setUV(1, 0);
+	setRect(pos, dim);
 
 	glBindBuffer(GL_ARRAY_BUFFER, _vboID); //bind _vboID to gl array buffer (can only have one array buffer active at one time)
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), &vertexData, GL_STATIC_DRAW); //upload vertex data to GPU (bound to vboID)
+	glBufferData(GL_ARRAY_BUFFER, sizeof(_vertexData), &_vertexData, glDrawType); //upload vertex data to GPU (bound to vboID)
 	glBindBuffer(GL_ARRAY_BUFFER, 0); //unbind _vboID
 }
 
 void Sprite::draw() {
 	if (_texture.id != 0) {
 		glBindTexture(GL_TEXTURE_2D, _texture.id);
+	}
+	else {
+		//warning("Binding texture_2d to id '0' as texture not set for the sprite");
+		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 
 	glBindBuffer(GL_ARRAY_BUFFER, _vboID);
@@ -89,4 +73,28 @@ void Sprite::draw() {
 	glDisableVertexAttribArray(2);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void Vengine::Sprite::setRect(glm::vec2 pos, glm::vec2 dim)
+{
+	_pos = pos;
+	_dim = dim;
+
+	_vertexData[0].setPosition(pos.x, pos.y + dim.y);//top left
+	_vertexData[0].setUV(0, 1); //uv is for texture mapping, range from 0 to 1, u is x axis, v is y axis, u,v = 0 is bottom left
+
+	_vertexData[1].setPosition(pos.x + dim.x, pos.y + dim.y);//top right
+	_vertexData[1].setUV(1, 1);
+
+	_vertexData[2].setPosition(pos.x, pos.y);//bottom left
+	_vertexData[2].setUV(0, 0);
+
+	_vertexData[3].setPosition(pos.x + dim.x, pos.y + dim.y);//top right
+	_vertexData[3].setUV(1, 1);
+
+	_vertexData[4].setPosition(pos.x, pos.y);//bottom left
+	_vertexData[4].setUV(0, 0);
+
+	_vertexData[5].setPosition(pos.x + dim.x, pos.y);//bottom right
+	_vertexData[5].setUV(1, 0);
 }
