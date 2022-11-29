@@ -43,6 +43,17 @@ bool BetterSprite::posWithinSprite(glm::vec2 xy)
 	return false;
 }
 
+Vengine::Vertex BetterSprite::getVertex(int i)
+{
+	if (i >= 0 && i < 6) {
+		return _vertexData[i];
+	}
+	else {
+		Vengine::fatalError("vertex index out of range (i > 5 or i < 0)");
+		return Vengine::Vertex();
+	}
+}
+
 //--private
 
 void BetterSprite::updateBuffer(TransformType transformType){

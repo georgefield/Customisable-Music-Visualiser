@@ -147,7 +147,6 @@
     <ClCompile Include="..\deps\myImgui\imgui_tables.cpp" />
     <ClCompile Include="..\deps\myImgui\imgui_widgets.cpp" />
     <ClCompile Include="Audio.cpp" />
-    <ClCompile Include="BetterSpriteBatch.cpp" />
     <ClCompile Include="ComputeShader.cpp" />
     <ClCompile Include="DrawFunctions.cpp" />
     <ClCompile Include="Errors.cpp" />
@@ -164,10 +163,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Audio.h" />
-    <ClInclude Include="BetterSpriteBatch.h" />
     <ClInclude Include="ComputeShader.h" />
     <ClInclude Include="DrawFunctions.h" />
-    <ClInclude Include="Errors.h" />
+    <ClInclude Include="MyErrors.h" />
     <ClInclude Include="GLSLProgram.h" />
     <ClInclude Include="GLtexture.h" />
     <ClInclude Include="InputManager.h" />

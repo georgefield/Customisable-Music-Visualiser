@@ -21,9 +21,13 @@ public:
 	void transform(glm::mat2x2 matrix);
 
 
-
 	//test sprite
 	bool posWithinSprite(glm::vec2 xy);
+
+	//getters
+	float getDepth() const { return _depth; }
+	Vengine::GLtexture getTexture() const { return _texture; }
+	Vengine::Vertex getVertex(int i); 
 protected:
 	float _depth;
 private:

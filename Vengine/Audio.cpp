@@ -1,5 +1,5 @@
 #include "Audio.h"
-#include "Errors.h"
+#include "MyErrors.h"
 #include "IOManager.h"
 
 #include <iostream>

@@ -1,6 +1,6 @@
 #include "ComputeShader.h"
 #include "GLSLProgram.h"
-#include "Errors.h"
+#include "MyErrors.h"
 
 #include <fstream>
 #include <vector>

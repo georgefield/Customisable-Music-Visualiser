@@ -1,5 +1,5 @@
 #pragma once
-#include "Errors.h"
+#include "MyErrors.h"
 
 #include <iostream>
 #include <SDL/SDL.h>

@@ -14,6 +14,7 @@ SpriteManager::~SpriteManager()
 void SpriteManager::init(Vengine::Window* hostWindow)
 {
 	_hostWindow = hostWindow;
+	_spriteBatch.init();
 }
 
 
@@ -55,6 +56,18 @@ void SpriteManager::draw()
 	for (auto& it : _userAddedSprites) {
 		it.second->draw();
 	}
+}
+
+void SpriteManager::drawWithBatching() //useful for fast rendering when not editing
+{
+	_spriteBatch.begin();
+
+	for (auto& it : _userAddedSprites) {
+		_spriteBatch.draw(it.second);
+	}
+	_spriteBatch.end();
+
+	_spriteBatch.renderBatch();
 }
 
 void SpriteManager::processInput(Vengine::InputManager* inputManager)

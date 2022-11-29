@@ -5,7 +5,7 @@
 #include "GLtexture.h"
 #include "ComputeShader.h"
 #include "Window.h"
-#include "Errors.h"
+#include "MyErrors.h"
 #include "IOManager.h"
 #include "DrawFunctions.h"
 #include "MyTiming.h"

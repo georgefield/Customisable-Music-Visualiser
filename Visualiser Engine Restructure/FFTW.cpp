@@ -1,5 +1,5 @@
 #include "FFTW.h"
-#include <Vengine/Errors.h>
+#include <Vengine/MyErrors.h>
 
 FFTW::FFTW(int N) :
 	_p(nullptr),

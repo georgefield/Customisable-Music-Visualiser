@@ -134,6 +134,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BetterSprite.cpp" />
+    <ClCompile Include="BetterSpriteBatch.cpp" />
     <ClCompile Include="CustomisableSprite.cpp" />
     <ClCompile Include="FFTW.cpp" />
     <ClCompile Include="main.cpp" />
@@ -143,6 +144,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BetterSprite.h" />
+    <ClInclude Include="BetterSpriteBatch.h" />
     <ClInclude Include="CustomisableSprite.h" />
     <ClInclude Include="FFTW.h" />
     <ClInclude Include="MainGame.h" />

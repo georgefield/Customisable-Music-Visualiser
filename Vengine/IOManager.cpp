@@ -1,6 +1,6 @@
 #include "IOManager.h"
 #include "picoPNG.h"
-#include "Errors.h"
+#include "MyErrors.h"
 
 #include <fstream>
 #include <filesystem>

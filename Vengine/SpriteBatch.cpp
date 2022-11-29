@@ -1,5 +1,5 @@
 #include "SpriteBatch.h"
-#include "Errors.h"
+#include "MyErrors.h"
 
 #include <algorithm>
 

@@ -1,5 +1,5 @@
 #include "Window.h"
-#include "Errors.h"
+#include "MyErrors.h"
 
 #include <imgui.h>
 #include <imgui_impl_opengl3.h>

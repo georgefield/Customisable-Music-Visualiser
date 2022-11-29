@@ -143,7 +143,9 @@ void MainGame::processInput() {
 		}
 	}
 
-	_spriteManager.processInput(&_inputManager);
+	if (_showUi) {
+		_spriteManager.processInput(&_inputManager);
+	}
 }
 
 void MainGame::gameLoop() {
@@ -251,7 +253,12 @@ void MainGame::drawVis() {
 	//test better sprite
 	_noShading.use();
 	
-	_spriteManager.draw();
+	if (_showUi) {
+		_spriteManager.draw();
+	}
+	else {
+		_spriteManager.drawWithBatching();
+	}
 
 	_noShading.unuse();
 	//--

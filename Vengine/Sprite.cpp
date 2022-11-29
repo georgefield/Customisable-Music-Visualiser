@@ -1,6 +1,6 @@
 #include "Sprite.h"
 #include "ResourceManager.h"
-#include "Errors.h"
+#include "MyErrors.h"
 
 #include <cstddef>
 
