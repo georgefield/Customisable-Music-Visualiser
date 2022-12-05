@@ -22,7 +22,11 @@ namespace Vengine {
 
 		//getters
 		glm::vec2 getMouseCoords() { return _mouseCoords; }
+
+		bool isChangeThisFrame() { return _isChangeThisFrame; }
 	private:
+		bool _isChangeThisFrame;
+
 		bool wasKeyDown(unsigned int keyID);
 
 		std::unordered_map<unsigned int, bool> _keyMap;

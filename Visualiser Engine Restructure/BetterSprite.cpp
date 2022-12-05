@@ -1,11 +1,12 @@
 #include "BetterSprite.h"
 
+#include "MyFuncs.h"
 
+void BetterSprite::init(glm::vec2 pos, glm::vec2 dim, float depth, std::string textureFilepath, GLuint glDrawType) {
 
-void BetterSprite::init(glm::vec2 pos, glm::vec2 dim, float depth, std::string textureFilepath, GLuint glDrawType){
-
-	_depth = depth;
-	Sprite::init(pos, dim, textureFilepath, glDrawType);
+	Sprite::init(pos, dim, depth, textureFilepath, glDrawType);
+	MyFuncs::OpenGLcoordsToPixelCoords(pos, _posPix);
+	MyFuncs::OpenGLsizeToPixelSize(dim, _dimPix);
 }
 
 
@@ -33,14 +34,9 @@ void BetterSprite::transform(glm::mat2x2 matrix){
 	updateBuffer(QuadTranslate);
 }
 
-bool BetterSprite::posWithinSprite(glm::vec2 xy)
+bool BetterSprite::posWithinSprite(glm::vec2 pos)
 {
-	//vertex data [2] & [3] are on diagonal, [2] BL, [3] TR
-	if (xy.x >= _vertexData[2].position.x && xy.x <= _vertexData[3].position.x
-		&& xy.y >= _vertexData[2].position.y && xy.y <= _vertexData[3].position.y) {
-		return true;
-	}
-	return false;
+	return MyFuncs::posWithinRect(pos, glm::vec4(_pos, _dim));
 }
 
 Vengine::Vertex BetterSprite::getVertex(int i)
@@ -55,6 +51,12 @@ Vengine::Vertex BetterSprite::getVertex(int i)
 }
 
 //--private
+
+void BetterSprite::updatePixInfo()
+{
+	MyFuncs::OpenGLcoordsToPixelCoords(_pos, _posPix);
+	MyFuncs::OpenGLsizeToPixelSize(_dim, _dimPix);
+}
 
 void BetterSprite::updateBuffer(TransformType transformType){
 

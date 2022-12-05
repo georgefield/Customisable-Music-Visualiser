@@ -3,6 +3,8 @@
 #include <GL/glew.h>
 #include <string>
 
+#include <glm/glm.hpp>
+
 namespace Vengine {
 
 	class Window
@@ -19,6 +21,8 @@ namespace Vengine {
 		//getters
 		int getScreenWidth() const { return _screenWidth; }
 		int getScreenHeight() const { return _screenHeight; }
+
+		glm::vec2 getScreenDim() const { return glm::vec2(_screenWidth, _screenHeight); }
 
 		SDL_Window* getWindow() const { return _window; }
 	private:

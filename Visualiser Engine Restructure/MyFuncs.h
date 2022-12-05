@@ -2,16 +2,20 @@
 #include <glm/glm.hpp>
 #include <Vengine/Window.h>
 
+#include <imgui.h>
+
 class MyFuncs
 {
 public:
-	static void SetGlobalWindow(Vengine::Window& window) { _window = &window; }
+	static void setGlobalScreenDim(int w, int h) { _screenWH = { w, h }; };
 
-	static void PixelCoordsToOpenGLcoords(glm::vec2 inXY, glm::vec2& outXY, glm::vec2 screenWH);
-	static void OpenGLcoordsToPixelCoords(glm::vec2 inXY, glm::vec2& outXY, glm::vec2 screenWH);
-	
-	static Vengine::Window* getWindow() { return _window; }
+	static bool posWithinRect(glm::vec2 pos, glm::vec4 rect); //does not matter whether in pix or openGL as long as both the same
+
+	static void PixelCoordsToOpenGLcoords(glm::vec2 inXY, glm::vec2& outXY, glm::vec2 screenWH = _screenWH);
+	static void OpenGLcoordsToPixelCoords(glm::vec2 inXY, glm::vec2& outXY, glm::vec2 screenWH = _screenWH);
+	static void PixelSizeToOpenGLsize(glm::vec2 inXY, glm::vec2& outXY, glm::vec2 screenWH = _screenWH);
+	static void OpenGLsizeToPixelSize(glm::vec2 inXY, glm::vec2& outXY, glm::vec2 screenWH = _screenWH);
 private:
-	static Vengine::Window* _window;
+	static glm::vec2 _screenWH;
 };
 

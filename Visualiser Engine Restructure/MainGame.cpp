@@ -83,17 +83,12 @@ void MainGame::initSystems() {
 void MainGame::initData(){
 
 	Vengine::IOManager::getFilesInDir("Textures/", _texFileNames);
-	MyFuncs::SetGlobalWindow(_window); //can be used everywhere now to get working window
+	MyFuncs::setGlobalScreenDim(_window.getScreenWidth(), _window.getScreenHeight());
 }
 
 void MainGame::initShaders() {
-	_eqProgram.compileShaders("Shaders/eq.vert", "Shaders/eq.frag");
-	//attributes must be added in order they are parsed in sprite draw()
-	_eqProgram.addAttrib("vertexPosition");
-	_eqProgram.addAttrib("vertexColour");
-	_eqProgram.addAttrib("vertexUV");
 
-	_eqProgram.linkShaders();
+	Vengine::ResourceManager::getShaderProgram("Shaders/eq"); //loads on startup
 
 
 	_noShading.compileShaders("Shaders/noshading.vert", "Shaders/noshading.frag");
@@ -264,14 +259,14 @@ void MainGame::drawVis() {
 	//--
 
 	///draw eq to screen
-	_eqProgram.use();
+	Vengine::ResourceManager::getShaderProgram("Shaders/eq")->use();
 
-	GLint nLocation = _eqProgram.getUniformLocation("n");
+	GLint nLocation = Vengine::ResourceManager::getShaderProgram("Shaders/eq")->getUniformLocation("n");
 	glUniform1i(nLocation, N);
 
 	_eq.draw(); //draws to screen
 
-	_eqProgram.unuse();
+	Vengine::ResourceManager::getShaderProgram("Shaders/eq")->unuse();
 }
 
 void MainGame::drawUi(){
@@ -284,20 +279,9 @@ void MainGame::drawUi(){
 	ImGui::Checkbox("Show texture background", &_showBackground);
 
 	//file chooser menu
-	ImGui::BeginChild("Texture options", ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 130), true, ImGuiWindowFlags_HorizontalScrollbar);
-	if (ImGui::Button("Refresh")) {
-		Vengine::IOManager::getFilesInDir("Textures/", _texFileNames);
+	if (ImGui::Button("Add Sprite")) {
+		_spriteManager.addSprite(glm::vec2(-0.5), glm::vec2(1));
 	}
-	int fileIndex = -1;
-	for (int i = 0; i < _texFileNames.size(); i++) {
-		if (ImGui::SmallButton(_texFileNames[i].c_str())) { //<- explore arrow button option, might be included directory chooser?, slows down program, maybe get user to type filename (still show list)
-			
-			fileIndex = i;
-			_spriteManager.addSprite(std::to_string(fileIndex).c_str());
-			_spriteManager.initSprite(std::to_string(fileIndex).c_str(), glm::vec2(-0.5), glm::vec2(1));
-		}
-	}
-	ImGui::EndChild();
 	//--
 
 	//background colour picker

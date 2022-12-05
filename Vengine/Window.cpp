@@ -71,10 +71,12 @@ void Window::nextFrame() {
 	ImGui::NewFrame();
 }
 
+
 void Vengine::Window::swapBuffer(){
 	//swaps the buffer in double buffer
 	SDL_GL_SwapWindow(_window);
 }
+
 
 void Vengine::Window::initImgui(){
 

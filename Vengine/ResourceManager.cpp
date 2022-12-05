@@ -1,12 +1,19 @@
 #include "ResourceManager.h"
+
+
 #include <cmath>
 
 using namespace Vengine;
 
 TextureCache ResourceManager::_textureCache; //static variables must be declared in cpp file
+ShaderCache ResourceManager::_shaderCache;
 
 GLtexture ResourceManager::getTexture(std::string textureFilepath) {
 	return _textureCache.getTexture(textureFilepath);
+}
+
+GLSLProgram* Vengine::ResourceManager::getShaderProgram(std::string shaderName){
+	return _shaderCache.getProgram(shaderName);
 }
 
 

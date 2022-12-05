@@ -1,7 +1,8 @@
 #include "SpriteManager.h"
 
 SpriteManager::SpriteManager() :
-	_hostWindow(nullptr)
+	_hostWindow(nullptr),
+	_selectedSpriteId(-1)
 {}
 
 SpriteManager::~SpriteManager()
@@ -18,41 +19,35 @@ void SpriteManager::init(Vengine::Window* hostWindow)
 }
 
 
-void SpriteManager::addSprite(const std::string& name)
+void SpriteManager::addSprite(glm::vec2 pos, glm::vec2 dim, float depth, std::string textureFilepath, GLuint glDrawType)
 {
-	auto it = _userAddedSprites.find(name);
-	if (it != _userAddedSprites.end()) {
-		Vengine::warning("sprite with name '" + name + "' already added");
-		return;
+	//id generation
+	int id = _userAddedSprites.size();
+	while (_userAddedSprites.find(id) != _userAddedSprites.end()) {
+		id++;
 	}
+
 	if (_hostWindow == nullptr) {
 		Vengine::fatalError("Sprite manager class used without first calling SpriteManager::init");
 	}
-	_userAddedSprites[name] = new CustomisableSprite(name, _hostWindow);
+	_userAddedSprites[id] = new CustomisableSprite(std::to_string(id), _hostWindow);
 
+	//init sprite
+	_userAddedSprites[id]->init(pos, dim, depth, textureFilepath, glDrawType);
 }
 
-void SpriteManager::deleteSprite(const std::string& name) {
-	auto it = _userAddedSprites.find(name);
+void SpriteManager::deleteSprite(int id) {
+	auto it = _userAddedSprites.find(id);
 	if (it != _userAddedSprites.end()) {
-		delete it->second;
-		_userAddedSprites.erase(name);
+		delete it->second; //delete memory of sprite
+		_userAddedSprites.erase(it); //delete map entry
 	}
 }
 
-void SpriteManager::initSprite(const std::string& name, glm::vec2 pos, glm::vec2 dim, float depth, std::string textureFilepath, GLuint glDrawType)
-{
-	auto it = _userAddedSprites.find(name);
-	if (it != _userAddedSprites.end()) {
-		it->second->init(pos, dim, depth, textureFilepath, glDrawType);
-	}
-	else {
-		Vengine::warning("sprite with name '" + name + "' does not exist");
-	}
-}
 
 void SpriteManager::draw()
 {
+	//then draw all
 	for (auto& it : _userAddedSprites) {
 		it.second->draw();
 	}
@@ -60,7 +55,7 @@ void SpriteManager::draw()
 
 void SpriteManager::drawWithBatching() //useful for fast rendering when not editing
 {
-	_spriteBatch.begin();
+	_spriteBatch.begin(Vengine::GlyphSortType::TEXTURE);
 
 	for (auto& it : _userAddedSprites) {
 		_spriteBatch.draw(it.second);
@@ -72,20 +67,29 @@ void SpriteManager::drawWithBatching() //useful for fast rendering when not edit
 
 void SpriteManager::processInput(Vengine::InputManager* inputManager)
 {
-	for (auto& it : _userAddedSprites) {
-		it.second->processInput(inputManager);
-	}
-}
+	if (inputManager->isChangeThisFrame()) { //only bother checking if change
 
-CustomisableSprite* SpriteManager::getSprite(std::string name)
-{
-	auto it = _userAddedSprites.find(name);
-	if (it != _userAddedSprites.end()) {
-		return it->second;
-	}
-	else {
-		Vengine::warning("sprite with name '" + name + "' does not exist");
-		return nullptr;
+		//if no sprite selected then see process input for all until one gets selected
+		if (_selectedSpriteId == -1) {
+			for (auto& it : _userAddedSprites) {
+				it.second->processInput(inputManager);
+				if (it.second->getSpriteState() == SELECTED) {
+					_selectedSpriteId = it.first;
+					break;
+				}
+			}
+		}
+		//if one gets selected only process input for that sprite
+		else {
+			_userAddedSprites[_selectedSpriteId]->processInput(inputManager);
+			if (_userAddedSprites[_selectedSpriteId]->getSpriteState() == NOT_SELECTED) { //deselected
+				_selectedSpriteId = -1;
+			}
+			else if (_userAddedSprites[_selectedSpriteId]->getSpriteState() == DELETE_SELF) { //delete and deselect
+				deleteSprite(_selectedSpriteId);
+				_selectedSpriteId = -1;
+			}
+		}
 	}
 }
 

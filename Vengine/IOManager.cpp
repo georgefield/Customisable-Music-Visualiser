@@ -73,6 +73,6 @@ void IOManager::getFilesInDir(const std::string& dirPath, std::vector<std::strin
 {
 	files.clear();
 	for (const auto& entry : std::filesystem::directory_iterator(dirPath)){
-		files.push_back(entry.path().stem().string());
+		files.push_back(entry.path().stem().string() + entry.path().extension().string());
 	}
 }

@@ -58,17 +58,13 @@ void MyTiming::setFPSlimit(unsigned int limit) {
 std::map<int, long long> MyTiming::_timerStartTicks;
 
 void MyTiming::startTimer(int& id) {
-	
+
+	id = _timerStartTicks.size(); //cannot be id overlap
+
 	//timers work by recording the start time and then are later calculated by checking the current time - start time
-	auto mit = _timerStartTicks.find(id);
-	if (mit == _timerStartTicks.end()) { //texture not loaded yet
-		id = _timerStartTicks.size();
-		_timerStartTicks.insert(std::make_pair(id, MyTiming::ticksSinceEpoch()));
-	}
-	else {
-		_timerStartTicks[id] = MyTiming::ticksSinceEpoch();
-	}
+	_timerStartTicks[id] = MyTiming::ticksSinceEpoch();
 }
+
 
 float MyTiming::readTimer(int id) { //returns seconds elapsed
 

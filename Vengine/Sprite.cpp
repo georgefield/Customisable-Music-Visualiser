@@ -22,7 +22,9 @@ Sprite::~Sprite()
 }
 
 
-void Sprite::init(glm::vec2 pos, glm::vec2 dim, std::string textureFilepath, GLuint glDrawType) {
+void Sprite::init(glm::vec2 pos, glm::vec2 dim, float depth, std::string textureFilepath, GLuint glDrawType) {
+
+	_depth = depth;
 
 	if (textureFilepath != "") {
 		_texture = ResourceManager::getTexture(textureFilepath);
