@@ -7,7 +7,15 @@ void BetterSprite::init(glm::vec2 pos, glm::vec2 dim, float depth, std::string t
 	Sprite::init(pos, dim, depth, textureFilepath, glDrawType);
 	MyFuncs::OpenGLcoordsToPixelCoords(pos, _posPix);
 	MyFuncs::OpenGLsizeToPixelSize(dim, _dimPix);
+	_shaderProgram = Vengine::ResourceManager::getShaderProgram("Shaders/noShading");
+	printf("%i", _shaderProgram->getID());
 }
+
+void BetterSprite::attachShader(Vengine::GLSLProgram* shaderProgram) {
+	_shaderProgram = shaderProgram;
+}
+
+
 
 
 void BetterSprite::move(float up, float right){
@@ -64,7 +72,8 @@ void BetterSprite::updateBuffer(TransformType transformType){
 	if (true) {
 		glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(_vertexData), &_vertexData);
 		if (glGetError() != GL_NO_ERROR) {
-			printf("error");
+			GLenum errCode = glGetError();
+			Vengine::warning("Error updating data about quad", true);
 		}
 	}
 	else { //dont use this for now

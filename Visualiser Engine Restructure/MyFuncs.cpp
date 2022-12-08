@@ -44,3 +44,16 @@ void MyFuncs::OpenGLsizeToPixelSize(glm::vec2 inXY, glm::vec2& outXY, glm::vec2 
 
 	outXY = { inXY.x * 0.5f * screenWH.x, inXY.y * 0.5f * screenWH.y };
 }
+
+
+void MyFuncs::setUniformsForShader(Vengine::GLSLProgram* shaderProgram) {
+
+	//set time to timer time
+	for (auto& it : *(shaderProgram->getUniformNames())) {
+
+		if (it == "time" && shaderProgram->getUniformType(it) == GL_FLOAT) {
+			GLuint loc = shaderProgram->getUniformLocation(it);
+			glUniform1f(loc, Vengine::MyTiming::readTimer(0));
+		}
+	}
+}

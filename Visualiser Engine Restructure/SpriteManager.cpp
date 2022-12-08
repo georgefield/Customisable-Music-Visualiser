@@ -3,7 +3,8 @@
 SpriteManager::SpriteManager() :
 	_hostWindow(nullptr),
 	_selectedSpriteId(-1)
-{}
+{
+}
 
 SpriteManager::~SpriteManager()
 {
@@ -49,20 +50,27 @@ void SpriteManager::draw()
 {
 	//then draw all
 	for (auto& it : _userAddedSprites) {
+		it.second->getShaderProgram()->use();
+
 		it.second->draw();
+		it.second->getShaderProgram()->unuse();
 	}
 }
 
 void SpriteManager::drawWithBatching() //useful for fast rendering when not editing
 {
-	_spriteBatch.begin(Vengine::GlyphSortType::TEXTURE);
+	_spriteBatch.begin();
 
 	for (auto& it : _userAddedSprites) {
 		_spriteBatch.draw(it.second);
 	}
 	_spriteBatch.end();
 
+	Vengine::ResourceManager::getShaderProgram("Shaders/wishyWashy")->use();
+
 	_spriteBatch.renderBatch();
+
+	Vengine::ResourceManager::getShaderProgram("Shaders/wishyWashy")->unuse();
 }
 
 void SpriteManager::processInput(Vengine::InputManager* inputManager)
@@ -92,4 +100,3 @@ void SpriteManager::processInput(Vengine::InputManager* inputManager)
 		}
 	}
 }
-

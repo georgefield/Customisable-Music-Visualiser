@@ -1,6 +1,7 @@
 #include "BetterSpriteBatch.h"
 
 #include <algorithm>
+#include "MyFuncs.h"
 
 BetterSpriteBatch::BetterSpriteBatch() : _vbo(0), _vao(0)
 {}
@@ -21,9 +22,8 @@ void BetterSpriteBatch::init() {
 }
 
 
-void BetterSpriteBatch::begin(Vengine::GlyphSortType sortType) {
+void BetterSpriteBatch::begin() {
 
-	_sortType = sortType;
 	_renderBatches.clear();
 	_spritePtrs.clear();
 }
@@ -31,7 +31,7 @@ void BetterSpriteBatch::begin(Vengine::GlyphSortType sortType) {
 void BetterSpriteBatch::end() {
 
 	sortSprites();
-	createRenderBatches();
+	_cb = createRenderBatches();
 }
 
 void BetterSpriteBatch::draw(BetterSprite* sprite) { //adds glyph to vector of glyphs
@@ -47,62 +47,70 @@ void BetterSpriteBatch::renderBatch() {
 
 	glBindVertexArray(_vao); //use already set up vao to handle attribs
 
-	for (int i = 0; i < _renderBatches.size(); i++) {
-		glBindTexture(GL_TEXTURE_2D, _renderBatches[i].texture);
+	for (int i = 0; i < _cb; i++) {
+		_renderBatches[i].first->use();
+		MyFuncs::setUniformsForShader(_renderBatches[i].first);
+		for (int j = 0; j < _renderBatches[i].second.size(); j++) {
+			glBindTexture(GL_TEXTURE_2D, _renderBatches[i].second[j].texture);
 
-		glDrawArrays(GL_TRIANGLES, _renderBatches[i].offset, _renderBatches[i].numVertices);
+			glDrawArrays(GL_TRIANGLES, _renderBatches[i].second[j].offset, _renderBatches[i].second[j].numVertices);
+		}
+		_renderBatches[i].first->unuse();
 	}
-
+	
 	glBindVertexArray(0);
 }
 
-
-void BetterSpriteBatch::createRenderBatches() {
+int BetterSpriteBatch::createRenderBatches() {
 
 	if (_spritePtrs.empty()) {
-		return;
+		return 0;
 	}
 
 	std::vector<Vengine::Vertex> vertices;
 	vertices.resize(_spritePtrs.size() * 6);
 
-	//RenderBatch myBatch(0, 6, _glyphs[0]->texture); <--
-	//_renderBatches.push_back(myBatch)               <-- inefficient (makes copy)
+	int cv = 0, cs = 0, cb = 0; //current vertex, sprite, batch
+	
+	int offset = 0; //how many vertices added, jumps in 6s
+	_renderBatches.resize(_spritePtrs.size());
+	_renderBatches[cb].first = _spritePtrs[cs]->getShaderProgram();
+	_renderBatches[cb].second.emplace_back(offset, 6, _spritePtrs[0]->getTexture().id);
 
-	int offset = 0;
-	_renderBatches.emplace_back(offset, 6, _spritePtrs[0]->getTexture().id); //more efficient
-
-	int cv = 0;
 	vertices[cv] = _spritePtrs[0]->getVertex(cv); cv++;
 	vertices[cv] = _spritePtrs[0]->getVertex(cv); cv++;
 	vertices[cv] = _spritePtrs[0]->getVertex(cv); cv++;
 	vertices[cv] = _spritePtrs[0]->getVertex(cv); cv++;
 	vertices[cv] = _spritePtrs[0]->getVertex(cv); cv++;
 	vertices[cv] = _spritePtrs[0]->getVertex(cv); cv++;
-
+	
 	offset += 6;
-
-	for (int cg = 1; cg < _spritePtrs.size(); cg++) {
-
-		//save data of where vertices of quads with each texture is stored in vbo so can be called by draw arrays in render batch function
-		if (_spritePtrs[cg]->getTexture().id != _spritePtrs[cg - 1]->getTexture().id) {
-			_renderBatches.emplace_back(offset, 6, _spritePtrs[cg]->getTexture().id);
+	cs++;
+	
+	while (cs < _spritePtrs.size()) {
+		if (_spritePtrs[cs]->getShaderProgram()->getID() != _spritePtrs[cs - 1]->getShaderProgram()->getID()) {
+			cb++;
+			_renderBatches[cb].first = _spritePtrs[cs]->getShaderProgram();
+			_renderBatches[cb].second.emplace_back(offset, 6, _spritePtrs[cs]->getTexture().id);
+		}
+		else if (_spritePtrs[cs]->getTexture().id != _spritePtrs[cs - 1]->getTexture().id) {
+			_renderBatches[cb].second.emplace_back(offset, 6, _spritePtrs[cs]->getTexture().id);
 		}
 		else {
-			_renderBatches.back().numVertices += 6;
+			_renderBatches[cb].second.back().numVertices += 6;
 		}
 
-		//add vertices to array
-		vertices[cv] = _spritePtrs[cg]->getVertex(cv - offset); cv++;
-		vertices[cv] = _spritePtrs[cg]->getVertex(cv - offset); cv++;
-		vertices[cv] = _spritePtrs[cg]->getVertex(cv - offset); cv++;
-		vertices[cv] = _spritePtrs[cg]->getVertex(cv - offset); cv++;
-		vertices[cv] = _spritePtrs[cg]->getVertex(cv - offset); cv++;
-		vertices[cv] = _spritePtrs[cg]->getVertex(cv - offset); cv++;
+		vertices[cv] = _spritePtrs[cs]->getVertex(cv - offset); cv++;
+		vertices[cv] = _spritePtrs[cs]->getVertex(cv - offset); cv++;
+		vertices[cv] = _spritePtrs[cs]->getVertex(cv - offset); cv++;
+		vertices[cv] = _spritePtrs[cs]->getVertex(cv - offset); cv++;
+		vertices[cv] = _spritePtrs[cs]->getVertex(cv - offset); cv++;
+		vertices[cv] = _spritePtrs[cs]->getVertex(cv - offset); cv++;
 
 		offset += 6;
+		cs++;
 	}
-
+	
 	///vvv send vertex data to GPU vvv
 	glBindBuffer(GL_ARRAY_BUFFER, _vbo);
 	//orphan buffer
@@ -111,6 +119,7 @@ void BetterSpriteBatch::createRenderBatches() {
 	glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vengine::Vertex), vertices.data());
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+	return cb + 1; //num batches
 }
 
 //create vao and vbo
@@ -153,22 +162,14 @@ bool BetterSpriteBatch::compareBackToFront(BetterSprite* a, BetterSprite* b) {
 bool BetterSpriteBatch::compareTexture(BetterSprite* a, BetterSprite* b) {
 	return (a->getTexture().id < b->getTexture().id); //sorts based on texture id (groups textures together) lower texture ids first (add first drawn first)
 }
+bool BetterSpriteBatch::compareShader(BetterSprite* a, BetterSprite* b) {
+	return (a->getShaderProgram()->getID() < b->getShaderProgram()->getID()); //sorts based on texture id (groups textures together) lower texture ids first (add first drawn first)
+}
 
 void BetterSpriteBatch::sortSprites() {
 
-	switch (_sortType) {
-	case Vengine::GlyphSortType::BACK_TO_FRONT:
-		std::stable_sort(_spritePtrs.begin(), _spritePtrs.end(), compareBackToFront);
-		break;
-	case Vengine::GlyphSortType::FRONT_TO_BACK:
-		std::stable_sort(_spritePtrs.begin(), _spritePtrs.end(), compareFrontToBack);
-		break;
-	case Vengine::GlyphSortType::TEXTURE:
-		std::stable_sort(_spritePtrs.begin(), _spritePtrs.end(), compareTexture);
-		break;
-	case Vengine::GlyphSortType::BACK_TO_FRONT_BUT_GROUP_TEXTURE:
-		std::stable_sort(_spritePtrs.begin(), _spritePtrs.end(), compareTexture);
-		std::stable_sort(_spritePtrs.begin(), _spritePtrs.end(), compareBackToFront);
-		break;
-	}
+	//by depth then split into shader then split into texture
+	std::stable_sort(_spritePtrs.begin(), _spritePtrs.end(), compareTexture);
+	std::stable_sort(_spritePtrs.begin(), _spritePtrs.end(), compareShader);
+	std::stable_sort(_spritePtrs.begin(), _spritePtrs.end(), compareBackToFront);
 }

@@ -14,12 +14,12 @@ public:
 
 	void init();
 
-	void begin(Vengine::GlyphSortType sortType = Vengine::GlyphSortType::TEXTURE);
+	void begin();
 	void draw(BetterSprite* sprite);
 	void end();
 	void renderBatch();
 private:
-	void createRenderBatches();
+	int createRenderBatches();
 	void createVertexArray();
 
 
@@ -27,15 +27,15 @@ private:
 	static bool compareFrontToBack(BetterSprite* a, BetterSprite* b);
 	static bool compareBackToFront(BetterSprite* a, BetterSprite* b);
 	static bool compareTexture(BetterSprite* a, BetterSprite* b);
+	static bool compareShader(BetterSprite* a, BetterSprite* b);
 	//sort function
 	void sortSprites();
-
-	Vengine::GlyphSortType _sortType;
 
 	GLuint _vbo;
 	GLuint _vao;
 
 	std::vector<BetterSprite*> _spritePtrs;
 
-	std::vector<Vengine::RenderBatch> _renderBatches;
+	std::vector<std::pair<Vengine::GLSLProgram*, std::vector<Vengine::RenderBatch>>> _renderBatches; //first array is shaders, second array is textures
+	int _cb;
 };

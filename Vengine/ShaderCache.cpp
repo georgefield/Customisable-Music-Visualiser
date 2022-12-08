@@ -34,6 +34,8 @@ GLSLProgram* ShaderCache::getProgram(std::string shaderFilepath) {
 
 		_shaderMap[shaderFilepath]->linkShaders();
 
+		_shaderMap[shaderFilepath]->updateUniformData();
+
 		return _shaderMap[shaderFilepath];
 	}
 

@@ -75,6 +75,8 @@ void Sprite::draw() {
 	glDisableVertexAttribArray(2);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	glBindTexture(GL_TEXTURE_2D, 0); //reset texture bind
 }
 
 void Vengine::Sprite::setRect(glm::vec2 pos, glm::vec2 dim)

@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
-#include <Vengine/Window.h>
+
+#include <Vengine/Vengine.h>
 
 #include <imgui.h>
 
@@ -15,6 +16,8 @@ public:
 	static void OpenGLcoordsToPixelCoords(glm::vec2 inXY, glm::vec2& outXY, glm::vec2 screenWH = _screenWH);
 	static void PixelSizeToOpenGLsize(glm::vec2 inXY, glm::vec2& outXY, glm::vec2 screenWH = _screenWH);
 	static void OpenGLsizeToPixelSize(glm::vec2 inXY, glm::vec2& outXY, glm::vec2 screenWH = _screenWH);
+
+	static void setUniformsForShader(Vengine::GLSLProgram* shaderProgram);
 private:
 	static glm::vec2 _screenWH;
 };

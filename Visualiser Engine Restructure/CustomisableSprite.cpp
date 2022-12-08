@@ -25,10 +25,12 @@ void CustomisableSprite::init(glm::vec2 pos, glm::vec2 dim, float depth, std::st
 	_justCreated = true;
 
 	Vengine::IOManager::getFilesInDir("Textures/", _texFileNames);
+	Vengine::IOManager::getFilesInDir("Shaders/", _shaderFileNames, false, ".frag");
 }
 
 
 void CustomisableSprite::draw(){
+
 
 	//draw imgui
 	if (_spriteState == SELECTED) {
@@ -60,12 +62,36 @@ void CustomisableSprite::draw(){
 		}
 		for (int i = 0; i < _texFileNames.size(); i++) {
 			if (ImGui::SmallButton(_texFileNames[i].c_str())) { //<- explore arrow button option, might be included directory chooser?, slows down program, maybe get user to type filename (still show list)
-				_texture = _texture = Vengine::ResourceManager::getTexture("Textures/" + _texFileNames[i]);
+				_texture = Vengine::ResourceManager::getTexture("Textures/" + _texFileNames[i]);
 			}
 		}
 		ImGui::EndChild();
 		//--
 
+		//choose shader--
+		ImGui::BeginChild("Shader options", ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 130), true, ImGuiWindowFlags_HorizontalScrollbar);
+		if (ImGui::Button("Refresh")) {
+			Vengine::IOManager::getFilesInDir("Shaders/", _shaderFileNames, false, ".frag");
+		}
+		for (int i = 0; i < _shaderFileNames.size(); i++) {
+			if (ImGui::SmallButton(_shaderFileNames[i].c_str())) { 
+				attachShader(Vengine::ResourceManager::getShaderProgram("Shaders/" + _shaderFileNames[i]));
+			}
+		}
+		ImGui::EndChild();
+		//--
+
+		//choose size--
+		int sizeX = _dimPix.x;
+		int sizeY = _dimPix.y;
+		ImGui::InputInt("Size X", &sizeX);
+		ImGui::InputInt("Size Y", &sizeY);
+		//convert from pix coords
+		glm::vec2 OpenGLsize;
+		MyFuncs::PixelSizeToOpenGLsize(glm::vec2(sizeX, sizeY), OpenGLsize);
+		BetterSprite::setRectDim(OpenGLsize);
+		//--
+	
 		//delete self--
 		if (ImGui::Button("Delete")) {
 			_spriteState = DELETE_SELF;
@@ -117,6 +143,7 @@ void CustomisableSprite::processInput(Vengine::InputManager* inputManager){
 	else {
 		_justCreated = false; //_justCreated used so it doesnt immediantly deselect
 	}
+
 }
 
 bool CustomisableSprite::posWithinSettings(glm::vec2 pos)

@@ -17,7 +17,7 @@ public:
 	CustomisableSprite(const std::string& name, Vengine::Window* hostWindow);
 
 	void init(glm::vec2 pos, glm::vec2 dim, float depth = 0.0f, std::string textureFilepath = "", GLuint glDrawType = GL_DYNAMIC_DRAW) override;
-	void draw();
+	void draw() override;
 
 	void processInput(Vengine::InputManager* inputManager);
 
@@ -27,11 +27,11 @@ private:
 
 	void setOptionsWindowPosAndDim();
 
+	//important information describing sprite--
 	Vengine::Window* _window;
-
 	std::string _name;	
-
 	SpriteComm _spriteState;
+	//--
 
 	//imgui vars--
 	glm::vec2 _optionsPosInPixels;
@@ -42,6 +42,7 @@ private:
 	int _minPixelsBetweenGUIandRightSide;
 
 	std::vector<std::string> _texFileNames;
+	std::vector<std::string> _shaderFileNames;
 	//--
 
 	//selected/dragging vars--

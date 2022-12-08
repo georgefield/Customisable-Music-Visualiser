@@ -8,7 +8,8 @@ class BetterSprite : public Vengine::Sprite
 {
 public:
 
-	virtual void init(glm::vec2 pos, glm::vec2 dim, float depth = 0.0f, std::string textureFilepath = "", GLuint glDrawType = GL_DYNAMIC_DRAW) override;	
+	virtual void init(glm::vec2 pos, glm::vec2 dim, float depth = 0.0f, std::string textureFilepath = "", GLuint glDrawType = GL_DYNAMIC_DRAW) override;
+	void attachShader(Vengine::GLSLProgram* shaderProgram);
 
 	//change sprite
 	void setRect(glm::vec2 pos, glm::vec2 dim) { Sprite::setRect(pos, dim); updateBuffer(QuadTranslate); updatePixInfo(); }
@@ -25,6 +26,7 @@ public:
 	bool posWithinSprite(glm::vec2 pos);
 
 	//getters
+	Vengine::GLSLProgram* getShaderProgram() const { return _shaderProgram; }
 	float getDepth() const { return _depth; }
 	Vengine::GLtexture getTexture() const { return _texture; }
 	Vengine::Vertex getVertex(int i);
@@ -35,6 +37,7 @@ public:
 protected:
 	glm::vec2 _posPix;
 	glm::vec2 _dimPix;
+	Vengine::GLSLProgram* _shaderProgram; //non functional in this inbetween class, but needed to make sprite batch work
 
 private:
 

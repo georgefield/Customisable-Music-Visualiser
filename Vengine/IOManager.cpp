@@ -69,10 +69,12 @@ bool IOManager::readFileToBuffer(const std::string& filepath, std::vector<unsign
 	return true;
 }
 
-void IOManager::getFilesInDir(const std::string& dirPath, std::vector<std::string>& files)
+void IOManager::getFilesInDir(const std::string& dirPath, std::vector<std::string>& files, bool showExtension, std::string extension)
 {
 	files.clear();
 	for (const auto& entry : std::filesystem::directory_iterator(dirPath)){
-		files.push_back(entry.path().stem().string() + entry.path().extension().string());
+		if (extension == "" || entry.path().extension().string() == extension) {
+			files.push_back(entry.path().stem().string() + (showExtension ? entry.path().extension().string() : ""));
+		}
 	}
 }

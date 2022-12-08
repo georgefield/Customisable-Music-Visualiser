@@ -11,7 +11,7 @@ namespace Vengine {
 	public:
 		static GLtexture loadPNG(const std::string& filepath);
 		static bool readFileToBuffer(const std::string& filepath, std::vector<unsigned char>& buffer);
-		static void getFilesInDir(const std::string& dirPath, std::vector<std::string>& files);
+		static void getFilesInDir(const std::string& dirPath, std::vector<std::string>& files, bool showExtension = true, std::string extension = "");
 	};
 
 }

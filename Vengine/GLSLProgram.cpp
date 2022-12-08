@@ -78,6 +78,29 @@ void GLSLProgram::linkShaders() {
 	glDetachShader(_programID, _fragShaderID);
 }
 
+void GLSLProgram::updateUniformData() {
+
+	GLint i;
+	GLint count;
+
+	//below two arent used but whatever
+	GLint size; // size of the variable
+	GLenum type; // type of the variable (float, vec3 or mat4, etc)
+
+	const GLsizei bufSize = 32; // maximum name length
+	GLchar name[bufSize]; // variable name in GLSL
+	GLsizei length; // name length
+
+	glGetProgramiv(_programID, GL_ACTIVE_UNIFORMS, &count);
+
+	for (int i = 0; i < count; i++)
+	{
+		glGetActiveUniform(_programID, (GLuint)i, bufSize, &length, &size, &type, name);
+		_uniformNames.push_back(name);
+		_shaderUniforms[name] = type;
+	}
+}
+
 
 void GLSLProgram::addAttrib(const std::string& attribName) {
 
@@ -107,6 +130,18 @@ void GLSLProgram::unuse() {
 	glUseProgram(0);
 	for (int i = 0; i < _numAttribs; i++) {
 		glDisableVertexAttribArray(i);
+	}
+}
+
+GLenum Vengine::GLSLProgram::getUniformType(std::string name)
+{
+	auto it = _shaderUniforms.find(name);
+	if (it != _shaderUniforms.end()) {
+		return it->second; //second value is the bool
+	}
+	else {
+		fatalError("No uniform named " + name + " in shader " + _shaderName);
+		return 0;
 	}
 }
 

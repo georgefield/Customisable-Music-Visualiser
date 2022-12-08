@@ -88,25 +88,9 @@ void MainGame::initData(){
 
 void MainGame::initShaders() {
 
-	Vengine::ResourceManager::getShaderProgram("Shaders/eq"); //loads on startup
-
-
-	_noShading.compileShaders("Shaders/noshading.vert", "Shaders/noshading.frag");
-	//attributes must be added in order they are parsed in sprite draw()
-	_noShading.addAttrib("vertexPosition");
-	_noShading.addAttrib("vertexColour");
-	_noShading.addAttrib("vertexUV");
-
-	_noShading.linkShaders();
-
-
-	_wishyWashyProgram.compileShaders("Shaders/wishyWashy.vert", "Shaders/wishyWashy.frag");
-	//attributes must be added in order they are parsed in sprite draw()
-	_wishyWashyProgram.addAttrib("vertexPosition");
-	_wishyWashyProgram.addAttrib("vertexColour");
-	_wishyWashyProgram.addAttrib("vertexUV");
-
-	_wishyWashyProgram.linkShaders();
+	//shaders listed below are loaded on start up
+	Vengine::ResourceManager::getShaderProgram("Shaders/eq");
+	Vengine::ResourceManager::getShaderProgram("Shaders/wishyWashy");
 }
 
 
@@ -200,9 +184,9 @@ void MainGame::drawVis() {
 	glViewport(0, 0, _window.getScreenWidth(), _window.getScreenHeight());
 	
 	///sprite batch example
-	_wishyWashyProgram.use();
+	Vengine::ResourceManager::getShaderProgram("Shaders/wishyWashy")->use();
 
-	GLint timeLocation = _wishyWashyProgram.getUniformLocation("time");
+	GLint timeLocation = Vengine::ResourceManager::getShaderProgram("Shaders/wishyWashy")->getUniformLocation("time");
 	glUniform1f(timeLocation, elapsed);
 
 	_spriteBatch.begin(); //--- add quads to draw between begin and end
@@ -242,20 +226,17 @@ void MainGame::drawVis() {
 
 	_spriteBatch.renderBatch(); //draw all quads specified between begin and end to screen
 
-	_wishyWashyProgram.unuse();
+	Vengine::ResourceManager::getShaderProgram("Shaders/wishyWashy")->unuse();
 
 	
 	//test better sprite
-	_noShading.use();
-	
 	if (_showUi) {
+		ImGui::ShowDemoWindow();
 		_spriteManager.draw();
 	}
 	else {
 		_spriteManager.drawWithBatching();
 	}
-
-	_noShading.unuse();
 	//--
 
 	///draw eq to screen

@@ -68,9 +68,6 @@ private:
 	int _prevSample;
 	float _sampleOffsetToSound;
 
-	Vengine::GLSLProgram _noShading;
-	Vengine::GLSLProgram _wishyWashyProgram;
-
 	FFTW _fft;
 
 	Vengine::Audio _song;
