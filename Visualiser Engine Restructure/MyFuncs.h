@@ -18,7 +18,10 @@ public:
 	static void OpenGLsizeToPixelSize(glm::vec2 inXY, glm::vec2& outXY, glm::vec2 screenWH = _screenWH);
 
 	static void setUniformsForShader(Vengine::GLSLProgram* shaderProgram);
+
+	static void updateRMS(float rms);
 private:
 	static glm::vec2 _screenWH;
+	static float _rms;
 };
 

@@ -5,8 +5,8 @@
 #include <Vengine/Vengine.h>
 #include <Vengine/MyImgui.h>
 
-#include "FFTW.h"
 #include "SpriteManager.h"
+#include "SignalProcessing.h"
 
 enum class GameState {
 	PLAY,
@@ -34,6 +34,8 @@ private:
 	void gameLoop();
 	void drawVis();
 	void drawUi();
+
+	void endFrame();
 
 	void initShaders();
 
@@ -68,7 +70,7 @@ private:
 	int _prevSample;
 	float _sampleOffsetToSound;
 
-	FFTW _fft;
+	SignalProcessing _signalProc;
 
 	Vengine::Audio _song;
 

@@ -140,6 +140,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainGame.cpp" />
     <ClCompile Include="MyFuncs.cpp" />
+    <ClCompile Include="SignalProcessing.cpp" />
     <ClCompile Include="SpriteManager.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -149,6 +150,7 @@
     <ClInclude Include="FFTW.h" />
     <ClInclude Include="MainGame.h" />
     <ClInclude Include="MyFuncs.h" />
+    <ClInclude Include="SignalProcessing.h" />
     <ClInclude Include="SpriteManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -3,7 +3,7 @@
 #include <Vengine/MyErrors.h>
 
 glm::vec2 MyFuncs::_screenWH = { 0, 0 };
-
+float MyFuncs::_rms = 0;
 
 bool MyFuncs::posWithinRect(glm::vec2 pos, glm::vec4 rect)
 {
@@ -55,5 +55,14 @@ void MyFuncs::setUniformsForShader(Vengine::GLSLProgram* shaderProgram) {
 			GLuint loc = shaderProgram->getUniformLocation(it);
 			glUniform1f(loc, Vengine::MyTiming::readTimer(0));
 		}
+		else if (it == "rms" && shaderProgram->getUniformType(it) == GL_FLOAT) {
+			GLuint loc = shaderProgram->getUniformLocation(it);
+			glUniform1f(loc, _rms);
+		}
 	}
+}
+
+
+void MyFuncs::updateRMS(float rms) {
+	_rms = rms;
 }

@@ -13,7 +13,7 @@ MainGame::MainGame() :
 	_currSample(0),
 	_prevSample(-44100),
 	_globalTimer(-1),
-	_fft(N),
+	_signalProc(SPflags::ENABLE_FOURIER_CALCULATION | SPflags::ENABLE_RMS_CALCULATION),
 	_sampleOffsetToSound(-0.0f),
 	_song(),
 	_yMult(1.0f),
@@ -53,6 +53,8 @@ void MainGame::initSystems() {
 
 	//load song
 	_song.loadWav(musicFilepath, _sampleRate);
+	//set up signal processing unit
+	_signalProc.setAudioData(_song.getNormalisedWavData());
 
 	//create SSBO for waveform data (input entire file)
 	Vengine::DrawFunctions::createSSBO(_ssboWavDataID, 0, _song.getNormalisedWavData(), _song.getWavLength(), GL_STATIC_COPY);
@@ -146,8 +148,10 @@ void MainGame::gameLoop() {
 			_window.nextFrame();
 
 			processInput();
+
 			if (_inputManager.isKeyPressed(SDL_BUTTON_LEFT)) {
 				printf("%f fps\n", Vengine::MyTiming::getFPS());
+				_signalProc.reset(); //fix all algorithms relying on continuity in case of build up of floating point errors
 			}
 			if (_inputManager.isKeyPressed(SDLK_TAB)) {
 				_showUi = !_showUi;
@@ -157,17 +161,22 @@ void MainGame::gameLoop() {
 			if (_showUi) {
 				drawUi();
 			}
-			//tell ImGui to render Ui (must do every frame)
-			ImGui::Render();
-			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-			//display what has just been drawn to screen
-			_window.swapBuffer();
-
-			//debug check fps
-			Vengine::MyTiming::frameDone();
+			endFrame();
 		}
 	}
+}
+
+void MainGame::endFrame() {
+	//tell ImGui to render Ui (must do every frame)
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+	//display what has just been drawn to screen
+	_window.swapBuffer();
+
+	//to count frame timings
+	Vengine::MyTiming::frameDone();
 }
 
 void MainGame::drawVis() {
@@ -176,9 +185,9 @@ void MainGame::drawVis() {
 	float elapsed = Vengine::MyTiming::readTimer(_globalTimer);
 	_currSample = max((int)(elapsed * _sampleRate) + _sampleOffsetToSound * _sampleRate, 0);
 
-	_fft.getFFT(_song.getNormalisedWavData(), _currSample, _harmonicData, 500/_yMult);
-
-	Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, &(_harmonicData[0]), _harmonicData.size() * sizeof(float));
+	_signalProc.update(_currSample);
+	//printf("%f\n", _signalProc.getRMS());
+	Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, _signalProc.getFourierHarmonics(), _signalProc.getHowManyHarmonics() * sizeof(float));
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, _window.getScreenWidth(), _window.getScreenHeight());

@@ -1,4 +1,5 @@
 #include "SpriteManager.h"
+#include "MyFuncs.h"
 
 SpriteManager::SpriteManager() :
 	_hostWindow(nullptr),
@@ -51,7 +52,7 @@ void SpriteManager::draw()
 	//then draw all
 	for (auto& it : _userAddedSprites) {
 		it.second->getShaderProgram()->use();
-
+		MyFuncs::setUniformsForShader(it.second->getShaderProgram());
 		it.second->draw();
 		it.second->getShaderProgram()->unuse();
 	}
@@ -66,11 +67,7 @@ void SpriteManager::drawWithBatching() //useful for fast rendering when not edit
 	}
 	_spriteBatch.end();
 
-	Vengine::ResourceManager::getShaderProgram("Shaders/wishyWashy")->use();
-
 	_spriteBatch.renderBatch();
-
-	Vengine::ResourceManager::getShaderProgram("Shaders/wishyWashy")->unuse();
 }
 
 void SpriteManager::processInput(Vengine::InputManager* inputManager)

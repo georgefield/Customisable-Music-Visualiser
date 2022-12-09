@@ -6,7 +6,7 @@
 
 using namespace Vengine;
 
-Audio::Audio() {
+Audio::Audio() : _normalisedWavBuf(nullptr) {
 
 }
 
@@ -86,4 +86,12 @@ void Audio::normaliseWav() {
 		int ret = byteArrToInt(&(cvt.buf[i]), 4);
 		_normalisedWavBuf[i/4] = (float(ret) / INT32_MAX);
 	}
+}
+
+float* Audio::getNormalisedWavData() {
+	if (_normalisedWavBuf != nullptr) {
+		return _normalisedWavBuf;
+	}
+	Vengine::fatalError("No .wav file in buffer in Audio class when GetNormalisedWavData called");
+	return nullptr;
 }

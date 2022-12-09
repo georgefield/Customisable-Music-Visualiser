@@ -12,7 +12,8 @@ namespace Vengine {
 		void loadWav(const std::string& filepath, int& _sampleRate);
 		void playSound();
 
-		float* getNormalisedWavData() { return _normalisedWavBuf; }
+		//getters
+		float* getNormalisedWavData();
 		Uint32 getWavLength() { return _waveLength; }
 
 	private: 
