@@ -25,9 +25,14 @@ void main(){
 	int index = int(screenFrac * numFreq);
 	
 
-	if (harmonicValues[index] >= fragmentUV.y){
-		float brightness = fragmentUV.y / harmonicValues[index];
-		colour = vec4(1) * brightness;
+	if (abs(harmonicValues[index]) >= fragmentUV.y){
+		float brightness = fragmentUV.y / abs(harmonicValues[index]);
+		if (harmonicValues[index] >= 0){
+			colour = vec4(1) * brightness;
+		}
+		else{
+			colour = vec4(1,0,0,1) * brightness;
+		}
 	}else{
 		colour = vec4(0);
 	}

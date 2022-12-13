@@ -76,7 +76,17 @@ void DrawFunctions::createSSBO(GLuint& ssboID, GLint binding, void* data, int by
 
 void DrawFunctions::updateSSBO(GLuint& ssboID, GLint binding, void* data, int bytesOfData) {
 
+	updateSSBOpart(ssboID, binding, data, 0, bytesOfData);
+}
+
+void DrawFunctions::updateSSBOpart(GLuint& ssboID, GLint binding, void* data, int offset, int bytesOfData) {
+
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding, ssboID); //make it go in right buffer
-	glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, bytesOfData, data); //upload normalised data to ssbo
+	glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, bytesOfData, data); //upload normalised data to ssbo
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
+
+	GLenum error = glGetError();
+	if (error != GL_NO_ERROR) {
+		Vengine::logGLerror("failed to update ssbo buffer", error);
+	}
 }

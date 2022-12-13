@@ -1,18 +1,20 @@
 #pragma once
 #include <vector>
 #include "FFTW.h"
+#include <GL/glew.h>
+#include "History.h"
 
 enum SPflags {
-	DISABLE_ALL,
-	ENABLE_FOURIER_CALCULATION,
-	DISABLE_FOURIER_CALCULATION,
-	ENABLE_RMS_CALCULATION,
-	DISABLE_RMS_CALCULATION
+	NONE = 0,
+	ALL = 1,
+	FOURIER_CALCULATION = 2,
+	RMS_CALCULATION = 4,
+	ONSET_DETECTION = 8
 };
 
 class SignalProcessing {
 public:
-	SignalProcessing(int flags = DISABLE_ALL);
+	SignalProcessing(int sampleRate, int flags = ALL);
 
 	void enable(int flags) { _state |= flags; }
 	void disable(int flags) { _state &= ~flags; } //& with inverted bits of flag
@@ -21,22 +23,31 @@ public:
 	void update(int currentSample);
 	void reset(); //there has been a break in calculations
 
+	void updateSSBOwithHistory(History<float>* history, GLuint id, GLint binding);
+
 	//getters
-	float* getFourierHarmonics() { return &(_fourierHarmonics[0]); }
-	int getHowManyHarmonics() { return _fourierHarmonics.size(); }
-	float getRMS() { return _rms; }
-private:
+	float* getFourierHarmonics() { return _fftOutput->newest(); }
+	int getHowManyHarmonics() { return _fft.numHarmonics(); }
+	float getRMS() { return _rms; } 
+	History<float>* getEnergyHistory() { return &_energy; }
+//private:
 	int _state;
 	float* _audioData;
+	int _sampleRate;
 
 	FFTW _fft;
 	int _previousSample;
 
 	//signal processing outputs
-	std::vector<float> _fourierHarmonics;
+	History<float*>* _fftOutput;
 	float _sumOfSamplesSquared;
 	float _rms;
+	History<float> _energy;
+	History<float> _spectralDistance;
+	History<float> _derOfLogEnergy;
 
 	//signal processing functions
 	void RMS(int currentSample);
+	void energy(int currentSample);
+	void noteOnset(int currentSample);
 };

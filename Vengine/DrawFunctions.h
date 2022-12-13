@@ -16,6 +16,7 @@ namespace Vengine {
 		static void uploadTextureToShader(GLSLProgram program, GLuint& textureID, const std::string& texVariableName, GLenum tex = GL_TEXTURE0, int num = 0);
 		static void createSSBO(GLuint& ssboID, GLint binding, void* data, int bytesOfData, GLenum usage);
 		static void updateSSBO(GLuint& ssboID, GLint binding, void* data, int bytesOfData);
+		static void updateSSBOpart(GLuint& ssboID, GLint binding, void* data, int offset, int bytesOfData);
 	};
 
 }

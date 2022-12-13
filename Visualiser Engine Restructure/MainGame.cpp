@@ -13,7 +13,7 @@ MainGame::MainGame() :
 	_currSample(0),
 	_prevSample(-44100),
 	_globalTimer(-1),
-	_signalProc(SPflags::ENABLE_FOURIER_CALCULATION | SPflags::ENABLE_RMS_CALCULATION),
+	_signalProc(SPflags::ALL),
 	_sampleOffsetToSound(-0.0f),
 	_song(),
 	_yMult(1.0f),
@@ -133,7 +133,7 @@ void MainGame::gameLoop() {
 
 	Vengine::MyTiming::startTimer(_globalTimer);
 
-	_song.playSound();
+	//_song.playSound();
 
 	Vengine::MyTiming::setNumSamplesForFPS(100);
 	Vengine::MyTiming::setFPSlimit(2500);
@@ -179,6 +179,7 @@ void MainGame::endFrame() {
 	Vengine::MyTiming::frameDone();
 }
 
+
 void MainGame::drawVis() {
 
 	///compute current sample and run eq compute shader to find harmonic values
@@ -186,8 +187,8 @@ void MainGame::drawVis() {
 	_currSample = max((int)(elapsed * _sampleRate) + _sampleOffsetToSound * _sampleRate, 0);
 
 	_signalProc.update(_currSample);
-	//printf("%f\n", _signalProc.getRMS());
-	Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, _signalProc.getFourierHarmonics(), _signalProc.getHowManyHarmonics() * sizeof(float));
+	//Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, _signalProc.getFourierHarmonics(), _signalProc.getHowManyHarmonics() * sizeof(float));
+	_signalProc.updateSSBOwithHistory(&_signalProc._spectralDistance, _ssboHarmonicDataID, 1);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, _window.getScreenWidth(), _window.getScreenHeight());

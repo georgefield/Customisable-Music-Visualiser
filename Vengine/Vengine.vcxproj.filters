@@ -27,7 +27,7 @@
     <ClCompile Include="DrawFunctions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Errors.cpp">
+    <ClCompile Include="MyErrors.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GLSLProgram.cpp">

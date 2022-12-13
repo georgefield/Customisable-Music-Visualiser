@@ -149,7 +149,7 @@
     <ClCompile Include="Audio.cpp" />
     <ClCompile Include="ComputeShader.cpp" />
     <ClCompile Include="DrawFunctions.cpp" />
-    <ClCompile Include="Errors.cpp" />
+    <ClCompile Include="MyErrors.cpp" />
     <ClCompile Include="GLSLProgram.cpp" />
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="IOManager.cpp" />
