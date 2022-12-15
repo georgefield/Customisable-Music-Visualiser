@@ -1,9 +1,11 @@
 #pragma once
 #include <vector>
+#include <map>
 #include "FFTW.h"
 #include <GL/glew.h>
 #include "History.h"
 #include "Kernels.h"
+
 
 
 enum SPflags {
@@ -60,4 +62,5 @@ public:
 	void energy(int currentSample, Kernel kernel);
 	void noteOnset(int currentSample);
 	void convolveFourierHarmonics(float* out, Kernel kernel = LINEAR_PYRAMID);
+	void peakPicking(int currentSample, float* data);
 };

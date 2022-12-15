@@ -29,6 +29,7 @@ public:
 		}
 	}
 private:
+
 	static float linear(int k, int n) {
 		return 1 - ((2.0f / n) * fabsf(k - ((n - 1) / 2)));
 	}
@@ -40,4 +41,5 @@ private:
 
 		return expf( - (x * x) / (n / 2));
 	}
+
 };

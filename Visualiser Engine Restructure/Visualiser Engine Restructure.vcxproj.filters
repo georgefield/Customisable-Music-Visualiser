@@ -74,5 +74,8 @@
     <ClInclude Include="Kernels.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Limiter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

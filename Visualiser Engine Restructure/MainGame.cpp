@@ -189,7 +189,7 @@ void MainGame::drawVis() {
 	_signalProc.update(_currSample);
 	//Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, _signalProc.getFourierHarmonics(), _signalProc.getHowManyHarmonics() * sizeof(float));
 	//Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, _signalProc._convolvedFourierHarmonics.get(0), _signalProc.getHowManyHarmonics() * sizeof(float));
-	_signalProc.updateSSBOwithHistory(&_signalProc._CONVspectralDistance, _ssboHarmonicDataID, 1);
+	_signalProc.updateSSBOwithHistory(&_signalProc._CONVspectralDistanceConvolvedHarmonics, _ssboHarmonicDataID, 1);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, _window.getScreenWidth(), _window.getScreenHeight());

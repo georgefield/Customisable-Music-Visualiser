@@ -109,7 +109,7 @@ float convolveHistoryWithKernel(History<float>* history, int entries = 0, Kernel
 	for (int i = 0; i < entries; i++) {
 		conv += history->get(i) * Kernels::apply(kernel, i, entries); //integral of the multiplication = dot product   (in discrete space)
 	}
-	return conv;
+	return conv * 2.0f / entries;
 }
 
 void SignalProcessing::energy(int currentSample, Kernel kernel) {
@@ -153,27 +153,30 @@ void SignalProcessing::convolveFourierHarmonics(float* out, Kernel kernel) {
 
 	memset(out, 0.0f, _fft.numHarmonics() * sizeof(float));
 
+	float normalisingGuess = (2.0f / _fftOutput->totalSize());
+
 	for (int i = 0; i < _fftOutput->totalSize(); i++) {
 		for (int j = 0; j < _fft.numHarmonics(); j++) {
-			out[j] += _fftOutput->get(i)[j] * Kernels::apply(kernel, i, _fftOutput->totalSize()) * 0.1;
+			out[j] += _fftOutput->get(i)[j] * Kernels::apply(kernel, i, _fftOutput->totalSize()) * normalisingGuess;
 		}
 	}
 }
 
 void SignalProcessing::noteOnset(int currentSample) {
 
-	float one_over_dt = ((float)_sampleRate / (float)(currentSample - _previousSample));
+	float one_over_dt = ((float)_sampleRate / (float)(currentSample - _previousSample)) * 0.001; //do dt in ms as otherwise numbers too big
 
 	//	***temporal features***
 
 	//--change of energy per second, using log scale as human ear is log scale
 	//good for detecting beats of music with 4 to floor drum pattern
+
 	float derOfLogEnergy = (logf(_energy.get(0)) - logf(_energy.get(1))); // d(log(E))
 	derOfLogEnergy *= one_over_dt; // *= 1/dt
 	if (isnan(derOfLogEnergy) || isinf(derOfLogEnergy)) { derOfLogEnergy = 0; } //if an energy is 0, log is -inf, stops cascade of nan/inf
 	_derOfLogEnergy.add((derOfLogEnergy < 0 ? 0 : derOfLogEnergy)); //only take onset (positive change in energy)
 
-	_CONVderOfLogEnergy.add(convolveHistoryWithKernel(&_derOfLogEnergy, 20, LINEAR_PYRAMID) * 0.001);
+	_CONVderOfLogEnergy.add(convolveHistoryWithKernel(&_derOfLogEnergy, 20, LINEAR_PYRAMID));
 	//--
 
 	//	***spectral features***
@@ -181,7 +184,7 @@ void SignalProcessing::noteOnset(int currentSample) {
 	//--spectral distance, take fourier transform as N dimension point, calculates L2norm from previous transform to current
 	float spectralDistance = L2normIncOnly(_fftOutput->get(0), _fftOutput->get(1), _fft.numHarmonics());
 	spectralDistance *= one_over_dt; //must be scaled for time
-	_spectralDistance.add(spectralDistance * 0.001);
+	_spectralDistance.add(spectralDistance);
 
 	_CONVspectralDistance.add(convolveHistoryWithKernel(&_spectralDistance, 20, LINEAR_PYRAMID));
 	//--
@@ -192,9 +195,9 @@ void SignalProcessing::noteOnset(int currentSample) {
 
 	float spectralDistanceConvolvedHarmonics = L2normIncOnly(_convolvedFourierHarmonics.get(0), _convolvedFourierHarmonics.get(1), _fft.numHarmonics());
 	spectralDistanceConvolvedHarmonics *= one_over_dt;
-	_spectralDistanceConvolvedHarmonics.add(spectralDistanceConvolvedHarmonics * 0.001);
+	_spectralDistanceConvolvedHarmonics.add(spectralDistanceConvolvedHarmonics);
 
-	_CONVspectralDistanceConvolvedHarmonics.add(convolveHistoryWithKernel(&_spectralDistanceConvolvedHarmonics, 10, LINEAR_PYRAMID) * 0.5);
+	_CONVspectralDistanceConvolvedHarmonics.add(convolveHistoryWithKernel(&_spectralDistanceConvolvedHarmonics, 10, LINEAR_PYRAMID));
 	//--
 	//^^^problem with spectral distance is that offset are hard to differentiate from onset as distance depends on how different the spectrum is
 	//   somewhat solved by only including positive difference in harmonics (increasing volume), although this only really works for convolved harmonics as
@@ -203,6 +206,13 @@ void SignalProcessing::noteOnset(int currentSample) {
 
 	//	***neg log likelihood***
 
+	//[TBC]
+
+
+}
+
+void SignalProcessing::peakPicking(int currentSample, float* data)
+{
 
 }
 

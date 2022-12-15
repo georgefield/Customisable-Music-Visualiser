@@ -150,6 +150,7 @@
     <ClInclude Include="FFTW.h" />
     <ClInclude Include="History.h" />
     <ClInclude Include="Kernels.h" />
+    <ClInclude Include="Limiter.h" />
     <ClInclude Include="MainGame.h" />
     <ClInclude Include="MyFuncs.h" />
     <ClInclude Include="SignalProcessing.h" />

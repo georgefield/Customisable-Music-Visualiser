@@ -2,24 +2,33 @@
 #include <stdio.h>
 #include <iostream>
 #include <Vengine/MyErrors.h>
+#include "Limiter.h"
 
 template <class T>
 class History
 {
 public:
-	History(int size) : _start(size - 1), _size(size), _addCalls(0) {
+	History(int size) : _start(size - 1), _size(size), _addCalls(0), _L(1,0.2,20) {
 		_data = (T*)malloc(_size * sizeof(T));
 		memset(_data, NULL, _size * sizeof(T));
+
 	}
 	~History() {
 		free(_data);
 	}
 	
+
 	void add(T value) {
 		_start = (_start == 0 ? _size - 1 : _start - 1);
 		_data[_start] = value;
 		_addCalls++;
 	};
+
+	void addWithLimiter(T value){
+		_start = (_start == 0 ? _size - 1 : _start - 1);
+		_data[_start] = _L.limitValue(value);
+		_addCalls++;
+	}
 
 	void clear(bool eraseData = false) {
 		_start = _size - 1;
@@ -54,4 +63,6 @@ private:
 	int _size;
 
 	int _addCalls;
+
+	Limiter _L;
 };
