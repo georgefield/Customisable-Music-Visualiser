@@ -1,4 +1,30 @@
 ﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(534,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (Visualiser.vcxproj).  This can lead to incorrect clean and rebuild behavior.
-  FFTW.cpp
-C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\FFTW.cpp(15,15): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+  SignalProcessing.cpp
+C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\Kernels.h(33,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\Kernels.h(41,26): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\SignalProcessing.cpp(36,15): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\SignalProcessing.cpp(77,45): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\SignalProcessing.cpp(154,14): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\SignalProcessing.cpp(158,89): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
+C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\SignalProcessing.cpp(176,90): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\SignalProcessing.cpp(184,41): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\SignalProcessing.cpp(195,77): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\SignalProcessing.cpp(197,130): warning C4244: 'argument': conversion from 'double' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\Kernels.h(30): warning C4715: 'Kernels::apply': not all control paths return a value
   Visualiser Engine Restructure.vcxproj -> C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Debug\Visualiser Engine Restructure.exe

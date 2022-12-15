@@ -27,6 +27,7 @@ float* FFTW::getFFT(float* samples, int currentSample, float divFac)
 
 	for (int i = 0; i < ((_N / 2) + 1); i++) {
 		_harmonicValues.newest()[i] = sqrtf((_out[i][0] * _out[i][0]) + (_out[i][1] * _out[i][1])) / divFac; //set entry
+		_harmonicValues.add(_harmonicValues.oldest()); //increment whilst keeping same pointers
 	}
 	
 	return _harmonicValues.newest(); //return just calculated fft

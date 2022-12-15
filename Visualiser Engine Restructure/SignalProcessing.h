@@ -3,22 +3,26 @@
 #include "FFTW.h"
 #include <GL/glew.h>
 #include "History.h"
+#include "Kernels.h"
+
 
 enum SPflags {
 	NONE = 0,
-	ALL = 1,
-	FOURIER_CALCULATION = 2,
-	RMS_CALCULATION = 4,
-	ONSET_DETECTION = 8
+	FOURIER_CALCULATION = 1,
+	RMS_CALCULATION = 2,
+	ONSET_DETECTION = 4,
+
+
+	ALL = 255 //2^x - 1, =1111 1111, will trigger all
 };
 
 class SignalProcessing {
 public:
-	SignalProcessing(int sampleRate, int flags = ALL);
+	SignalProcessing();
+	void init(float* audioData, int sampleRate, int flags = ALL);
 
 	void enable(int flags) { _state |= flags; }
 	void disable(int flags) { _state &= ~flags; } //& with inverted bits of flag
-	void setAudioData(float* audioData) { _audioData = audioData; }
 
 	void update(int currentSample);
 	void reset(); //there has been a break in calculations
@@ -45,9 +49,15 @@ public:
 	History<float> _energy;
 	History<float> _spectralDistance;
 	History<float> _derOfLogEnergy;
+	History<float> _CONVderOfLogEnergy;
+	History<float> _CONVspectralDistance;
+	History<float*> _convolvedFourierHarmonics;
+	History<float> _spectralDistanceConvolvedHarmonics;
+	History<float> _CONVspectralDistanceConvolvedHarmonics;
 
 	//signal processing functions
 	void RMS(int currentSample);
-	void energy(int currentSample);
+	void energy(int currentSample, Kernel kernel);
 	void noteOnset(int currentSample);
+	void convolveFourierHarmonics(float* out, Kernel kernel = LINEAR_PYRAMID);
 };

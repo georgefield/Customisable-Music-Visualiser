@@ -149,6 +149,7 @@
     <ClInclude Include="CustomisableSprite.h" />
     <ClInclude Include="FFTW.h" />
     <ClInclude Include="History.h" />
+    <ClInclude Include="Kernels.h" />
     <ClInclude Include="MainGame.h" />
     <ClInclude Include="MyFuncs.h" />
     <ClInclude Include="SignalProcessing.h" />

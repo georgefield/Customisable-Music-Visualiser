@@ -13,7 +13,6 @@ MainGame::MainGame() :
 	_currSample(0),
 	_prevSample(-44100),
 	_globalTimer(-1),
-	_signalProc(SPflags::ALL),
 	_sampleOffsetToSound(-0.0f),
 	_song(),
 	_yMult(1.0f),
@@ -26,13 +25,13 @@ MainGame::MainGame() :
 
 //RESTRUCTURE ENTIRE ENGINE, CLONE THIS PROJECT AS BACKUP
 
-const std::string musicFilepath = "Music/Gorillaz - On Melancholy Hill.wav";
+const std::string musicFilepath = "Music/King Geedorah - Next Levels.wav";
 
 
 void MainGame::run() {
 	initSystems();
 	initData();
-	//sprite init
+
 	_eq.init(glm::vec2(-1), glm::vec2(2));
 
 	gameLoop();
@@ -53,8 +52,9 @@ void MainGame::initSystems() {
 
 	//load song
 	_song.loadWav(musicFilepath, _sampleRate);
+
 	//set up signal processing unit
-	_signalProc.setAudioData(_song.getNormalisedWavData());
+	_signalProc.init(_song.getNormalisedWavData(), _sampleRate, SPflags::ALL);
 
 	//create SSBO for waveform data (input entire file)
 	Vengine::DrawFunctions::createSSBO(_ssboWavDataID, 0, _song.getNormalisedWavData(), _song.getWavLength(), GL_STATIC_COPY);
@@ -133,7 +133,7 @@ void MainGame::gameLoop() {
 
 	Vengine::MyTiming::startTimer(_globalTimer);
 
-	//_song.playSound();
+	_song.playSound();
 
 	Vengine::MyTiming::setNumSamplesForFPS(100);
 	Vengine::MyTiming::setFPSlimit(2500);
@@ -188,7 +188,8 @@ void MainGame::drawVis() {
 
 	_signalProc.update(_currSample);
 	//Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, _signalProc.getFourierHarmonics(), _signalProc.getHowManyHarmonics() * sizeof(float));
-	_signalProc.updateSSBOwithHistory(&_signalProc._spectralDistance, _ssboHarmonicDataID, 1);
+	//Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, _signalProc._convolvedFourierHarmonics.get(0), _signalProc.getHowManyHarmonics() * sizeof(float));
+	_signalProc.updateSSBOwithHistory(&_signalProc._CONVspectralDistance, _ssboHarmonicDataID, 1);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(0, 0, _window.getScreenWidth(), _window.getScreenHeight());
