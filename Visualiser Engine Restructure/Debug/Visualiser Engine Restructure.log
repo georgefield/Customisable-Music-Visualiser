@@ -1,14 +1,2 @@
 ﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(534,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (Visualiser.vcxproj).  This can lead to incorrect clean and rebuild behavior.
-  SignalProcessing.cpp
-C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\Kernels.h(34,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\Kernels.h(42,26): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\SignalProcessing.cpp(36,15): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\SignalProcessing.cpp(77,45): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\SignalProcessing.cpp(154,14): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\SignalProcessing.cpp(167,20): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\History.h(11,67): warning C4305: 'argument': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\History.h(11): message : while compiling class template member function 'History<float>::History(int)'
-C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\SignalProcessing.cpp(17): message : see reference to function template instantiation 'History<float>::History(int)' being compiled
-C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\SignalProcessing.h(51): message : see reference to class template instantiation 'History<float>' being compiled
-C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Visualiser Engine Restructure\Kernels.h(30): warning C4715: 'Kernels::apply': not all control paths return a value
   Visualiser Engine Restructure.vcxproj -> C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Debug\Visualiser Engine Restructure.exe

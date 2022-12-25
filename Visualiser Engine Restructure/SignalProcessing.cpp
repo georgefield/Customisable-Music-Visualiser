@@ -21,7 +21,8 @@ SignalProcessing::SignalProcessing() :
 	_CONVderOfLogEnergy(Hs),
 	_CONVspectralDistance(Hs),
 	_spectralDistanceConvolvedHarmonics(Hs),
-	_CONVspectralDistanceConvolvedHarmonics(Hs)
+	_CONVspectralDistanceConvolvedHarmonics(Hs),
+	_BRUH(Hs)
 {
 }
 
@@ -55,6 +56,12 @@ void SignalProcessing::update(int currentSample) {
 	if (_state & ONSET_DETECTION) {
 		energy(currentSample, LINEAR_PYRAMID);
 		noteOnset(currentSample);
+	}
+
+	if (_state & TEMPO_DETECTION) {
+		if (!(_state & ONSET_DETECTION)) { Vengine::warning("Cannot do tempo detection without onset detection"); return; }
+		peakPicking(currentSample, &_CONVspectralDistanceConvolvedHarmonics);
+		tempo(currentSample);
 	}
 
 	_previousSample = currentSample;
@@ -176,7 +183,7 @@ void SignalProcessing::noteOnset(int currentSample) {
 	if (isnan(derOfLogEnergy) || isinf(derOfLogEnergy)) { derOfLogEnergy = 0; } //if an energy is 0, log is -inf, stops cascade of nan/inf
 	_derOfLogEnergy.add((derOfLogEnergy < 0 ? 0 : derOfLogEnergy)); //only take onset (positive change in energy)
 
-	_CONVderOfLogEnergy.add(convolveHistoryWithKernel(&_derOfLogEnergy, 20, LINEAR_PYRAMID));
+	_CONVderOfLogEnergy.addWithLimiter(convolveHistoryWithKernel(&_derOfLogEnergy, 20, LINEAR_PYRAMID), currentSample, 120.0f);
 	//--
 
 	//	***spectral features***
@@ -186,7 +193,7 @@ void SignalProcessing::noteOnset(int currentSample) {
 	spectralDistance *= one_over_dt; //must be scaled for time
 	_spectralDistance.add(spectralDistance);
 
-	_CONVspectralDistance.add(convolveHistoryWithKernel(&_spectralDistance, 20, LINEAR_PYRAMID));
+	_CONVspectralDistance.add(convolveHistoryWithKernel(&_spectralDistance, 20, LINEAR_PYRAMID), currentSample);
 	//--
 
 	//--spectral distance of convolved harmonics, may be slow
@@ -195,9 +202,9 @@ void SignalProcessing::noteOnset(int currentSample) {
 
 	float spectralDistanceConvolvedHarmonics = L2normIncOnly(_convolvedFourierHarmonics.get(0), _convolvedFourierHarmonics.get(1), _fft.numHarmonics());
 	spectralDistanceConvolvedHarmonics *= one_over_dt;
-	_spectralDistanceConvolvedHarmonics.add(spectralDistanceConvolvedHarmonics);
+	_spectralDistanceConvolvedHarmonics.add(spectralDistanceConvolvedHarmonics, currentSample);
 
-	_CONVspectralDistanceConvolvedHarmonics.add(convolveHistoryWithKernel(&_spectralDistanceConvolvedHarmonics, 10, LINEAR_PYRAMID));
+	_CONVspectralDistanceConvolvedHarmonics.add(convolveHistoryWithKernel(&_spectralDistanceConvolvedHarmonics, 10, LINEAR_PYRAMID), currentSample);
 	//--
 	//^^^problem with spectral distance is that offset are hard to differentiate from onset as distance depends on how different the spectrum is
 	//   somewhat solved by only including positive difference in harmonics (increasing volume), although this only really works for convolved harmonics as
@@ -206,15 +213,104 @@ void SignalProcessing::noteOnset(int currentSample) {
 
 	//	***neg log likelihood***
 
-	//[TBC]
+	//[TBD]
 
 
 }
 
-void SignalProcessing::peakPicking(int currentSample, float* data)
+void SignalProcessing::peakPicking(int currentSample, History<float>* data)
 {
+	//very simple atm, better methods in paper
+	const float threshhold = 0.15;
 
+	bool aboveThreshold = true;
+	for (int i = 0; i < data->totalSize(); i++) {
+		if (data->get(data->totalSize() - i - 1) >= threshhold && aboveThreshold == false) {
+			_peaks.push_back(data->getSample(i));
+			aboveThreshold = true;
+		}
+		else {
+			aboveThreshold = false;
+		}
+		_BRUH.add(aboveThreshold);
+	}
 }
+
+struct Cluster {
+	void add(int ioi) {
+		_IOI.push_back(ioi);
+	}
+
+	void mergeWith(Cluster* cluster) {
+		for (int i = 0; i < cluster->_IOI.size(); i++) {
+			_IOI.push_back(cluster->_IOI[i]);
+		}
+	}
+
+	float interval() {
+		float sum = 0;
+		for (auto& it : _IOI) {
+			sum += it;
+		}
+		sum /= _IOI.size();
+		return sum;
+	}
+
+	bool merged1 = false;
+	bool merged2 = false;
+
+	std::vector<int> _IOI;
+};
+
+void SignalProcessing::tempo(int currentSample) {
+
+	//use symbolic representation from Dixon paper using the note onsets detected with noteOnset & peakPicking
+
+	const float clusterWidthInSeconds = 0.05; //in samples
+	const int clusterWidth = int(clusterWidthInSeconds * _sampleRate);
+
+	std::unordered_map<int, Cluster> clusters;
+
+	//create clusters map (maps all inter onset intervals to a bin)
+	for (auto& E1 : _peaks) {
+		for (auto& E2 : _peaks) {
+			if (E1 == E2) { break; }
+
+			int ioi = fabsf(E1 - E2);
+			int ci= ioi / clusterWidth;
+
+			clusters[ci].add(ioi);
+		}
+	}
+
+	//merge clusters with average interval below cluster width
+	for (auto& i : clusters) {
+		for (auto& j : clusters) {
+			if (i.first == j.first) { break; }
+			
+			if (fabsf(i.second.interval() - j.second.interval()) < clusterWidth) {
+				i.second.mergeWith(&j.second);
+				j.second.merged1 = true;
+			}
+		}
+	}
+
+	//merge multiples
+	for (auto& i : clusters) {
+		if (!i.second.merged1) {
+			for (auto& j : clusters) {
+				if (j.second.merged2) { break; }
+				if (i.first == j.first) { break; }
+
+				if (fabsf(i.second.interval() * 2 - j.second.interval()) < clusterWidth) {
+					i.second.mergeWith(&j.second);
+					j.second.merged2 = true;
+				}
+			}
+		}
+	}
+}
+
 
 void SignalProcessing::updateSSBOwithHistory(History<float>* history, GLuint id, GLint binding) {
 

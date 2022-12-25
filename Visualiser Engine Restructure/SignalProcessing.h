@@ -13,6 +13,7 @@ enum SPflags {
 	FOURIER_CALCULATION = 1,
 	RMS_CALCULATION = 2,
 	ONSET_DETECTION = 4,
+	TEMPO_DETECTION = 8,
 
 
 	ALL = 255 //2^x - 1, =1111 1111, will trigger all
@@ -48,7 +49,9 @@ public:
 	History<float*>* _fftOutput;
 	float _sumOfSamplesSquared;
 	float _rms;
+
 	History<float> _energy;
+
 	History<float> _spectralDistance;
 	History<float> _derOfLogEnergy;
 	History<float> _CONVderOfLogEnergy;
@@ -57,10 +60,23 @@ public:
 	History<float> _spectralDistanceConvolvedHarmonics;
 	History<float> _CONVspectralDistanceConvolvedHarmonics;
 
-	//signal processing functions
+	History<float> _BRUH;
+
+	std::vector<int> _peaks;
+
+
+	//*** signal processing functions ***
+
 	void RMS(int currentSample);
 	void energy(int currentSample, Kernel kernel);
+
+	//note onset
 	void noteOnset(int currentSample);
+	void peakPicking(int currentSample, History<float>* data);
+
+	void tempo(int currentSample);
+
 	void convolveFourierHarmonics(float* out, Kernel kernel = LINEAR_PYRAMID);
-	void peakPicking(int currentSample, float* data);
+
+	//***
 };

@@ -10,7 +10,9 @@ public:
 		Vengine::MyTiming::startTimer(_timerID);
 	}
 
-	float limitValue(float value) {
+	float limitValue(float value, float gain = 1) {
+
+		value *= gain;
 
 		float deltaT = Vengine::MyTiming::readTimer(_timerID) - _timeOfLastHigh;
 
