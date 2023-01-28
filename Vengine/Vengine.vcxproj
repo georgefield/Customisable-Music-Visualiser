@@ -86,6 +86,7 @@
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>$(SolutionDir)deps\myImgui</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <DebugInformationFormat>OldStyle</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -149,6 +150,7 @@
     <ClCompile Include="Audio.cpp" />
     <ClCompile Include="ComputeShader.cpp" />
     <ClCompile Include="DrawFunctions.cpp" />
+    <ClCompile Include="Model.cpp" />
     <ClCompile Include="MyErrors.cpp" />
     <ClCompile Include="GLSLProgram.cpp" />
     <ClCompile Include="InputManager.cpp" />
@@ -166,6 +168,7 @@
     <ClInclude Include="Audio.h" />
     <ClInclude Include="ComputeShader.h" />
     <ClInclude Include="DrawFunctions.h" />
+    <ClInclude Include="Model.h" />
     <ClInclude Include="MyErrors.h" />
     <ClInclude Include="GLSLProgram.h" />
     <ClInclude Include="GLtexture.h" />
@@ -181,6 +184,7 @@
     <ClInclude Include="TextureCache.h" />
     <ClInclude Include="Vengine.h" />
     <ClInclude Include="Vertex.h" />
+    <ClInclude Include="Viewport.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

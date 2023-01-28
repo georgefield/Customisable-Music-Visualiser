@@ -685,8 +685,10 @@ static int parse_version(void)
         return GL3W_ERROR_INIT;
     glGetIntegerv(GL_MAJOR_VERSION, &version.major);
     glGetIntegerv(GL_MINOR_VERSION, &version.minor);
-    if (version.major < 3)
+    if (version.major < 3) {
+        printf("openGL version < 3, please update openGL\n");
         return GL3W_ERROR_OPENGL_VERSION;
+    }
     return GL3W_OK;
 }
 

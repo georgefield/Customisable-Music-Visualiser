@@ -7,6 +7,7 @@
 
 #include "SpriteManager.h"
 #include "SignalProcessing.h"
+#include "UI.h"
 
 enum class GameState {
 	PLAY,
@@ -22,9 +23,11 @@ public:
 	void run();
 private:
 	Vengine::Window _window;
+	Vengine::Viewport _viewport;
 
 	int _sampleRate;
 	GameState _gameState;
+	UI _UI;
 
 	Vengine::InputManager _inputManager;
 
@@ -39,16 +42,9 @@ private:
 
 	void initShaders();
 
-	//ImGui variables
-	float _yMult;
-	bool _showUi;
-	bool _showBackground;
-	ImVec4 _clearColour;
-	std::vector<std::string> _texFileNames;
-	bool _showDragableBox;
-	//--
 
 	Vengine::Sprite _eq;
+	Vengine::Sprite _background;
 	SpriteManager _spriteManager;
 
 	Vengine::SpriteBatch _spriteBatch;

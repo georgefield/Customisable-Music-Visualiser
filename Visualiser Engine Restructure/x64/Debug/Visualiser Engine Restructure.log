@@ -1,0 +1,19 @@
+﻿  BetterSprite.cpp
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\BetterSprite.h(4,10): fatal  error C1083: Cannot open include file: 'Vengine/Vengine.h': No such file or directory
+  BetterSpriteBatch.cpp
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\BetterSprite.h(4,10): fatal  error C1083: Cannot open include file: 'Vengine/Vengine.h': No such file or directory
+  CustomisableSprite.cpp
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\BetterSprite.h(4,10): fatal  error C1083: Cannot open include file: 'Vengine/Vengine.h': No such file or directory
+  FFTW.cpp
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\History.h(4,10): fatal  error C1083: Cannot open include file: 'Vengine/MyErrors.h': No such file or directory
+  main.cpp
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MainGame.h(5,10): fatal  error C1083: Cannot open include file: 'Vengine/Vengine.h': No such file or directory
+  MainGame.cpp
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MainGame.h(5,10): fatal  error C1083: Cannot open include file: 'Vengine/Vengine.h': No such file or directory
+  MyFuncs.cpp
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MyFuncs.h(4,10): fatal  error C1083: Cannot open include file: 'Vengine/Vengine.h': No such file or directory
+  SignalProcessing.cpp
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\History.h(4,10): fatal  error C1083: Cannot open include file: 'Vengine/MyErrors.h': No such file or directory
+  SpriteManager.cpp
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SpriteManager.h(5,10): fatal  error C1083: Cannot open include file: 'Vengine/Vengine.h': No such file or directory
+  Generating Code...

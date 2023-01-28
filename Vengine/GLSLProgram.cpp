@@ -121,6 +121,7 @@ GLuint GLSLProgram::getUniformLocation(const std::string& uniformName) {
 
 
 void GLSLProgram::use() {
+
 	glUseProgram(_programID);
 	for (int i = 0; i < _numAttribs; i++) {
 		glEnableVertexAttribArray(i);

@@ -13,3 +13,6 @@
 #include "Audio.h"
 #include "SpriteBatch.h"
 #include "InputManager.h"
+#include "Viewport.h"
+
+#include <iostream> //logging, delete when finished debugging

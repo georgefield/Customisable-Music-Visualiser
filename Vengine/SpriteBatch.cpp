@@ -23,99 +23,114 @@ void SpriteBatch::init() {
 	createVertexArray();
 }
 
+void SpriteBatch::begin() {
 
-void SpriteBatch::begin(GlyphSortType sortType) {
-	_sortType = sortType;
-	_renderBatches.clear();
-	_glyphs.clear();
+	_programBatches.clear();
+	_spritePtrs.clear();
 }
 
 void SpriteBatch::end() {
-	_glyphPtrs.resize(_glyphs.size());
-	for (int i = 0; i < _glyphs.size(); i++) {
-		_glyphPtrs[i] = &_glyphs[i];
-	}
-	sortGlyphs();
+	
+	sortSprites();
 	createRenderBatches();
 }
 
-void SpriteBatch::draw(const glm::vec4& destRect, const glm::vec4& uvRect, const GLuint& texture, const float& depth, const ColourRGBA8& colour) { //adds glyph to vector of glyphs
+void SpriteBatch::draw(Sprite* sprite) { //adds glyph to vector of glyphs
 
-	_glyphs.emplace_back(destRect, uvRect, texture, depth, colour);
+	_spritePtrs.push_back(sprite);
+	_numVerticesToDraw += sprite->getNumVertices();
 }
 
-void SpriteBatch::renderBatch() {
+void SpriteBatch::renderBatch(void (*uniformSetterFunction)(GLSLProgram*)) {
 
 	if (_vao == 0) {
-		fatalError("VAO not initialised so cannot render batch");
+		Vengine::fatalError("VAO not initialised so cannot render batch");
 	}
 
 	glBindVertexArray(_vao); //use already set up vao to handle attribs
 
-	for (int i = 0; i < _renderBatches.size(); i++) {
-		glBindTexture(GL_TEXTURE_2D, _renderBatches[i].texture);
+	for (int i = 0; i < _programBatches.size(); i++) {
+		//use shader program for batch
+		_programBatches[i].program->use();
 
-		glDrawArrays(GL_TRIANGLES, _renderBatches[i].offset, _renderBatches[i].numVertices);
+		//set uniforms of shader
+		uniformSetterFunction(_programBatches[i].program);
+
+		for (int j = 0; j < _programBatches[i].textureBatches.size(); j++) {
+
+			if (_programBatches[i].textureBatches[j].textureID != 0) { //set texture
+				glBindTexture(GL_TEXTURE_2D, _programBatches[i].textureBatches[j].textureID);
+			}
+
+			//draw batch
+			glDrawArrays(GL_TRIANGLES, _programBatches[i].textureBatches[j].batchOffset, _programBatches[i].textureBatches[j].numVertices);
+		}
+
+		_programBatches[i].program->unuse();
 	}
 
 	glBindVertexArray(0);
 }
 
+void addVerticesToContiguousArray(Vertex* array, Vertex* vertices, int numVertices, int& offset) {
+	for (int i = 0; i < numVertices; i++) {
+		array[offset + i] = vertices[i];
+	}
+	offset += numVertices;
+}
 
 void SpriteBatch::createRenderBatches() {
 
-	if (_glyphPtrs.empty()) {
+	if (_spritePtrs.empty()) {
 		return;
 	}
 
-	std::vector<Vertex> vertices;
-	vertices.resize(_glyphPtrs.size() * 6);
+	Vertex* contiguousVertexArray = new Vertex[_numVerticesToDraw];
+	int contiguousVertexArrayOffset = 0;
 
-	//RenderBatch myBatch(0, 6, _glyphs[0]->texture); <--
-	//_renderBatches.push_back(myBatch)               <-- inefficient (makes copy)
+	int cs = 0; //current sprite
+	int batchOffset = 0;
 
-	int offset = 0;
-	_renderBatches.emplace_back(offset, 6, _glyphPtrs[0]->texture); //more efficient
 
-	int cv = 0;
-	vertices[cv++] = _glyphPtrs[0]->topLeft;
-	vertices[cv++] = _glyphPtrs[0]->bottomLeft;
-	vertices[cv++] = _glyphPtrs[0]->bottomRight;
-	vertices[cv++] = _glyphPtrs[0]->bottomRight;
-	vertices[cv++] = _glyphPtrs[0]->topRight;
-	vertices[cv++] = _glyphPtrs[0]->topLeft;
+	_programBatches.emplace_back(); //new program batch
+	_programBatches.back().program = _spritePtrs[cs]->getShaderProgram(); //set glsl program
 
-	offset += 6;
+	_programBatches.back().textureBatches.emplace_back(_spritePtrs[cs]->getTexture()->id, batchOffset); //new texture batch
 
-	for (int cg = 1; cg < _glyphPtrs.size(); cg++) {
+	addVerticesToContiguousArray(contiguousVertexArray, _spritePtrs[cs]->getVertices(), _spritePtrs[cs]->getNumVertices(), contiguousVertexArrayOffset);
+	_programBatches.back().textureBatches.back().numVertices += _spritePtrs[cs]->getNumVertices();
 
-		//save data of where vertices of quads with each texture is stored in vbo so can be called by draw arrays in render batch function
-		if (_glyphPtrs[cg]->texture != _glyphPtrs[cg - 1]->texture) {
-			_renderBatches.emplace_back(offset, 6, _glyphPtrs[cg]->texture);
+	cs++;
+
+	while (cs < _spritePtrs.size()) {
+		if (_spritePtrs[cs]->getShaderProgram()->getID() != _spritePtrs[cs - 1]->getShaderProgram()->getID()) { //new program batch
+
+			batchOffset += _programBatches.back().textureBatches.back().numVertices;
+
+			_programBatches.emplace_back();
+			_programBatches.back().program = _spritePtrs[cs]->getShaderProgram();
+			_programBatches.back().textureBatches.emplace_back(_spritePtrs[cs]->getTexture()->id, batchOffset); //new texture batch
 		}
-		else {
-			_renderBatches.back().numVertices += 6;
+		else if (_spritePtrs[cs]->getTexture()->id != _spritePtrs[cs - 1]->getTexture()->id) {
+
+			batchOffset += _programBatches.back().textureBatches.back().numVertices;
+
+			_programBatches.back().textureBatches.emplace_back(_spritePtrs[cs]->getTexture()->id, batchOffset);
 		}
 
-		//add vertices to array
-		vertices[cv++] = _glyphPtrs[cg]->topLeft;
-		vertices[cv++] = _glyphPtrs[cg]->bottomLeft;
-		vertices[cv++] = _glyphPtrs[cg]->bottomRight;
-		vertices[cv++] = _glyphPtrs[cg]->bottomRight;
-		vertices[cv++] = _glyphPtrs[cg]->topRight;
-		vertices[cv++] = _glyphPtrs[cg]->topLeft;
+		addVerticesToContiguousArray(contiguousVertexArray, _spritePtrs[cs]->getVertices(), _spritePtrs[cs]->getNumVertices(), contiguousVertexArrayOffset);
+		_programBatches.back().textureBatches.back().numVertices += _spritePtrs[cs]->getNumVertices();
 
-		offset += 6;
+		cs++;
 	}
 
 	///vvv send vertex data to GPU vvv
 	glBindBuffer(GL_ARRAY_BUFFER, _vbo);
 	//orphan buffer
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, _numVerticesToDraw * sizeof(Vertex), nullptr, GL_DYNAMIC_DRAW);
 	//upload data of vertices array to vbo
-	glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(Vertex), vertices.data());
+	glBufferSubData(GL_ARRAY_BUFFER, 0, _numVerticesToDraw * sizeof(Vertex), contiguousVertexArray);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
 }
 
 void SpriteBatch::createVertexArray() { //vao is a way to tell opengl that all quads in vbo has same vertex attribs
@@ -147,31 +162,25 @@ void SpriteBatch::createVertexArray() { //vao is a way to tell opengl that all q
 }
 
 
-bool SpriteBatch::compareFrontToBack(Glyph* a, Glyph* b) {
-	return (a->depth < b->depth);
+//sorting stuff
+bool SpriteBatch::compareFrontToBack(Sprite* a, Sprite* b) {
+	return (a->getDepth() < b->getDepth());
 }
-bool SpriteBatch::compareBackToFront(Glyph* a, Glyph* b) {
-	return (a->depth > b->depth);
+bool SpriteBatch::compareBackToFront(Sprite* a, Sprite* b) {
+	return (a->getDepth() > b->getDepth());
 }
-bool SpriteBatch::compareTexture(Glyph* a, Glyph* b) {
-	return (a->texture < b->texture); //sorts based on texture id (groups textures together) lower texture ids first (add first drawn first)
+bool SpriteBatch::compareTexture(Sprite* a, Sprite* b) {
+	return (a->getTexture()->id < b->getTexture()->id); //sorts based on texture id (groups textures together) lower texture ids first (add first drawn first)
+}
+bool SpriteBatch::compareShader(Sprite* a, Sprite* b) {
+	return (a->getShaderProgram()->getID() < b->getShaderProgram()->getID()); //sorts based on texture id (groups textures together) lower texture ids first (add first drawn first)
 }
 
-void SpriteBatch::sortGlyphs() {
 
-	switch (_sortType) {
-	case GlyphSortType::BACK_TO_FRONT:
-		std::stable_sort(_glyphPtrs.begin(), _glyphPtrs.end(), compareBackToFront);
-		break;
-	case GlyphSortType::FRONT_TO_BACK:
-		std::stable_sort(_glyphPtrs.begin(), _glyphPtrs.end(), compareFrontToBack);
-		break;
-	case GlyphSortType::TEXTURE:
-		std::stable_sort(_glyphPtrs.begin(), _glyphPtrs.end(), compareTexture);
-		break;
-	case GlyphSortType::BACK_TO_FRONT_BUT_GROUP_TEXTURE:
-		std::stable_sort(_glyphPtrs.begin(), _glyphPtrs.end(), compareTexture);
-		std::stable_sort(_glyphPtrs.begin(), _glyphPtrs.end(), compareBackToFront);
-		break;
-	}
+void SpriteBatch::sortSprites() {
+
+	//by depth then split into shader then split into texture
+	std::stable_sort(_spritePtrs.begin(), _spritePtrs.end(), compareTexture);
+	std::stable_sort(_spritePtrs.begin(), _spritePtrs.end(), compareShader);
+	std::stable_sort(_spritePtrs.begin(), _spritePtrs.end(), compareBackToFront);
 }

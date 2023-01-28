@@ -133,8 +133,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="BetterSprite.cpp" />
-    <ClCompile Include="BetterSpriteBatch.cpp" />
     <ClCompile Include="CustomisableSprite.cpp" />
     <ClCompile Include="FFTW.cpp" />
     <ClCompile Include="main.cpp" />
@@ -142,10 +140,9 @@
     <ClCompile Include="MyFuncs.cpp" />
     <ClCompile Include="SignalProcessing.cpp" />
     <ClCompile Include="SpriteManager.cpp" />
+    <ClCompile Include="UI.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BetterSprite.h" />
-    <ClInclude Include="BetterSpriteBatch.h" />
     <ClInclude Include="CustomisableSprite.h" />
     <ClInclude Include="FFTW.h" />
     <ClInclude Include="History.h" />
@@ -155,6 +152,7 @@
     <ClInclude Include="MyFuncs.h" />
     <ClInclude Include="SignalProcessing.h" />
     <ClInclude Include="SpriteManager.h" />
+    <ClInclude Include="UI.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

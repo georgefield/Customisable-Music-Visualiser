@@ -1,2 +1,39 @@
-﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(534,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (Visualiser.vcxproj).  This can lead to incorrect clean and rebuild behavior.
-  Visualiser Engine Restructure.vcxproj -> C:\Users\George\Documents\3rd Year Project\Visualiser Engine Restructure\Debug\Visualiser Engine Restructure.exe
+﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(517,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (Visualiser.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  MainGame.cpp
+C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(18,14): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
+          with
+          [
+              T=float
+          ]
+C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(19,15): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
+          with
+          [
+              T=float
+          ]
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(34,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(42,26): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MainGame.cpp(69,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MainGame.cpp(125,59): warning C4244: 'argument': conversion from 'Sint32' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MainGame.cpp(125,44): warning C4244: 'argument': conversion from 'Sint32' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MainGame.cpp(186,16): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+  UI.cpp
+C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(18,14): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
+          with
+          [
+              T=float
+          ]
+C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(19,15): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
+          with
+          [
+              T=float
+          ]
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(27,61): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(27,57): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(80,77): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(80,59): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(81,77): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(81,34): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(107,14): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(108,14): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+  Generating Code...
+  Visualiser Engine Restructure.vcxproj -> C:\Users\George\Documents\3rd year project\Project\Debug\Visualiser Engine Restructure.exe

@@ -38,5 +38,4 @@ namespace Vengine {
 			uv.u = u; uv.v = v;
 		}
 	};
-
 }

@@ -3,62 +3,32 @@
 #include <glm/glm.hpp>
 #include <vector>
 
+#include "GLSLProgram.h"
 #include "Vertex.h"
 #include "GLtexture.h"
+#include "Sprite.h"
 
 namespace Vengine {
 
-	enum class GlyphSortType {
-		NONE, FRONT_TO_BACK, BACK_TO_FRONT, TEXTURE, BACK_TO_FRONT_BUT_GROUP_TEXTURE
-	};
-
-
-	class Glyph
-	{
+	class TextureBatch {
 	public:
-		Glyph() {};
-		Glyph(const glm::vec4& destRect, const glm::vec4& uvRect, const GLuint& Texture, const float& Depth, const ColourRGBA8& colour) :
-			texture(Texture),
-			depth(Depth)
+		TextureBatch(GLuint TextureID, int BatchOffset)
 		{
-			topLeft.colour = colour;
-			topLeft.setPosition(destRect.x, destRect.y + destRect.w);
-			topLeft.setUV(uvRect.x, uvRect.y + uvRect.w);
-
-			bottomLeft.colour = colour;
-			bottomLeft.setPosition(destRect.x, destRect.y);
-			bottomLeft.setUV(uvRect.x, uvRect.y);
-
-			bottomRight.colour = colour;
-			bottomRight.setPosition(destRect.x + destRect.z, destRect.y);
-			bottomRight.setUV(uvRect.x + uvRect.z, uvRect.y);
-
-			topRight.colour = colour;
-			topRight.setPosition(destRect.x + destRect.z, destRect.y + destRect.w);
-			topRight.setUV(uvRect.x + uvRect.z, uvRect.y + uvRect.w);
+			textureID = TextureID;
+			batchOffset = BatchOffset;
+			numVertices = 0;
 		}
 
-		Vertex topLeft;
-		Vertex bottomLeft;
-		Vertex topRight;
-		Vertex bottomRight;
+		GLuint textureID;
 
-		GLuint texture;
-
-		float depth;
+		//location information relative to contiguousVertexArray buffered in 'createRenderBatches()'
+		int batchOffset;
+		int numVertices;
 	};
 
-
-	class RenderBatch {
-	public:
-		RenderBatch(GLuint Offset, GLuint NumVertices, GLuint Texture) :
-			offset(Offset), numVertices(NumVertices), texture(Texture)
-		{
-		}
-
-		GLuint offset;
-		GLuint numVertices;
-		GLuint texture;
+	struct ProgramBatch {
+		GLSLProgram* program;
+		std::vector<TextureBatch> textureBatches;
 	};
 
 
@@ -70,31 +40,30 @@ namespace Vengine {
 
 		void init();
 
-		void begin(GlyphSortType sortType = GlyphSortType::TEXTURE);
+		void begin();
+		void draw(Sprite* sprite);
 		void end();
-		void draw(const glm::vec4& destRect, const glm::vec4& uvRect, const GLuint& texture, const float& depth, const ColourRGBA8& colour);
-		void renderBatch();
+		void renderBatch(void (*uniformSetterFunction)(GLSLProgram*));
 	private:
 		void createRenderBatches();
 		void createVertexArray();
 
 
 		//comparison function for stable sort in "SortGlyphs()"
-		static bool compareFrontToBack(Glyph* a, Glyph* b);
-		static bool compareBackToFront(Glyph* a, Glyph* b);
-		static bool compareTexture(Glyph* a, Glyph* b);
+		static bool compareFrontToBack(Sprite* a, Sprite* b);
+		static bool compareBackToFront(Sprite* a, Sprite* b);
+		static bool compareTexture(Sprite* a, Sprite* b);
+		static bool compareShader(Sprite* a, Sprite* b);
 		//sort function
-		void sortGlyphs();
-
-		GlyphSortType _sortType;
+		void sortSprites();
 
 		GLuint _vbo;
 		GLuint _vao;
+		int _numVerticesToDraw;
 
-		std::vector<Glyph*> _glyphPtrs; // for sorting
-		std::vector<Glyph> _glyphs; //actual glyphs
+		std::vector<Sprite*> _spritePtrs;
 
-		std::vector<RenderBatch> _renderBatches;
+		std::vector<ProgramBatch> _programBatches; //first array is shaders, second array is textures
 	};
 
 }

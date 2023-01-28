@@ -5,9 +5,14 @@
 
 #include "GLtexture.h"
 #include "Vertex.h"
+#include "GLSLProgram.h"
+#include "MyErrors.h"
+#include "ResourceManager.h"
+#include "Model.h"
 
 
 namespace Vengine {
+
 
 	class Sprite
 	{
@@ -15,22 +20,69 @@ namespace Vengine {
 		Sprite();
 		~Sprite();
 
-		virtual void init(glm::vec2 pos, glm::vec2 dim, float depth = 0.0f, std::string textureFilepath = "", GLuint glDrawType = GL_STATIC_DRAW);
+		void init(Model* model, glm::vec2 pos, glm::vec2 dim, float depth = 0.0f, std::string textureFilepath = "", GLuint glDrawType = GL_STATIC_DRAW);
 
-		virtual void draw();
+		void draw();
+
+		void attachShader(GLSLProgram* shaderProgram);
+
+		void updateBuffer();
+
+		//getters
+		float getDepth() {
+			return _depth;
+		}
+		GLtexture* getTexture() {
+			return &_texture;
+		}
+		Vertex* getVertices() {
+			return _model->vertices;
+		}
+		int getNumVertices() {
+			return _model->numVertices;
+		}
+
+		//getters
+		GLSLProgram* getShaderProgram() { 
+
+			return _shaderProgram; 
+		};
+
+	private: 
+		Model* _model;
 
 	protected:
+
 		float _depth;
 
-		glm::vec2 _pos;
-		glm::vec2 _dim;
 		GLuint _vboID; //vertex buffer object id
 
 		GLtexture _texture;
 
-		Vertex _vertexData[6];
+		GLSLProgram* _shaderProgram;
 
-		void setRect(glm::vec2 pos, glm::vec2 dim);
+		//model interaction helper functions
+		void setModelPos(glm::vec2 pos) {
+			_model->setBoundingBox(pos, _model->dim);
+			updateBuffer();
+		}
+		void setModelDim(glm::vec2 dim) {
+			_model->setBoundingBox(_model->pos, dim);
+			updateBuffer();
+		}
+		void setModelBoundingBox(glm::vec2 pos, glm::vec2 dim) {
+			_model->setBoundingBox(pos, dim);
+			updateBuffer();
+		}
+		glm::vec4 getModelBoundingBox() {
+			return _model->getBoundingBox();
+		}
+		glm::vec2 getModelPos() {
+			return _model->pos;
+		}
+		glm::vec2 getModelDim() {
+			return _model->dim;
+		}
+
 	};
-
 }

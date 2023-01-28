@@ -85,8 +85,5 @@ void DrawFunctions::updateSSBOpart(GLuint& ssboID, GLint binding, void* data, in
 	glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, bytesOfData, data); //upload normalised data to ssbo
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
 
-	GLenum error = glGetError();
-	if (error != GL_NO_ERROR) {
-		Vengine::logGLerror("failed to update ssbo buffer", error);
-	}
+	Vengine::testForGlErrors("failed to update ssbo buffer");
 }

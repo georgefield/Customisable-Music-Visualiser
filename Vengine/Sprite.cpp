@@ -6,9 +6,7 @@
 
 using namespace Vengine;
 
-Sprite::Sprite() :
-	_pos(0,0),
-	_dim(0,0)
+Sprite::Sprite()
 {
 	_vboID = 0;
 }
@@ -19,10 +17,18 @@ Sprite::~Sprite()
 	if (_vboID != 0) {
 		glDeleteBuffers(1, &_vboID); //remove all data associated with vboID from GPU
 	}
+
+	delete _model;
 }
 
 
-void Sprite::init(glm::vec2 pos, glm::vec2 dim, float depth, std::string textureFilepath, GLuint glDrawType) {
+void Sprite::init(Model* model, glm::vec2 pos, glm::vec2 dim, float depth, std::string textureFilepath, GLuint glDrawType) {
+
+	_shaderProgram = ResourceManager::getShaderProgram("Shaders/noshading"); //default to no shading
+
+	_model = model;
+	_model->init();
+	_model->setBoundingBox(pos, dim);
 
 	_depth = depth;
 
@@ -37,15 +43,18 @@ void Sprite::init(glm::vec2 pos, glm::vec2 dim, float depth, std::string texture
 		glGenBuffers(1, &_vboID);
 	}
 
-	//create quad (two triangles) (hard coded)
-	setRect(pos, dim);
+	testForGlErrors("Error generating vbo");
 
 	glBindBuffer(GL_ARRAY_BUFFER, _vboID); //bind _vboID to gl array buffer (can only have one array buffer active at one time)
-	glBufferData(GL_ARRAY_BUFFER, sizeof(_vertexData), &_vertexData, glDrawType); //upload vertex data to GPU (bound to vboID)
+	glBufferData(GL_ARRAY_BUFFER, _model->numVertices * sizeof(Vertex), _model->vertices, glDrawType); //upload vertex data to GPU (bound to vboID)
 	glBindBuffer(GL_ARRAY_BUFFER, 0); //unbind _vboID
+
+	testForGlErrors("Error buffering data");
 }
 
+
 void Sprite::draw() {
+
 	if (_texture.id != 0) {
 		glBindTexture(GL_TEXTURE_2D, _texture.id);
 	}
@@ -77,28 +86,29 @@ void Sprite::draw() {
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	glBindTexture(GL_TEXTURE_2D, 0); //reset texture bind
+
+	testForGlErrors("Error rendering sprite");
 }
 
-void Vengine::Sprite::setRect(glm::vec2 pos, glm::vec2 dim)
+
+void Sprite::attachShader(Vengine::GLSLProgram* shaderProgram)
 {
-	_pos = pos;
-	_dim = dim;
-
-	_vertexData[0].setPosition(pos.x, pos.y + dim.y);//top left
-	_vertexData[0].setUV(0, 1); //uv is for texture mapping, range from 0 to 1, u is x axis, v is y axis, u,v = 0 is bottom left
-
-	_vertexData[1].setPosition(pos.x + dim.x, pos.y + dim.y);//top right
-	_vertexData[1].setUV(1, 1);
-
-	_vertexData[2].setPosition(pos.x, pos.y);//bottom left
-	_vertexData[2].setUV(0, 0);
-
-	_vertexData[3].setPosition(pos.x + dim.x, pos.y + dim.y);//top right
-	_vertexData[3].setUV(1, 1);
-
-	_vertexData[4].setPosition(pos.x, pos.y);//bottom left
-	_vertexData[4].setUV(0, 0);
-
-	_vertexData[5].setPosition(pos.x + dim.x, pos.y);//bottom right
-	_vertexData[5].setUV(1, 0);
+	printf("ATTACHING SHADER (WEE WOO)");
+	_shaderProgram = shaderProgram;
 }
+
+
+void Sprite::updateBuffer() {
+
+	glBindBuffer(GL_ARRAY_BUFFER, _vboID); //bind _vboID to gl array buffer (can only have one array buffer active at one time)
+	
+	glBufferSubData(GL_ARRAY_BUFFER, 0, _model->numVertices * sizeof(Vertex), _model->vertices);
+	if (glGetError() != GL_NO_ERROR) {
+		GLenum errCode = glGetError();
+		Vengine::warning("Error updating data about quad", true);
+	}
+	
+	glBindBuffer(GL_ARRAY_BUFFER, 0); //unbind _vboID
+}
+
+

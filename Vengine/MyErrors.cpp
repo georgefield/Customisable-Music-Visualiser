@@ -25,8 +25,14 @@ namespace Vengine {
 		}
 	}
 
-	void logGLerror(std::string message, GLenum error) {
-		Vengine::warning(message);
-		std::cout <<  "gl error number: " << error << std::endl;
+	void testForGlErrors(std::string messageInCaseOfError) {
+		GLenum code = glGetError();
+		if (code != GL_NO_ERROR) {
+			Vengine::warning(messageInCaseOfError);
+		}
+		while (code != GL_NO_ERROR) {
+			std::cout << code << std::endl;
+			code = glGetError();
+		}
 	}
 }

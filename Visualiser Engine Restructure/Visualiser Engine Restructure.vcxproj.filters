@@ -27,19 +27,16 @@
     <ClCompile Include="MyFuncs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BetterSprite.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="CustomisableSprite.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SpriteManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BetterSpriteBatch.cpp">
+    <ClCompile Include="SignalProcessing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SignalProcessing.cpp">
+    <ClCompile Include="UI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -53,16 +50,10 @@
     <ClInclude Include="MyFuncs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BetterSprite.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="CustomisableSprite.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SpriteManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BetterSpriteBatch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SignalProcessing.h">
@@ -75,6 +66,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Limiter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

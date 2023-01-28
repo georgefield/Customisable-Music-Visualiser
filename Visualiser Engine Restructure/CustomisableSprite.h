@@ -1,47 +1,56 @@
 #pragma once
-#include "BetterSprite.h"
 #include <string>
 #include <glm/glm.hpp>
 
 #include <Vengine/Vengine.h>
 
-enum SpriteComm {
+enum SpriteState {
 	NOT_SELECTED,
 	SELECTED,
 	DELETE_SELF
 };
 
-class CustomisableSprite : public BetterSprite
+class CustomisableSprite : public Vengine::Sprite
 {
 public:
-	CustomisableSprite(const std::string& name, Vengine::Window* hostWindow);
+	CustomisableSprite(const std::string& name, Vengine::Viewport* viewport, Vengine::Window* window);
 
-	void init(glm::vec2 pos, glm::vec2 dim, float depth = 0.0f, std::string textureFilepath = "", GLuint glDrawType = GL_DYNAMIC_DRAW) override;
-	void draw() override;
+
+	void init(Vengine::Model* model, glm::vec2 pos, glm::vec2 dim, float depth = 0.0f, std::string textureFilepath = "", GLuint glDrawType = GL_DYNAMIC_DRAW);
+	void draw();
 
 	void processInput(Vengine::InputManager* inputManager);
 
-	SpriteComm getSpriteState() { return _spriteState; }
+	//getters
+	Vengine::GLSLProgram* getShaderProgram() const { return _shaderProgram; };
+
+	SpriteState getSpriteState() { return _spriteState; }
 private:
-	bool posWithinSettings(glm::vec2 pos);
+	void drawUi();
 
 	void setOptionsWindowPosAndDim();
 
+	glm::vec2 getOpenGLmouseCoords(Vengine::InputManager* inputManager);
+
+	glm::vec2 opengGLposToPx(glm::vec2 openGLpos);
+	glm::vec2 opengGLdimToPx(glm::vec2 openGLdim);
+	glm::vec4 opengGLrectToPx(glm::vec4 openGLrect);
+
 	//important information describing sprite--
+	Vengine::Viewport* _viewport;
 	Vengine::Window* _window;
 	std::string _name;	
-	SpriteComm _spriteState;
+	SpriteState _spriteState;
 	//--
 
 	//imgui vars--
-	glm::vec2 _optionsPosInPixels;
-	glm::vec2 _optionsDimInPixels;
+	glm::vec4 _optionsRect; //in opengl coords
 
 	bool _isOptionsEnlarged;
 	int _minPixelsBetweenGUIandBottom;
 	int _minPixelsBetweenGUIandRightSide;
 
-	std::vector<std::string> _texFileNames;
+	std::vector<std::string> _textureFileNames;
 	std::vector<std::string> _shaderFileNames;
 	//--
 
@@ -50,10 +59,6 @@ private:
 	glm::vec2 _posOfSpriteAtClick;
 	int _timerID;
 	bool _justCreated;
-	//--
-
-	//Attached Shader--
-	Vengine::GLSLProgram* _shaderToUse;
 	//--
 };
 

@@ -2,7 +2,8 @@
 #include "MyFuncs.h"
 
 SpriteManager::SpriteManager() :
-	_hostWindow(nullptr),
+	_viewport(nullptr),
+	_window(nullptr),
 	_selectedSpriteId(-1)
 {
 }
@@ -14,9 +15,10 @@ SpriteManager::~SpriteManager()
 	}
 }
 
-void SpriteManager::init(Vengine::Window* hostWindow)
+void SpriteManager::init(Vengine::Viewport* viewport, Vengine::Window* window)
 {
-	_hostWindow = hostWindow;
+	_window = window;
+	_viewport = viewport;
 	_spriteBatch.init();
 }
 
@@ -29,13 +31,13 @@ void SpriteManager::addSprite(glm::vec2 pos, glm::vec2 dim, float depth, std::st
 		id++;
 	}
 
-	if (_hostWindow == nullptr) {
+	if (_viewport == nullptr) {
 		Vengine::fatalError("Sprite manager class used without first calling SpriteManager::init");
 	}
-	_userAddedSprites[id] = new CustomisableSprite(std::to_string(id), _hostWindow);
+	_userAddedSprites[id] = new CustomisableSprite(std::to_string(id), _viewport, _window);
 
 	//init sprite
-	_userAddedSprites[id]->init(pos, dim, depth, textureFilepath, glDrawType);
+	_userAddedSprites[id]->init(new Vengine::Quad(), pos, dim, depth, textureFilepath, glDrawType);
 }
 
 void SpriteManager::deleteSprite(int id) {
@@ -51,10 +53,15 @@ void SpriteManager::draw()
 {
 	//then draw all
 	for (auto& it : _userAddedSprites) {
-		it.second->getShaderProgram()->use();
-		MyFuncs::setUniformsForShader(it.second->getShaderProgram());
+
+		auto shaderProgram = it.second->getShaderProgram();
+
+		shaderProgram->use();
+
+		MyFuncs::setUniformsForShader(shaderProgram);
 		it.second->draw();
-		it.second->getShaderProgram()->unuse();
+
+		shaderProgram->unuse();
 	}
 }
 
@@ -63,11 +70,12 @@ void SpriteManager::drawWithBatching() //useful for fast rendering when not edit
 	_spriteBatch.begin();
 
 	for (auto& it : _userAddedSprites) {
+		std::cout << "LOL";
 		_spriteBatch.draw(it.second);
 	}
 	_spriteBatch.end();
 
-	_spriteBatch.renderBatch();
+	_spriteBatch.renderBatch(MyFuncs::setUniformsForShader);
 }
 
 void SpriteManager::processInput(Vengine::InputManager* inputManager)

@@ -21,6 +21,7 @@ namespace Vengine {
 		//getters
 		int getScreenWidth() const { return _screenWidth; }
 		int getScreenHeight() const { return _screenHeight; }
+		float getAspectRatio() const { return (float)_screenWidth / (float)_screenHeight; }
 
 		glm::vec2 getScreenDim() const { return glm::vec2(_screenWidth, _screenHeight); }
 

@@ -21,7 +21,9 @@ int Window::create(std::string windowName, int screenWidth, int screenHeight, Ui
 
 	_screenWidth = screenWidth;
 	_screenHeight = screenHeight;
-
+	
+	//initialise SDL
+	printf("init SDL...\n");
 	SDL_Init(SDL_INIT_EVERYTHING);
 
 	//must be set before creating window
@@ -40,10 +42,14 @@ int Window::create(std::string windowName, int screenWidth, int screenHeight, Ui
 	}
 
 	//optional, if hardware does not fully supports opengl glew will fix it
+	printf("init glew...\n");
 	GLenum error = glewInit();
 	if (error != GLEW_OK) {
 		fatalError("Could not initialise glew");
 	}
+
+	//general test for gl errors using glGetError func (in MyErrors)
+	testForGlErrors("Problem setting up openGL");
 
 	//print openGL version in console
 	printf("***OpenGL version %s***\n", glGetString(GL_VERSION));
@@ -55,6 +61,7 @@ int Window::create(std::string windowName, int screenWidth, int screenHeight, Ui
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
 	//init imgui
+	printf("init imgui...\n");
 	initImgui();
 
 	return 0; //could return error code for now just return 0
@@ -81,11 +88,14 @@ void Vengine::Window::swapBuffer(){
 void Vengine::Window::initImgui(){
 
 	//init IMGUI
+	printf("	creating context...\n");
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
 	ImGui::StyleColorsDark();
 	
+	printf("	init SDL2...\n");
 	ImGui_ImplSDL2_InitForOpenGL(_window, _glContext);
-	ImGui_ImplOpenGL3_Init("#version 430");
+	printf("	init openGL3...\n");
+	ImGui_ImplOpenGL3_Init();
 }
