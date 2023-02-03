@@ -11,7 +11,7 @@ Master::Master(int sampleWindowForFft, int historySize) :
 	_previousSample(-1),
 
 	_fftOutput(nullptr),
-	_timeConvolvedFftOutput(17),
+	_timeConvolvedFftOutput(5),
 
 	_sampleFftLastCalculated(-1),
 	_sampleTimeConvolvedFftLastCalculated(-1)
@@ -69,11 +69,9 @@ void Master::calculateTimeConvolvedFft() {
 
 	memset(out, 0.0f, _fft.numHarmonics() * sizeof(float));
 
-	float normalisingGuess = (2.0f / _fftOutput->totalSize());
-
 	for (int i = 0; i < _fftOutput->totalSize(); i++) {
 		for (int j = 0; j < _fft.numHarmonics(); j++) {
-			out[j] += _fftOutput->get(i)[j] * Kernels::apply(LINEAR_PYRAMID, i, _fftOutput->totalSize()) * normalisingGuess;
+			out[j] += _fftOutput->get(i)[j] * Kernels::apply(LINEAR_PYRAMID, i, _fftOutput->totalSize());
 		}
 	}
 
@@ -105,5 +103,5 @@ float Master::sumOfConvolutionOfHistory(History<float>* history, int entries, Ke
 	for (int i = 0; i < entries; i++) {
 		conv += history->get(i) * Kernels::apply(kernel, i, entries); //integral of the multiplication = dot product   (in discrete space)
 	}
-	return conv * 2.0f / entries;
+	return conv;
 }

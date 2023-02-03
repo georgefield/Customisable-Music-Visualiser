@@ -57,6 +57,9 @@
     <ClCompile Include="Tools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TempoDetection.cpp">
+      <Filter>Source Files\Signal Processing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainGame.h">
@@ -105,6 +108,12 @@
       <Filter>Source Files\Signal Processing</Filter>
     </ClInclude>
     <ClInclude Include="Tools.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TempoDetection.h">
+      <Filter>Header Files\Signal Processing</Filter>
+    </ClInclude>
+    <ClInclude Include="Threshold.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

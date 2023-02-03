@@ -23,21 +23,21 @@ void NoteOnset::calculateNext(DataExtractionAlgorithm dataAlg, PeakPickingAlgori
 		_m->calculateTimeConvolvedFft(); //depends on time convolved fft
 		onsetValue = spectralDistanceOfTimeConvolvedHarmonics();
 	}
-	_onsetDetectionHistory.add(onsetValue, _m->_currentSample);
+	float limitedValue = _generalLimiter.clampMedianThenLimit(onsetValue);
+	_onsetDetectionHistory.add(limitedValue, _m->_currentSample);
 
-	_CONVonsetDetectionHistory.addWithLimiter(
-		_m->sumOfConvolutionOfHistory(&_onsetDetectionHistory, 20, LINEAR_PYRAMID),
-		_m->_currentSample,
-		120.0f
+	_CONVonsetDetectionHistory.add(
+		_m->sumOfConvolutionOfHistory(&_onsetDetectionHistory, 5, LINEAR_PYRAMID),
+		_m->_currentSample
 	);
 
 	//peak detection
 	bool isPeak = false;
 	if (peakAlg == PeakPickingAlgorithm::THRESHOLD) {
-		isPeak = threshold(_onsetDetectionHistory.newest(), 0.5);
+		isPeak = thresholdPercent(getOnsetHistory(), 10); //peak if in top 10%
 	}
 	if (peakAlg == PeakPickingAlgorithm::CONVOLVE_THEN_THRESHOLD) {
-		isPeak = threshold(_CONVonsetDetectionHistory.newest(), 0.5);
+		isPeak = thresholdPercent(getCONVonsetHistory(), 10); //peak if in top 10%
 	}
 	if (isPeak) {
 		_onsetPeaks.add(_m->_currentSample);
@@ -97,11 +97,8 @@ float NoteOnset::spectralDistanceOfTimeConvolvedHarmonics() {
 
 //*** peak picking algorithms ***
 
-bool NoteOnset::threshold(float value, float thresh)
+bool NoteOnset::thresholdPercent(History<float>* historyToUse, float topXpercent)
 {
-	if (value > thresh) {
-		return true;
-	}
-	return false;
+	_thresholder.addValue(historyToUse->newest());
+	return _thresholder.testThreshold(historyToUse->newest(), topXpercent);
 }
-

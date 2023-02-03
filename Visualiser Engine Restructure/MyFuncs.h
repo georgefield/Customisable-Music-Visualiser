@@ -16,3 +16,4 @@ private:
 	static float _rms;
 };
 
+   

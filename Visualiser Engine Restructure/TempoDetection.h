@@ -29,4 +29,6 @@ private:
 	int _sampleLastCalculated;
 
 	History<float> _timeSinceLastBeatHistory;
+
+	float dixonAlgorithm();
 };

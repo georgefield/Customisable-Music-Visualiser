@@ -3,6 +3,7 @@
 #include "NoteOnset.h"
 #include "Energy.hpp"
 #include "RMS.hpp"
+#include "TempoDetection.h"
 
 #include <GL/glew.h>
 
@@ -12,7 +13,8 @@ public:
 		_master(4096, 2049),
 		_rms(2049),
 		_energy(2049),
-		_noteOnset(2049)
+		_noteOnset(2049),
+		_tempoDetection(2049)
 	{
 	}
 
@@ -22,6 +24,7 @@ public:
 		_rms.init(&_master);
 		_energy.init(&_master);
 		_noteOnset.init(&_master, &_energy);
+		_tempoDetection.init(&_master, &_noteOnset);
 	}
 
 	void beginCalculations(int currentSample) {
@@ -43,6 +46,7 @@ public:
 	RMS _rms;
 	Energy _energy;
 	NoteOnset _noteOnset;
+	TempoDetection _tempoDetection;
 
 	void updateSSBOwithHistory(History<float>* history, GLuint id, GLint binding);
 

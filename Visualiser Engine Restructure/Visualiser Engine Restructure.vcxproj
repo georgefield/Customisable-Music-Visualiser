@@ -142,6 +142,7 @@
     <ClCompile Include="MyFuncs.cpp" />
     <ClCompile Include="SignalProcessing.cpp" />
     <ClCompile Include="SpriteManager.cpp" />
+    <ClCompile Include="TempoDetection.cpp" />
     <ClCompile Include="Tools.cpp" />
     <ClCompile Include="UI.cpp" />
     <ClCompile Include="UniformSetting.cpp" />
@@ -160,6 +161,8 @@
     <ClInclude Include="RMS.hpp" />
     <ClInclude Include="SignalProcessing.h" />
     <ClInclude Include="SpriteManager.h" />
+    <ClInclude Include="TempoDetection.h" />
+    <ClInclude Include="Threshold.h" />
     <ClInclude Include="Tools.h" />
     <ClInclude Include="UI.h" />
     <ClInclude Include="UniformSetting.h" />

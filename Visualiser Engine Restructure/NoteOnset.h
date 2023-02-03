@@ -1,8 +1,12 @@
 #pragma once
 #include "Tools.h"
 #include "Master.h"
+#include "Threshold.h"
 
 #include "Energy.hpp"
+
+#include <set>
+#include "Limiter.h"
 
 class NoteOnset {
 public:
@@ -20,16 +24,23 @@ public:
 	NoteOnset(int historySize) :
 		_onsetDetectionHistory(historySize),
 		_onsetPeaks(historySize),
-		_CONVonsetDetectionHistory(historySize)
+		_CONVonsetDetectionHistory(historySize),
+		_generalLimiter(1.0, 0.5, 10.0, 0.2),
+		_thresholder(500)
 	{}
 
 	void init(Master* master, Energy* energy) {
 		_m = master;
 		_energy = energy;
 		_sampleLastCalculated = -1;
+		//thresholding vars
+		_justGoneOverThreshold = false;
 	}
 
-	void calculateNext(DataExtractionAlgorithm dataAlg, PeakPickingAlgorithm peakAlg);
+	void calculateNext(
+		DataExtractionAlgorithm dataAlg = DataExtractionAlgorithm::SPECTRAL_DISTANCE_CONVOLVED_HARMONICS, 
+		PeakPickingAlgorithm peakAlg = PeakPickingAlgorithm::THRESHOLD
+	);
 
 	History<float>* getOnsetHistory() {
 		return &_onsetDetectionHistory;
@@ -52,10 +63,14 @@ private:
 	float spectralDistanceOfHarmonics();
 	float spectralDistanceOfTimeConvolvedHarmonics();
 
-	bool threshold(float value, float thresh);
+	bool thresholdPercent(History<float>* historyToUse, float topXpercent);
 
 	History<float> _onsetDetectionHistory;
 	History<float> _CONVonsetDetectionHistory;
 
+	Limiter _generalLimiter;
+	Threshold _thresholder;
+
 	History<int> _onsetPeaks; //in sample time
+	bool _justGoneOverThreshold;
 };

@@ -2,14 +2,14 @@
 #include <stdio.h>
 #include <iostream>
 #include <Vengine/MyErrors.h>
-#include "Limiter.h"
 
+#include <vector>
 
 template <class T>
 class History
 {
 public:
-	History(int size) : _start(size - 1), _size(size), _addCalls(0), _L(1,0.2,5) {
+	History(int size) : _start(size - 1), _size(size), _addCalls(0) {
 		_data = new T[_size];
 		memset(_data, NULL, _size * sizeof(T));
 
@@ -28,10 +28,6 @@ public:
 		_addCalls++;
 	};
 
-	void addWithLimiter(T value, int currentSample = -1, int gain = 1){
-		add(_L.limitValue(value, gain), currentSample);
-	}
-
 	void clear(bool eraseData = false) {
 		_start = _size - 1;
 		_addCalls = 0;
@@ -39,11 +35,22 @@ public:
 	}
 
 	//getters
+	std::vector<T> getAsVector() {
+		std::vector<T> toReturn;
+		toReturn.reserve(entries());
+
+		for (int i = 0; i < entries(); i++) {
+			toReturn.push_back(get(i));
+		}
+
+		return toReturn;
+	}
+
 	T oldest() { return get(std::min(_addCalls - 1, _size - 1)); }
 	T newest() { return get(0); }
 	T previous() { return get(1); }
 	T get(int recency) { 
-		if (_addCalls == 0) { Vengine::fatalError("No entries in history"); }
+		if (_addCalls == 0) { Vengine::warning("Get called on unitialised entry"); }
 		return _data[(_start + recency) % _size]; 
 	}
 	
@@ -75,6 +82,4 @@ protected:
 	int _size;
 
 	int _addCalls;
-
-	Limiter _L;
 };

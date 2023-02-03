@@ -13,22 +13,31 @@ enum Kernel {
 
 class Kernels {
 public:
+	//can speed up if program needs
 	static float apply(Kernel kernel, int k, int n) {
+		float scale = 1.0f;
 		switch (kernel) {
 		case LINEAR_PYRAMID:
-			return linear(k, n);
+			scale = (2.0f / float(n));
+			return linear(k, n) * scale;
 			break;
-		case GAUSSIAN_PYRAMID:
+		case GAUSSIAN_PYRAMID://no scaling as gaussian integral = 1
 			return gaussian(k, n);
 		case FLAT:
-			return 1; //because all weighted equally
+			return 1.0f / float(n);
 		case TENSION2_PYRAMID:
-			return tension(k, n, 1);
+			scale = getTensionScale(2.0f, n);
+			return tension(k, n, 2) * scale;
 		case TENSIONP5_PYRAMID:
-			return tension(k, n, 0.5);
+			scale = getTensionScale(0.5f, n);
+			return tension(k, n, 0.5) * scale;
 		}
 	}
 private:
+
+	static float getTensionScale(float t, int n) {
+		return ((t + 1) / float(n)) * powf(2.0f / float(n), t);
+	}
 
 	static float linear(int k, int n) {
 		return 1 - ((2.0f / n) * fabsf(k - ((n - 1) / 2)));
@@ -38,8 +47,7 @@ private:
 	}
 	static float gaussian(int k, int n) {
 		int x = k - ((n - 1) / 2);
-
-		return expf( - (x * x) / (n / 2));
+		return expf( - (x * x) / (n / 2)); 
 	}
 
 };

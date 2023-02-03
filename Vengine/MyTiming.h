@@ -8,6 +8,11 @@ namespace Vengine {
 	class MyTiming
 	{
 	public:
+		struct WhenRead {
+			bool readThisFrame;
+			bool readLastFrame;
+		};
+
 		static void frameDone();
 		static float getFPS();
 		static void setNumSamplesForFPS(int samples);
@@ -16,6 +21,7 @@ namespace Vengine {
 
 		static void startTimer(int& id);
 		static float readTimer(int id);
+		static bool timerReadLastFrame(int id);
 	private:
 		static long long ticksSinceEpoch();
 		static float ticksToSeconds(long long ticks);
@@ -29,6 +35,9 @@ namespace Vengine {
 		static int _frameCount;
 
 		static std::map<int, long long> _timerStartTicks; //used to store start timer time
+
+		static void updateWhenRead();
+		static std::map<int, WhenRead> _whenTimerRead;
 	};
 
 }

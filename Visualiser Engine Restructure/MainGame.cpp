@@ -155,6 +155,9 @@ void MainGame::gameLoop() {
 			if (_inputManager.isKeyPressed(SDL_BUTTON_LEFT)) {
 				printf("%f fps\n", Vengine::MyTiming::getFPS());
 			}
+			if (_inputManager.isKeyPressed(SDLK_ESCAPE)) {
+				system("PAUSE");
+			}
 
 			drawVis(); //visualiser first to draw ui on top of visualiser
 			drawUi();
@@ -187,13 +190,14 @@ void MainGame::drawVis() {
 
 	_signalProc.beginCalculations(_currSample);
 
-	_signalProc._noteOnset.calculateNext(NoteOnset::DataExtractionAlgorithm::SPECTRAL_DISTANCE_CONVOLVED_HARMONICS, NoteOnset::PeakPickingAlgorithm::THRESHOLD);
+	_signalProc._noteOnset.calculateNext(NoteOnset::DataExtractionAlgorithm::SPECTRAL_DISTANCE_CONVOLVED_HARMONICS, NoteOnset::PeakPickingAlgorithm::CONVOLVE_THEN_THRESHOLD);
+	_signalProc._tempoDetection.calculateNext();
 	//_signalProc.calculateFft();
 
 	_signalProc.endCalculations();
 
 	//Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, _signalProc.getFftOutput(), _signalProc.getNumHarmonics() * sizeof(float));
-	_signalProc.updateSSBOwithHistory(_signalProc._noteOnset.getOnsetHistory(), _ssboHarmonicDataID, 1);
+	_signalProc.updateSSBOwithHistory(_signalProc._noteOnset.getCONVonsetHistory(), _ssboHarmonicDataID, 1);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

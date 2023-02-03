@@ -13,6 +13,7 @@ float MyTiming::_deltaT = 1.0; //set to non zero to avoid errors
 int MyTiming::_numFPSsamples = 10;
 std::vector<long long> MyTiming::_frameTimings(_numFPSsamples);
 int MyTiming::_frameCount = 0;
+std::map<int, MyTiming::WhenRead> MyTiming::_whenTimerRead;
 
 
 void MyTiming::frameDone() {
@@ -23,6 +24,7 @@ void MyTiming::frameDone() {
 		}
 	}
 
+	updateWhenRead();
 	_frameCount++;
 	_frameTimings.at(_frameCount % _numFPSsamples) = MyTiming::ticksSinceEpoch();
 }
@@ -63,12 +65,19 @@ void MyTiming::startTimer(int& id) {
 
 	//timers work by recording the start time and then are later calculated by checking the current time - start time
 	_timerStartTicks[id] = MyTiming::ticksSinceEpoch();
+	_whenTimerRead[id] = { false, false }; //0 for no
 }
 
 
 float MyTiming::readTimer(int id) { //returns seconds elapsed
 
+	_whenTimerRead[id].readThisFrame = true;
 	return ticksToSeconds(MyTiming::ticksSinceEpoch() - _timerStartTicks[id]);
+}
+
+bool Vengine::MyTiming::timerReadLastFrame(int id)
+{
+	return _whenTimerRead[id].readLastFrame;
 }
 
 
@@ -83,4 +92,12 @@ long long MyTiming::ticksSinceEpoch() { //in nanoseconds
 float MyTiming::ticksToSeconds(long long ticks) {
 
 	return ticks * 0.000000001f;
+}
+
+void Vengine::MyTiming::updateWhenRead()
+{
+	for (auto& it : _whenTimerRead) {
+		it.second.readLastFrame = it.second.readThisFrame;
+		it.second.readThisFrame = false;
+	}
 }
