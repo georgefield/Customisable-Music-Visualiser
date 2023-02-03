@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\Signal Processing">
+      <UniqueIdentifier>{81c9e6ae-9017-4488-970b-2a815d22131a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Signal Processing">
+      <UniqueIdentifier>{53bf489d-29e8-4d99-bc20-7ffe23c47f8a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -33,10 +39,22 @@
     <ClCompile Include="SpriteManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SignalProcessing.cpp">
+    <ClCompile Include="UI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UI.cpp">
+    <ClCompile Include="UniformSetting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Master.cpp">
+      <Filter>Source Files\Signal Processing</Filter>
+    </ClCompile>
+    <ClCompile Include="NoteOnset.cpp">
+      <Filter>Source Files\Signal Processing</Filter>
+    </ClCompile>
+    <ClCompile Include="SignalProcessing.cpp">
+      <Filter>Source Files\Signal Processing</Filter>
+    </ClCompile>
+    <ClCompile Include="Tools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -50,13 +68,7 @@
     <ClInclude Include="MyFuncs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CustomisableSprite.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="SpriteManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SignalProcessing.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="History.h">
@@ -69,6 +81,30 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="UI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UniformSetting.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Master.h">
+      <Filter>Header Files\Signal Processing</Filter>
+    </ClInclude>
+    <ClInclude Include="Energy.hpp">
+      <Filter>Source Files\Signal Processing</Filter>
+    </ClInclude>
+    <ClInclude Include="NoteOnset.h">
+      <Filter>Header Files\Signal Processing</Filter>
+    </ClInclude>
+    <ClInclude Include="CustomisableSprite.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SignalProcessing.h">
+      <Filter>Header Files\Signal Processing</Filter>
+    </ClInclude>
+    <ClInclude Include="RMS.hpp">
+      <Filter>Source Files\Signal Processing</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

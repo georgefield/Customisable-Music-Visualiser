@@ -6,6 +6,7 @@ in vec2 vertexUV;
 
 out vec2 fragmentPosition;
 out vec2 fragmentUV;
+out vec4 fragmentColour;
 
 
 void main(){
@@ -14,5 +15,6 @@ void main(){
 	gl_Position.w = 1.0;
 	
 	fragmentPosition = vertexPosition; //all will be interpolated between vertices
-	fragmentUV = vec2(vertexUV.x, vertexUV.y);
+	fragmentColour = vertexColour;
+	fragmentUV = vec2(vertexUV.x, 1- vertexUV.y); //flip y because openGL is wierd
 }

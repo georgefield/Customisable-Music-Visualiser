@@ -135,24 +135,34 @@
   <ItemGroup>
     <ClCompile Include="CustomisableSprite.cpp" />
     <ClCompile Include="FFTW.cpp" />
+    <ClCompile Include="NoteOnset.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainGame.cpp" />
+    <ClCompile Include="Master.cpp" />
     <ClCompile Include="MyFuncs.cpp" />
     <ClCompile Include="SignalProcessing.cpp" />
     <ClCompile Include="SpriteManager.cpp" />
+    <ClCompile Include="Tools.cpp" />
     <ClCompile Include="UI.cpp" />
+    <ClCompile Include="UniformSetting.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CustomisableSprite.h" />
+    <ClInclude Include="Energy.hpp" />
     <ClInclude Include="FFTW.h" />
+    <ClInclude Include="NoteOnset.h" />
     <ClInclude Include="History.h" />
     <ClInclude Include="Kernels.h" />
     <ClInclude Include="Limiter.h" />
     <ClInclude Include="MainGame.h" />
+    <ClInclude Include="Master.h" />
     <ClInclude Include="MyFuncs.h" />
+    <ClInclude Include="RMS.hpp" />
     <ClInclude Include="SignalProcessing.h" />
     <ClInclude Include="SpriteManager.h" />
+    <ClInclude Include="Tools.h" />
     <ClInclude Include="UI.h" />
+    <ClInclude Include="UniformSetting.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

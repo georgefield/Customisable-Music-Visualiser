@@ -131,6 +131,8 @@ void SpriteBatch::createRenderBatches() {
 	//upload data of vertices array to vbo
 	glBufferSubData(GL_ARRAY_BUFFER, 0, _numVerticesToDraw * sizeof(Vertex), contiguousVertexArray);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	delete[] contiguousVertexArray;
 }
 
 void SpriteBatch::createVertexArray() { //vao is a way to tell opengl that all quads in vbo has same vertex attribs
@@ -184,3 +186,4 @@ void SpriteBatch::sortSprites() {
 	std::stable_sort(_spritePtrs.begin(), _spritePtrs.end(), compareShader);
 	std::stable_sort(_spritePtrs.begin(), _spritePtrs.end(), compareBackToFront);
 }
+

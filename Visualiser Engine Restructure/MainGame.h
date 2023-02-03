@@ -44,7 +44,6 @@ private:
 
 
 	Vengine::Sprite _eq;
-	Vengine::Sprite _background;
 	SpriteManager _spriteManager;
 
 	Vengine::SpriteBatch _spriteBatch;

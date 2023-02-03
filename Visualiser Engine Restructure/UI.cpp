@@ -14,7 +14,7 @@ void UI::init(Vengine::Window* window, SpriteManager* spriteManager, Vengine::In
 	_inputManager = inputManager;
 
 	_toolbarSizePx = 100;
-	_sidebarSizePx = 150;
+	_sidebarSizePx = 200;
 }
 
 
@@ -81,11 +81,60 @@ void UI::sidebar() {
 	ImGui::SetNextWindowSize(ImVec2(_sidebarSizePx, _window->getScreenHeight() - _toolbarSizePx));
 
 	ImGui::Begin("Sidebar", (bool*)0, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoTitleBar);
-	ImGui::Text("WIP Sidebar");
+
+	//change sprite values from sidebar--
+
+	std::vector<CustomisableSprite*> spritesByDepthOrder = _spriteManager->getDepthSortedSprites();
+
+	ImGui::Text("Sprites");
+	ImGui::BeginChild("Sprites", ImVec2(ImGui::GetContentRegionAvail().x, std::min(_window->getScreenHeight() * 0.8f, 500.0f)), true);
+
+	bool sortRequired = false;
+	for (int i = spritesByDepthOrder.size() - 1; i >= 0; i--) {
+		ImGui::PushID(i);
+
+		ImGui::Separator();
+
+		auto it = spritesByDepthOrder[i];
+
+		//name
+		ImGui::Text(it->getName().c_str());
+
+		//change depth
+		ImGui::InputFloat("Depth", it->getDepthPtr());
+		if (ImGui::IsItemDeactivated()) {
+			sortRequired = true; //sort if depth changed
+		}
+
+		//show in editor
+		ImGui::Checkbox("Show (editor)", it->getShowPtr()); ImGui::SameLine();
+		//select sprite
+		if (ImGui::Button("Select")) {
+			spritesByDepthOrder[i]->setSpriteState(SELECTED);
+		}
+
+		//delete
+		if (ImGui::Button("Delete")) {
+			spritesByDepthOrder[i]->setSpriteState(DELETE_SELF);
+		}
+
+		ImGui::PopID(); 
+	}
+
+	ImGui::Separator();
+
+	ImGui::EndChild();
+
+	if (sortRequired) {
+		_spriteManager->updateDepthSortedSprites(); //in case any change in depth
+	}
+
+	//--
+
+
 
 	ImGui::End();
 }
-
 
 void UI::processInput()
 {

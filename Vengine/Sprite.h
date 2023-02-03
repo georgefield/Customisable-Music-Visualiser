@@ -62,6 +62,7 @@ namespace Vengine {
 		GLSLProgram* _shaderProgram;
 
 		//model interaction helper functions
+		//setters
 		void setModelPos(glm::vec2 pos) {
 			_model->setBoundingBox(pos, _model->dim);
 			updateBuffer();
@@ -74,6 +75,11 @@ namespace Vengine {
 			_model->setBoundingBox(pos, dim);
 			updateBuffer();
 		}
+		void setModelColour(ColourRGBA8 colour) {
+			_model->setColour(colour);
+			updateBuffer();
+		}
+		//getters
 		glm::vec4 getModelBoundingBox() {
 			return _model->getBoundingBox();
 		}
@@ -82,6 +88,9 @@ namespace Vengine {
 		}
 		glm::vec2 getModelDim() {
 			return _model->dim;
+		}
+		ColourRGBA8 getModelColour() {
+			return _model->colour;
 		}
 
 	};

@@ -24,7 +24,7 @@ Sprite::~Sprite()
 
 void Sprite::init(Model* model, glm::vec2 pos, glm::vec2 dim, float depth, std::string textureFilepath, GLuint glDrawType) {
 
-	_shaderProgram = ResourceManager::getShaderProgram("Shaders/noshading"); //default to no shading
+	_shaderProgram = ResourceManager::getShaderProgram("Shaders/Preset/simple"); //default to simple texture shading
 
 	_model = model;
 	_model->init();
@@ -93,7 +93,6 @@ void Sprite::draw() {
 
 void Sprite::attachShader(Vengine::GLSLProgram* shaderProgram)
 {
-	printf("ATTACHING SHADER (WEE WOO)");
 	_shaderProgram = shaderProgram;
 }
 

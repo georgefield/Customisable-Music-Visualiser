@@ -41,6 +41,7 @@ public:
 	//getters
 	T oldest() { return get(std::min(_addCalls - 1, _size - 1)); }
 	T newest() { return get(0); }
+	T previous() { return get(1); }
 	T get(int recency) { 
 		if (_addCalls == 0) { Vengine::fatalError("No entries in history"); }
 		return _data[(_start + recency) % _size]; 

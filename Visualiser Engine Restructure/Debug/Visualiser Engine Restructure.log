@@ -12,28 +12,52 @@ C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(19,15): wa
           ]
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(34,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(42,26): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MainGame.cpp(69,20): warning C4018: '<': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MainGame.cpp(125,59): warning C4244: 'argument': conversion from 'Sint32' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MainGame.cpp(125,44): warning C4244: 'argument': conversion from 'Sint32' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(84,38): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(85,39): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(90,28): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(91,29): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(139,38): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(140,39): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(145,28): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(146,29): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MainGame.cpp(71,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MainGame.cpp(126,59): warning C4244: 'argument': conversion from 'Sint32' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MainGame.cpp(126,44): warning C4244: 'argument': conversion from 'Sint32' to 'float', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MainGame.cpp(186,16): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-  UI.cpp
-C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(18,14): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(19,15): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(27,61): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(27,57): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(80,77): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(80,59): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(81,77): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(81,34): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(107,14): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(108,14): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-  Generating Code...
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\History.h(12,67): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\History.h(12,1): message : while compiling class template member function 'History<int>::History(int)'
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(22,14): message : see reference to function template instantiation 'History<int>::History(int)' being compiled
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(60,15): message : see reference to class template instantiation 'History<int>' being compiled
   Visualiser Engine Restructure.vcxproj -> C:\Users\George\Documents\3rd year project\Project\Debug\Visualiser Engine Restructure.exe
