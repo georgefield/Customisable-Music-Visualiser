@@ -33,6 +33,17 @@ void Audio::playSound() {
 	SDL_PauseAudioDevice(_soundID, 0); //0 is unpause aka play
 }
 
+void Vengine::Audio::pauseSound()
+{
+	SDL_PauseAudioDevice(_soundID, 1); //1 is pause
+}
+
+void Vengine::Audio::unpauseSound()
+{
+	SDL_PauseAudioDevice(_soundID, 0); //0 is play
+
+}
+
 
 Audio::~Audio() {
 	//clear up data

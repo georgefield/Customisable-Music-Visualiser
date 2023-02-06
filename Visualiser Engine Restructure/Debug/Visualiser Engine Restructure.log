@@ -54,9 +54,30 @@ C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(50,26): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Threshold.h(32,50): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Limiter.h(20,16): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(30,1): warning C4305: 'argument': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(29,21): warning C4018: '<': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(60,42): warning C4305: 'initializing': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(70,23): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(70,12): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(36,1): warning C4305: 'argument': truncation from 'double' to 'float'
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(50,19): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(58,19): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(108,21): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(123,21): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(139,20): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(140,20): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(204,30): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(205,30): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(215,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(235,35): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(236,30): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(308,44): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(318,29): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(318,12): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(363,20): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(367,30): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(368,31): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(370,15): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(379,15): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(380,16): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(393,24): warning C4305: '-=': truncation from 'double' to 'float'
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(396,33): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(404,26): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(406,34): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(409,49): warning C4244: '+=': conversion from 'double' to 'float', possible loss of data
   Visualiser Engine Restructure.vcxproj -> C:\Users\George\Documents\3rd year project\Project\Debug\Visualiser Engine Restructure.exe

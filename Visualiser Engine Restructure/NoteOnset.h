@@ -8,6 +8,11 @@
 #include <set>
 #include "Limiter.h"
 
+struct Peak {
+	int onset;
+	float salience;
+};
+
 class NoteOnset {
 public:
 	enum class DataExtractionAlgorithm {
@@ -26,7 +31,8 @@ public:
 		_onsetPeaks(historySize),
 		_CONVonsetDetectionHistory(historySize),
 		_generalLimiter(1.0, 0.5, 10.0, 0.2),
-		_thresholder(500)
+		_lastAboveThresh(false),
+		_thresholder(2000)
 	{}
 
 	void init(Master* master, Energy* energy) {
@@ -46,7 +52,7 @@ public:
 		return &_onsetDetectionHistory;
 	}
 
-	History<int>* getPeakHistory() {
+	History<Peak>* getPeakHistory() {
 		return &_onsetPeaks;
 	}
 
@@ -58,7 +64,7 @@ private:
 	Energy* _energy;
 
 	int _sampleLastCalculated;
-
+	
 	float derivativeOfLogEnergy();
 	float spectralDistanceOfHarmonics();
 	float spectralDistanceOfTimeConvolvedHarmonics();
@@ -70,7 +76,8 @@ private:
 
 	Limiter _generalLimiter;
 	Threshold _thresholder;
+	bool _lastAboveThresh;
 
-	History<int> _onsetPeaks; //in sample time
+	History<Peak> _onsetPeaks; //in sample time
 	bool _justGoneOverThreshold;
 };

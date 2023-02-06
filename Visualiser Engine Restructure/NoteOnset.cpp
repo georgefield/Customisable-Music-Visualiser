@@ -14,6 +14,7 @@ void NoteOnset::calculateNext(DataExtractionAlgorithm dataAlg, PeakPickingAlgori
 	if (dataAlg == DataExtractionAlgorithm::DER_OF_LOG_ENERGY) {
 		_energy->calculateNext(LINEAR_PYRAMID); //depends on energy
 		onsetValue = derivativeOfLogEnergy();
+		onsetValue *= 10; //somewhat normalise
 	}
 	if (dataAlg == DataExtractionAlgorithm::SPECTRAL_DISTANCE) {
 		_m->calculateFft(); //depends on fft for spectral information
@@ -22,12 +23,12 @@ void NoteOnset::calculateNext(DataExtractionAlgorithm dataAlg, PeakPickingAlgori
 	if (dataAlg == DataExtractionAlgorithm::SPECTRAL_DISTANCE_CONVOLVED_HARMONICS) {
 		_m->calculateTimeConvolvedFft(); //depends on time convolved fft
 		onsetValue = spectralDistanceOfTimeConvolvedHarmonics();
+		onsetValue *= 10; //somewhat normalise
 	}
-	float limitedValue = _generalLimiter.clampMedianThenLimit(onsetValue);
-	_onsetDetectionHistory.add(limitedValue, _m->_currentSample);
+	_onsetDetectionHistory.add(onsetValue, _m->_currentSample);
 
 	_CONVonsetDetectionHistory.add(
-		_m->sumOfConvolutionOfHistory(&_onsetDetectionHistory, 5, LINEAR_PYRAMID),
+		_m->sumOfConvolutionOfHistory(&_onsetDetectionHistory, 20, LINEAR_PYRAMID),
 		_m->_currentSample
 	);
 
@@ -40,7 +41,8 @@ void NoteOnset::calculateNext(DataExtractionAlgorithm dataAlg, PeakPickingAlgori
 		isPeak = thresholdPercent(getCONVonsetHistory(), 10); //peak if in top 10%
 	}
 	if (isPeak) {
-		_onsetPeaks.add(_m->_currentSample);
+		//std::cout << _m->_currentSample << std::endl;
+		_onsetPeaks.add({ _m->_currentSample, onsetValue });
 	}
 }
 
@@ -100,5 +102,8 @@ float NoteOnset::spectralDistanceOfTimeConvolvedHarmonics() {
 bool NoteOnset::thresholdPercent(History<float>* historyToUse, float topXpercent)
 {
 	_thresholder.addValue(historyToUse->newest());
-	return _thresholder.testThreshold(historyToUse->newest(), topXpercent);
+	bool aboveThresh = _thresholder.testThreshold(historyToUse->newest(), topXpercent);
+	bool aboveAndNoSpam = (!_lastAboveThresh && aboveThresh);
+	_lastAboveThresh = aboveThresh;
+	return aboveAndNoSpam;
 }

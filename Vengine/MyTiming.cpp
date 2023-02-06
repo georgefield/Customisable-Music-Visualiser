@@ -2,6 +2,10 @@
 #include <utility>
 #include <SDL/SDL.h>
 
+#include "MyErrors.h"
+
+#include <iostream>
+
 
 using namespace Vengine;
 
@@ -14,6 +18,9 @@ int MyTiming::_numFPSsamples = 10;
 std::vector<long long> MyTiming::_frameTimings(_numFPSsamples);
 int MyTiming::_frameCount = 0;
 std::map<int, MyTiming::WhenRead> MyTiming::_whenTimerRead;
+
+bool MyTiming::_isPaused = false;
+long long MyTiming::_pauseStartTicks = -1;
 
 
 void MyTiming::frameDone() {
@@ -72,7 +79,24 @@ void MyTiming::startTimer(int& id) {
 float MyTiming::readTimer(int id) { //returns seconds elapsed
 
 	_whenTimerRead[id].readThisFrame = true;
-	return ticksToSeconds(MyTiming::ticksSinceEpoch() - _timerStartTicks[id]);
+
+	long long ticks;
+
+	if (_isPaused) { //if paused then return time when paused by taking away time since paused
+		ticks = _pauseStartTicks - _timerStartTicks[id];
+	}
+	else {
+		ticks = MyTiming::ticksSinceEpoch() - _timerStartTicks[id];
+	}
+
+	return ticksToSeconds(ticks);
+}
+
+float Vengine::MyTiming::stopTimer(int id)
+{
+	float ret = readTimer(id);
+	_timerStartTicks.erase(id);
+	return ret;
 }
 
 bool Vengine::MyTiming::timerReadLastFrame(int id)
@@ -80,6 +104,29 @@ bool Vengine::MyTiming::timerReadLastFrame(int id)
 	return _whenTimerRead[id].readLastFrame;
 }
 
+void Vengine::MyTiming::pauseTimers()
+{
+	if (_isPaused) {
+		warning("timers already paused");
+		return;
+	}
+	_pauseStartTicks = MyTiming::ticksSinceEpoch();
+	_isPaused = true;
+}
+
+void Vengine::MyTiming::unpauseTimers()
+{
+	if (!_isPaused) {
+		warning("timers not paused");
+		return;
+	}
+
+	long long timePaused = (MyTiming::ticksSinceEpoch() - _pauseStartTicks);
+	for (auto& it : _timerStartTicks) {
+		it.second += timePaused; //shift start ticks forward by time paused
+	}
+	_isPaused = false;
+}
 
 
 //helper functions

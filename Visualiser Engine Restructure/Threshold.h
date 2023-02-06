@@ -20,7 +20,7 @@ public:
 	}
 
 	bool testThreshold(float value, float topXpercent) {
-		if (value > getTopXpercentValue(10)) {
+		if ((value * getFractionFull()) > getTopXpercentValue(10)) {
 			return true;
 		}
 		return false;

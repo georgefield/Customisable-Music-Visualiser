@@ -26,7 +26,7 @@ MainGame::MainGame() :
 
 //RESTRUCTURE ENTIRE ENGINE, CLONE THIS PROJECT AS BACKUP
 
-const std::string musicFilepath = "Music/King Geedorah - Next Levels.wav";
+const std::string musicFilepath = "Music/MPH - Nova.wav";
 
 
 void MainGame::run() {
@@ -136,7 +136,7 @@ void MainGame::gameLoop() {
 
 	Vengine::MyTiming::startTimer(_globalTimer);
 
-	_song.playSound();
+	//_song.playSound();
 
 	Vengine::MyTiming::setNumSamplesForFPS(100);
 	Vengine::MyTiming::setFPSlimit(2500);
@@ -156,7 +156,14 @@ void MainGame::gameLoop() {
 				printf("%f fps\n", Vengine::MyTiming::getFPS());
 			}
 			if (_inputManager.isKeyPressed(SDLK_ESCAPE)) {
+				Vengine::MyTiming::pauseTimers();
+				_song.pauseSound();
+				Vengine::MyTiming::readTimer(_globalTimer);
 				system("PAUSE");
+				Vengine::MyTiming::unpauseTimers();
+				_song.unpauseSound();
+				Vengine::MyTiming::readTimer(_globalTimer);
+
 			}
 
 			drawVis(); //visualiser first to draw ui on top of visualiser

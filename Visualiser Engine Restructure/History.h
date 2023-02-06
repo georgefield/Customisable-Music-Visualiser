@@ -35,11 +35,15 @@ public:
 	}
 
 	//getters
-	std::vector<T> getAsVector() {
+	std::vector<T> getAsVector(int firstXentries = -1) {
 		std::vector<T> toReturn;
-		toReturn.reserve(entries());
+		if (firstXentries == -1) { //get all
+			firstXentries = entries();
+			
+		}
+		toReturn.reserve(firstXentries);
 
-		for (int i = 0; i < entries(); i++) {
+		for (int i = 0; i < firstXentries; i++) {
 			toReturn.push_back(get(i));
 		}
 

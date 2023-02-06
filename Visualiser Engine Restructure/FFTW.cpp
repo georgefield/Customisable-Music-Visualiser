@@ -4,7 +4,7 @@
 FFTW::FFTW(int N) :
 	_p(nullptr),
 	_out(nullptr),
-	_harmonicValues(17) //store 17 previous fourier transforms, prime number to stop resonance
+	_harmonicValues(17) //store 17 previous fourier transforms, prime number to stop resonance, used for convolving
 {
 	_N = N;
 	_out = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex) * ((_N / 2) + 1));

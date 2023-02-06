@@ -21,8 +21,13 @@ namespace Vengine {
 
 		static void startTimer(int& id);
 		static float readTimer(int id);
+		static float stopTimer(int id);
 		static bool timerReadLastFrame(int id);
+
+		static void pauseTimers();
+		static void unpauseTimers();
 	private:
+
 		static long long ticksSinceEpoch();
 		static float ticksToSeconds(long long ticks);
 
@@ -33,6 +38,9 @@ namespace Vengine {
 		static int _numFPSsamples;
 		static std::vector<long long> _frameTimings;
 		static int _frameCount;
+
+		static bool _isPaused;
+		static long long _pauseStartTicks;
 
 		static std::map<int, long long> _timerStartTicks; //used to store start timer time
 

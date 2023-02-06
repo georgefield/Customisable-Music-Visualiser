@@ -11,6 +11,9 @@ namespace Vengine {
 		~Audio();
 		void loadWav(const std::string& filepath, int& _sampleRate);
 		void playSound();
+		void pauseSound();
+		void unpauseSound();
+
 
 		//getters
 		float* getNormalisedWavData();
