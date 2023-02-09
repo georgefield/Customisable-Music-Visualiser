@@ -20,7 +20,7 @@ public:
 		return &_energy;
 	}
 
-	void calculateNext(Kernel kernel) {
+	void calculateNext(int convolveWindowSize, Kernel kernel) {
 
 		//make sure not called twice on same frame
 		if (_sampleLastCalculated == _m->_currentSample) {
@@ -32,10 +32,10 @@ public:
 		//none
 
 		float sum = 0;
-		for (int i = _m->_currentSample; i < _m->_currentSample + _m->_N; i++) {
-			sum += fabsf(_m->_audioData[i]) * Kernels::apply(kernel, i - _m->_currentSample, _m->_N);
+		for (int i = _m->_currentSample; i < _m->_currentSample + convolveWindowSize; i++) {
+			sum += fabsf(_m->_audioData[i]) * Kernels::apply(kernel, i - _m->_currentSample, convolveWindowSize);
 		}
-		_energy.add(sum / _m->_N);
+		_energy.add(sum / convolveWindowSize);
 	}
 
 private:

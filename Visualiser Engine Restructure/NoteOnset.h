@@ -4,6 +4,7 @@
 #include "Threshold.h"
 
 #include "Energy.hpp"
+#include "FFTs.h"
 
 #include <set>
 #include "Limiter.h"
@@ -17,8 +18,8 @@ class NoteOnset {
 public:
 	enum class DataExtractionAlgorithm {
 		SPECTRAL_DISTANCE,
-		DER_OF_LOG_ENERGY,
-		SPECTRAL_DISTANCE_CONVOLVED_HARMONICS
+		SPECTRAL_DISTANCE_CONVOLVED_HARMONICS,
+		DER_OF_LOG_ENERGY
 	};
 
 	enum class PeakPickingAlgorithm {
@@ -32,19 +33,29 @@ public:
 		_CONVonsetDetectionHistory(historySize),
 		_generalLimiter(1.0, 0.5, 10.0, 0.2),
 		_lastAboveThresh(false),
-		_thresholder(2000)
+		_goingDownFromPeak(false),
+		_thresholder(500)
 	{}
 
-	void init(Master* master, Energy* energy) {
+	void init(Master* master, Energy* energy, FFTs* FFTs) {
 		_m = master;
 		_energy = energy;
+		_FFTs = FFTs;
+
 		_sampleLastCalculated = -1;
 		//thresholding vars
 		_justGoneOverThreshold = false;
+
+		_currentConvolvedHarmonics = new float[_FFTs->_numHarmonics];
+		_previousConvolvedHarmonics = new float[_FFTs->_numHarmonics];
+	}
+
+	void setFourierTransformToUseForSpectralDistance(FourierTransformType type) {
+		_fourierTransformTypeForSpectralDistance = type;
 	}
 
 	void calculateNext(
-		DataExtractionAlgorithm dataAlg = DataExtractionAlgorithm::SPECTRAL_DISTANCE_CONVOLVED_HARMONICS, 
+		DataExtractionAlgorithm dataAlg = DataExtractionAlgorithm::SPECTRAL_DISTANCE_CONVOLVED_HARMONICS,
 		PeakPickingAlgorithm peakAlg = PeakPickingAlgorithm::THRESHOLD
 	);
 
@@ -62,12 +73,14 @@ public:
 private:
 	Master* _m;
 	Energy* _energy;
+	FFTs* _FFTs;
 
+	FourierTransformType _fourierTransformTypeForSpectralDistance;
 	int _sampleLastCalculated;
 	
 	float derivativeOfLogEnergy();
-	float spectralDistanceOfHarmonics();
-	float spectralDistanceOfTimeConvolvedHarmonics();
+	float spectralDistanceOfHarmonics(History<float*>* fftHistoryToUse);
+	float spectralDistanceOfConvolvedHarmonics(History<float*>* fftHistoryToUse);
 
 	bool thresholdPercent(History<float>* historyToUse, float topXpercent);
 
@@ -77,7 +90,11 @@ private:
 	Limiter _generalLimiter;
 	Threshold _thresholder;
 	bool _lastAboveThresh;
+	bool _goingDownFromPeak;
 
 	History<Peak> _onsetPeaks; //in sample time
 	bool _justGoneOverThreshold;
+
+	float* _currentConvolvedHarmonics;
+	float* _previousConvolvedHarmonics;
 };

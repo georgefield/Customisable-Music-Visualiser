@@ -3,6 +3,64 @@
 #include <unordered_map>
 #include <algorithm>
 
+//use these to check alg working, should be score 12.832, accounted score 5746.29, interval 22151, when using peaks index 10 to 49
+static const Peak debugPeaks[] = {
+	{173531, 0.299334},
+	{195338, 0.34997},
+	{217155, 0.279703},
+	{239172, 0.279988},
+	{250790, 0.252536},
+	{261346, 0.177285},
+	{282988, 0.380858},
+	{305269, 0.359866},
+	{326898, 0.388706},
+	{349080, 0.313638},
+	{371298, 0.358589},
+	{392958, 0.395626},
+	{414888, 0.281313},
+	{426662, 0.186369},
+	{437540, 0.304242},
+	{459024, 0.398928},
+	{480863, 0.305505},
+	{502575, 0.419643},
+	{524868, 0.353359},
+	{546674, 0.455131},
+	{568776, 0.309439},
+	{590375, 0.352784},
+	{612734, 0.346797},
+	{634445, 0.352873},
+	{656628, 0.266307},
+	{678437, 0.397714},
+	{700579, 0.406734},
+	{722748, 0.347926},
+	{744445, 0.343726},
+	{766162, 0.370122},
+	{778061, 0.339499},
+	{789066, 0.30836},
+	{810348, 0.294004},
+	{832216, 0.325078},
+	{854668, 0.403057},
+	{876153, 0.361749},
+	{898380, 0.416377},
+	{920731, 0.342708},
+	{942031, 0.381639},
+	{964156, 0.296897},
+	{986092, 0.391958},
+	{1008048, 0.33328},
+	{1029966, 0.292398},
+	{1052052, 0.2897},
+	{1074607, 0.479422},
+	{1096247, 0.355332},
+	{1118082, 0.343106},
+	{1129856, 0.268347},
+	{1140983, 0.372489},
+	{1152125, 0.23371},
+	{1162350, 0.429268},
+	{1173809, 0.256634},
+	{1184324, 0.343433}
+};
+
+
 void TempoDetection::calculateNext() {
 
 	//make sure not called twice on same frame
@@ -14,14 +72,54 @@ void TempoDetection::calculateNext() {
 	//dependencies
 	_noteOnset->calculateNext(); //use default methods
 
-	float timeSinceLastBeat;
-	timeSinceLastBeat = dixonAlgorithm();
-	_timeSinceLastBeatHistory.add(timeSinceLastBeat);
+	//no peaks to work with yet
+	if (_noteOnset->getPeakHistory()->entries() == 0) {
+		return;
+	}
+
+	//only calculate in new peaks exist
+	if (_noteOnset->getPeakHistory()->newest().onset != _lastPeakOnset) {
+
+		_lastPeakOnset = _noteOnset->getPeakHistory()->newest().onset;
+
+		//new peak => calculate
+
+		if (_noteOnset->getPeakHistory()->entries() < 5) {
+			return;
+		}
+		if (!_initialCalculated) {
+			_initialCalculated = true;
+			initialDixonAlg();
+		}
+		else {
+			continuousDixonAlg();
+		}
+	}
+
+	//add values to histories
+	if (_initialCalculated) {
+		//tempo calc
+		float tempo = 60.0f * float(_m->_sampleRate) / float(_agents->_highestScoringAgent->_beatInterval);
+		_tempoRollingAvg.add(tempo);
+		_tempoHistory.add(_tempoRollingAvg.get(), _m->_currentSample);
+
+		//predictions calc
+		int samplesSinceLastBeat = (_m->_currentSample - _agents->_highestScoringAgent->_lastEvent.onset) % _agents->_highestScoringAgent->_beatInterval;
+		float timeSinceLastBeat = float(samplesSinceLastBeat) / float(_m->_sampleRate);
+		_timeSinceLastBeatHistory.add(timeSinceLastBeat);
+		float timeToNextBeat = float(_agents->_highestScoringAgent->_beatInterval - samplesSinceLastBeat) / float(_m->_sampleRate);
+		_timeToNextBeatHistory.add(timeToNextBeat);
+
+		//add confidence value (can improve confidence calc later pretty bad atm)
+		_confidenceHistory.add(_agents->getConfidenceInBestAgent());
+	}
 }
 
 //*** dixon algorithm ***
 
 //relationship function
+const float MIN_TEMPO = 30;
+const float MAX_TEMPO = 240;
 const int TEST_RATIOS_UP_TO = 8;
 int f(int d) {
 	if (d > 8)
@@ -34,281 +132,76 @@ int f(int d) {
 	return 0;
 }
 
-
-//struct to make algorithm easier to work with
-struct Cluster {
-	Cluster(int firstEntry) :
-		_sum(0),
-		score(0)
-	{
-		add(firstEntry);
+//returns false if interval too big too small (implies tempo out of range)
+bool intervalImpliesValidTempo(int interval, int sampleRate) {
+	if (interval >= (60.0f / MAX_TEMPO) * sampleRate &&
+		interval <= (60.0f / MIN_TEMPO) * sampleRate) {
+		return true;
 	}
-
-	void add(int ioi) { //inter onset interval (ioi)
-		IOIs.push_back(ioi);
-		_sum += ioi;
-		interval = _sum / IOIs.size();
-	}
-
-	void add(std::vector<int>* iois) { //adding multiple intervals at once
-		for (auto it : *iois) {
-			IOIs.push_back(it);
-			_sum += it;
-		}
-		interval = _sum / IOIs.size();
-	}
-
-	void mergeWith(Cluster* cluster) {
-		add(&cluster->IOIs);
-	}
-
-	float interval;
-	float score;
-
-	std::vector<int> IOIs;
-private:
-	int _sum;
-};
-
-bool compareClusterByInterval(const Cluster& a, const Cluster& b) {
-	return a.interval < b.interval;
+	return false;
 }
 
-struct ClusterSet {
-	ClusterSet(int clusterRadius) :
-		_clusterRadius(clusterRadius)
-	{}
 
-	std::list<Cluster> set;
+const float CLUSTER_RADIUS_SECONDS = 0.025; //allowed error from average ioi of cluster to be added
+const int MAX_PEAKS_STORED = 30; //longer => worse perfomance, more data to use
 
-	void debug() {
-		for (auto it : set) {
-			std::cout << it.interval << std::endl;
-		}
-		std::cout << std::endl;
-	}
+void TempoDetection::initialDixonAlg() {
 
-	void debug2() {
-		for (auto it : set) {
-			std::cout << it.interval << " < interval, score > " << it.score << std::endl;
-		}
-	}
-
-	void add(int ioi) {
-		if (set.size() == 0) {
-			std::cout << "first added at beginning: " << ioi << std::endl;
-			set.emplace(set.begin(), ioi);
-			return;
-		}
-
-		auto it = std::lower_bound(set.begin(), set.end(), ioi, compareClusterByInterval);
-
-		//special cases for smallest so far or biggest so far
-		if (it == set.begin()) { //smallest so far
-			int closestAbove = (*it).interval;
-			int distanceAbove = closestAbove - ioi;
-
-			if (distanceAbove > _clusterRadius) {
-				std::cout << "added " << ioi << " at front, in front of " << (*it).interval << std::endl;
-				set.emplace_front(ioi); //new cluster at beginning
-				return;
-			}
-			std::cout << "adding interval " << ioi << " to start cluster " << (*it).interval << std::endl;
-			(*it).add(ioi);
-			return;
-		}
-
-		if (it == set.end()) {
-			it--; //it now points to closest below
-			int closestBelow = (*it).interval;
-			int distanceBelow = ioi - closestBelow;
-
-			if (distanceBelow > _clusterRadius) {
-				std::cout << "added " << ioi << " at back, behind " << (*it).interval << std::endl;
-				set.emplace_back(ioi); //new cluster at end
-				return;
-			}
-			std::cout << "adding interval " << ioi << " to end cluster " << (*it).interval << std::endl;
-			(*it).add(ioi);
-			return;
-		}
-
-		//for ioi is inbetween cluster avg iois
-		auto itBelow = std::prev(it);
-
-		int closestAbove = (*it).interval;
-		int closestBelow = (*itBelow).interval;
-
-		int distanceAbove = closestAbove - ioi;
-		int distanceBelow = ioi - closestBelow;
-
-		if (distanceAbove > _clusterRadius && distanceBelow > _clusterRadius) { //no cluster in range
-			std::cout << "added " << ioi << " between " << (*itBelow).interval << " and " << (*it).interval << std::endl;
-
-			set.emplace(it, ioi); //new cluster inbetween
-			return;
-		}
-
-		if (distanceAbove < distanceBelow) {
-			std::cout << "adding interval " << ioi << " to cluster " << (*it).interval << std::endl;
-			(*it).add(ioi); //add ioi to cluster above
-			return;
-		}
-		std::cout << "adding interval " << ioi << " to cluster " << (*itBelow).interval << std::endl;
-		(*itBelow).add(ioi); //add ioi to cluster below
-		return;
-	}
-
-	void mergeNearbyClusters() {
-		if (set.size() <= 1) {
-			Vengine::warning("Num clusters <= 1");
-			return;
-		}
-
-		auto it = set.begin();
-		while (it != set.end() && std::next(it) != set.end()) { //it might become end as erase the one above after merging so check first
-			auto itAbove = std::next(it);
-			//no problems with delete elements of list being looped through as using iterator
-			if ((*itAbove).interval - (*it).interval < _clusterRadius) { //if intervals closer than cluster radius
-				(*it).mergeWith(&(*itAbove)); //then merge
-				set.erase(itAbove);
-			}
-			it++; //increment iterator
-		}
-	}
-private:
-	int _clusterRadius;
-};
-
-struct Agent {
-	Agent(int beatInterval, Peak firstEventToAdd) :
-		_beatInterval(beatInterval),
-		_prediction(firstEventToAdd.onset + beatInterval)
-	{
-		_history.push_back(firstEventToAdd);
-		_score = firstEventToAdd.salience;
-	}
-
-	int _beatInterval;
-	int _prediction;
-	std::vector<Peak> _history;
-	float _score;
-
-};
-
-struct AgentSet {
-
-	AgentSet(int sampleRate) :
-		_sampleRate(sampleRate)
-	{
-		_tempoMinDifference = 0.01 * _sampleRate; //10ms
-		_phaseMinDifference = 0.02 * _sampleRate; //20ms
-	}
-
-	void add(int beatInterval, Peak firstEventToAdd) {
-		set.emplace_back(beatInterval, firstEventToAdd);
-	}
-
-	void copyToNewAgent(std::list<Agent>::iterator agent) {
-		pushToSetOnEnd.emplace_back((*agent)._beatInterval, (*agent)._history.front());
-
-		for (int i = 1; i < (*agent)._history.size(); i++) { //first history beat added already
-			pushToSetOnEnd.back()._history.push_back((*agent)._history[i]);
-		}
-
-		pushToSetOnEnd.back()._score = (*agent)._score;
-	}
-
-	void addNewAgents() {
-		for (auto it : pushToSetOnEnd) {
-			set.emplace_back(it);
-		}
-		pushToSetOnEnd.clear();
-	}
-
-	void removeDuplicateAgents() {
-		for (auto A1 = set.begin(); std::next(A1) != set.end(); ++A1) {
-			for (auto A2 = std::next(A1); A2 != set.end(); ++A2) {
-				//for every pair of agents
-
-				//if too similar beat interval and prediction times then remove the one with the lowest score
-				if (fabsf((*A1)._beatInterval - (*A2)._beatInterval) < _tempoMinDifference &&
-					fabsf((*A1)._prediction - (*A2)._prediction) < _phaseMinDifference) {
-
-					if ((*A1)._score > (*A2)._score) { //always erase A2 then break
-						set.erase(A2);
-						break;
-					}
-					else { //A2 score better, replace A1 with A2 then erase A2
-						(*A1) = (*A2);
-						set.erase(A2);
-						break;
-					}
-				}
-			}
-		}
-	}
-
-	Agent* getHighestScoringAgent() {
-		if (set.size() == 0) {
-			Vengine::warning("No agents");
-			return nullptr;
-		}
-
-		Agent* bestAgent = &(*set.begin());
-		for (auto A = set.begin(); A != set.end(); ++A) {
-			if ((*A)._score > bestAgent->_score) {
-				bestAgent = &(*A);
-			}
-		}
-
-		return bestAgent;
-	}
-
-	std::list<Agent> set;
-private:
-	//duplicate thresholds
-	int _tempoMinDifference;
-	int _phaseMinDifference;
-
-	int _sampleRate;
-
-	std::vector<Agent> pushToSetOnEnd;
-};
-
-float TempoDetection::dixonAlgorithm() {
-
-	std::vector<Peak> peaks;// = _noteOnset->getPeakHistory()->getAsVector();
-
-	const int hardCodedPeaks[] = {
-		5345,
-		7000,
-		85000,
-		100000,
-		120000,
-		140000,
-		160000,
-		30000,
-		50000,
-		55000,
-		141000,
-		200000,
-		219850,
-		240500
-	};
-	const int hardCodedPeaksSize = sizeof(hardCodedPeaks) / sizeof(int);
-	peaks.reserve(hardCodedPeaksSize);
-	for (int i = 0; i < hardCodedPeaksSize; i++) {
-		peaks.push_back({ hardCodedPeaks[i], 1.0f });
-	}
-	//use symbolic representation from Dixon paper using the note onsets detected with noteOnset & peakPicking
+	_peaks = _noteOnset->getPeakHistory()->getAsVector(false, 15); //get oldest first, important for agent alg, max last 15 peaks as to
 
 	//*** tempo induction ***
+	int clusterRadius = int(CLUSTER_RADIUS_SECONDS * _m->_sampleRate); //need radius in samples
 
-	const float clusterRadiusInSeconds = 0.025; //allowed error from average ioi of cluster to be added
-	const int clusterRadius = int(clusterRadiusInSeconds * _m->_sampleRate);
+	_clusters = new ClusterSet(clusterRadius);
+	computeClusters(_clusters, _peaks);
 
-	ClusterSet clusters(clusterRadius);
+	//*** phase induction ***
+	_agents = new AgentSet(_m->_sampleRate);
+
+	for (auto rit = _clusters->set.rbegin(); rit != _clusters->set.rend(); ++rit) {
+		for (auto& peak : _peaks) {
+			_agents->add((*rit)._avgInterval, peak);
+		}
+	}
+	computeAgents(_agents, _peaks);
+
+	_agents->sortAgentsByScoreAccountingForIntervalScore(_clusters);
+	//agents.debug2();
+	//std::cout << _agents->set.back()._accountingForIntervalScore << std::endl;
+	//std::cout << _agents->set.back()._beatInterval << std::endl;
+}
+
+void TempoDetection::continuousDixonAlg()
+{
+	//remove oldest add newest (still oldest first)
+	if (_peaks.size() >= MAX_PEAKS_STORED) {
+		_peaks.erase(_peaks.begin());
+	}
+	_peaks.push_back(_noteOnset->getPeakHistory()->newest());
+
+	//*** tempo induction ***
+	_clusters->reset(); //delete old clusters
+	computeClusters(_clusters, _peaks); //recompute clusters with new peak
+
+	//*** phase induction ***
+
+	//only pass single new peak to agents to update based on the new info
+	std::vector<Peak> single;
+	single.push_back(_peaks.back());
+
+	for (auto rit = _clusters->set.rbegin(); rit != _clusters->set.rend(); ++rit) { //top ten times only
+		_agents->add((*rit)._avgInterval, single.back());
+	}
+
+	computeAgents(_agents, single);
+	_agents->sortAgentsByScoreAccountingForIntervalScore(_clusters);
+
+	//agents.debug2();
+	//std::cout << _agents->set.back()._accountingForIntervalScore << std::endl;
+	//std::cout << _agents->set.back()._beatInterval << std::endl;
+}
+
+void TempoDetection::computeClusters(ClusterSet* clusters, std::vector<Peak>& peaks) {
 
 	//compare intervals off all peaks
 	for (auto& E1 : peaks) {
@@ -316,113 +209,120 @@ float TempoDetection::dixonAlgorithm() {
 			if (E1.onset == E2.onset) { break; }
 
 			int ioi = fabsf(E1.onset - E2.onset);
-			clusters.add(ioi); //handles which cluster its added to
+			//only add cluster if interval would put tempo as >MIN_TEMPO && <MAX_TEMPO
+			if (intervalImpliesValidTempo(ioi, _m->_sampleRate)) {
+				clusters->add(ioi); //handles which cluster its added to
+			}
 		}
 	}
 
+	//clusters.debug2();
+	//system("PAUSE");
 
 	//merge clusters with average interval below cluster width
-	clusters.mergeNearbyClusters();
+	clusters->mergeNearbyClusters();
 
 	//score clusters
-	for (auto rit = clusters.set.rbegin(); rit != clusters.set.rend(); ++rit) {
-		
-		std::cout << (*rit).interval << ": ";
-
+	for (auto rit = clusters->set.rbegin(); rit != clusters->set.rend(); ++rit) {
 		//set base score depends on how many intervals in cluster
-		(*rit).score += f(1) * (*rit).IOIs.size();
+		(*rit)._score += f(1) * (*rit)._IOIs.size();
 
-		for (auto it = clusters.set.begin(); std::next(it) != rit.base(); ++it) {
-
-			std::cout << " " << (*it).interval;
-
+		for (auto it = clusters->set.begin(); std::next(it) != rit.base(); ++it) {
 			//test if itBelow interval factor of it
 			for (int k = 2; k <= TEST_RATIOS_UP_TO; k++) {
 				//= it.interval - (k * itBelow.interval)
-				float difference = (*rit).interval - (k * ((*it).interval));
+				float difference = (*rit)._avgInterval - (k * ((*it)._avgInterval));
 
 				//if |it.interval - k*itBelow.interval| < clusterRadius
-				if (fabsf(difference) <= clusterRadius) {
-					std::cout << f(k) << " " << (*rit).IOIs.size() << std::endl;
- 					(*it).score += f(k) * (*rit).IOIs.size();
+				if (fabsf(difference) <= clusters->_clusterRadius) {
+					(*it)._score += f(k) * (*rit)._IOIs.size();
 				}
 			}
 		}
-
-		std::cout << std::endl;
-	} 
-
-	clusters.debug2();
-	//ready for next part (AYO)
-
-	//*** phase induction ***
-	AgentSet agents(_m->_sampleRate);
-
-	for (auto it = clusters.set.begin(); it != clusters.set.end(); ++it) {
-		for (auto& peak : peaks) {
-			agents.add((*it).interval, peak);
-		}
 	}
+
+}
+
+void TempoDetection::computeAgents(AgentSet* agents, std::vector<Peak>& peaks)
+{
+	agents->sortAgentsByPrediction(); //agents sorted by score so need to be fully resorted. lots of errors so dont use insertion
 
 	float tolPrePercentage = 0.2; //20%
 	float tolPostPercentage = 0.4; //40%
 
-	int tolInner = 0.04 * _m->_sampleRate; // 40 ms
+	int maxTolPre = tolPrePercentage * (60 / MIN_TEMPO) * _m->_sampleRate; //used for optimisation
 
-	int timeOut = 2 * _m->_sampleRate; //how long after last peak that aligns with beat hypothesis before deleteing that agent
+	int tolInner = 0.05 * _m->_sampleRate; // 50 ms
 
-	float correctionFactor = 5; //how fast tempo changes to incorporate new beat information
+	float longerTimeoutForHigherScoreFactor = 8.0f; //best agent can wait for 8 beats of min tempo
+	int timeOut = (60 / MIN_TEMPO) * _m->_sampleRate; //how long after last peak that aligns with beat hypothesis before deleteing that agent, 
 
+	float correctionFactor = 0.2; //how fast tempo changes to incorporate new beat information, 0->1, 1 instant, 0 not at all
+	int tolPre, tolPost;
+
+	//loop through peaks. must be sorted by increasing event time to stop agent predictions being increased too much immediantly
 	for (auto& peak : peaks) {
-		std::cout << "peak: " << peak.onset << std::endl;
-		for (auto A = agents.set.begin(); A != agents.set.end(); ) {
-			int tolPre = tolPrePercentage * (*A)._beatInterval;
-			int tolPost = tolPostPercentage * (*A)._beatInterval;
-			std::cout << "tol pre " << tolPre << " post " << tolPost << std::endl;
+		//std::cout << "peak: " << peak.onset << std::endl;
+		for (auto A = agents->set.begin(); A != agents->set.end(); ) {
+			tolPre = tolPrePercentage * (*A)._beatInterval;
+			tolPost = tolPostPercentage * (*A)._beatInterval;
+			//std::cout << "tol pre " << tolPre << " post " << tolPost << std::endl;
 
-			if (peak.onset - (*A)._history.back().onset > timeOut) {
-				auto itBefore = std::prev(A);
-				agents.set.erase(A);
-				A = itBefore; //go back one (know it exists)
-				++A; //increment
+			float agentExtraTimeFactor = 1; //protect against deleting best agent on long pauses
+			if (_agents->_highestScoringAgent != nullptr) {
+				//extra time factor between longertimeout num and 0 depending on what fraction of the highest score the agent has
+				//clamped to min of 1 so every agent has atleast the timeout amount of time
+				float agentExtraTimeFactor = fmaxf((longerTimeoutForHigherScoreFactor * (*A)._accountingForIntervalScore) / agents->_highestScoringAgent->_accountingForIntervalScore, 1);
+			}
+
+
+			if (peak.onset - (*A)._lastEvent.onset > (timeOut * agentExtraTimeFactor)) {
+				//after specified time passes since last matching beat then discontinue this agent
+				//std::cout << (*A)._lastEvent.onset << " <- last event TIMEOUT" << std::endl;
+				auto nextA = std::next(A);
+				agents->set.erase(A);
+				A = nextA;
+			}
+			else if ((*A)._prediction - maxTolPre > peak.onset) {
+				//since agents are in order of prediction & tolPre < maxTolPre we know every agent after this will also have a prediction - tolPre that ignores this event
+				//std::cout << "ignore all past this" << std::endl;
+
+				break;
 			}
 			else {
-				std::cout << "agent pred " << (*A)._prediction << " peak " << peak.onset;
+
 				while ((*A)._prediction + tolPost < peak.onset) {
 					(*A)._prediction += (*A)._beatInterval;
-					(*A)._score -= 0.3; //negative equivalent of hitting a small beat
 				}
-				if ((*A)._prediction - tolPre <= peak.onset && peak.onset <= (*A)._prediction + tolPost) {
-					if (fabsf((*A)._prediction - peak.onset) > tolInner) { //outside in tolerance but inside outer tolerance
-						agents.copyToNewAgent(A); //create new agent that does not count this peak as beat time to protect against wrong decision
-						std::cout << " not inner, ";
+				//std::cout << "agent pred " << (*A)._prediction << " peak " << peak.onset << " interval " << (*A)._beatInterval;
+
+				if ((*A)._prediction - tolPre <= peak.onset && (*A)._prediction + tolPost >= peak.onset) {
+					if (SDL_abs((*A)._prediction - peak.onset) > tolInner) { //outside in tolerance but inside outer tolerance
+						agents->storeUnmodifiedVersionOfAgent(A); //create new agent that does not count this peak as beat time to protect against wrong decision
+						//std::cout << " not inner, ";
 					}
-					std::cout << " in outer";
+					//std::cout << " in outer";
 
 					//count this peak as a beat time
 					int error = peak.onset - (*A)._prediction;
-					float relativeError = error / (*A)._beatInterval;
+					float relativeError = (error > 0 ? float(error) / float(tolPost) : -float(error) / float(tolPre)); //error from 0 -> 1 depending on how close to tolerance limits on either side
 
-					(*A)._beatInterval += error / correctionFactor;
+					//std::cout << " ,relative error: " << relativeError;
+
+					(*A)._beatInterval += error * correctionFactor;
 					(*A)._prediction = peak.onset + (*A)._beatInterval;
-					(*A)._history.push_back(peak);
-					(*A)._score += (1 - (relativeError * 0.5)) * peak.salience;
+					(*A)._lastEvent = peak;
+					(*A)._score += (1.0f - (relativeError * 0.5f)) * peak.salience;
+
 				}
 				else {
-					std::cout << " ignored";
+					//std::cout << " ignored";
 				}
 				++A; //increment
 			}
-			std::cout << std::endl << "---" << std::endl;
-
 		}
-		agents.addNewAgents();
-		agents.removeDuplicateAgents();
+		agents->addBackTheUnmodifiedAgents();
+		agents->insertionSortAgentsByPrediction(); //fix any small change in order due to error correction, insertion sort O(n) for minor errors
+		agents->removeDuplicateAgents();
 	}
-	Agent* bestAgent = agents.getHighestScoringAgent();
-	std::cout << "bi, prd, sc" << bestAgent->_beatInterval << ", " << bestAgent->_prediction << ", " << bestAgent->_score << std::endl;
-
-	system("PAUSE");
-
-	return 0.0;
 }

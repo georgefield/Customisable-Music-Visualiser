@@ -134,6 +134,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="CustomisableSprite.cpp" />
+    <ClCompile Include="FFTs.cpp" />
     <ClCompile Include="FFTW.cpp" />
     <ClCompile Include="NoteOnset.cpp" />
     <ClCompile Include="main.cpp" />
@@ -149,7 +150,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CustomisableSprite.h" />
+    <ClInclude Include="DixonAlgorithmStructures.h" />
     <ClInclude Include="Energy.hpp" />
+    <ClInclude Include="FFTs.h" />
     <ClInclude Include="FFTW.h" />
     <ClInclude Include="NoteOnset.h" />
     <ClInclude Include="History.h" />
@@ -159,6 +162,7 @@
     <ClInclude Include="Master.h" />
     <ClInclude Include="MyFuncs.h" />
     <ClInclude Include="RMS.hpp" />
+    <ClInclude Include="RollingAverage.h" />
     <ClInclude Include="SignalProcessing.h" />
     <ClInclude Include="SpriteManager.h" />
     <ClInclude Include="TempoDetection.h" />

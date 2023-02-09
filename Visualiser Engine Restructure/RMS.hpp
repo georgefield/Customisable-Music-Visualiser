@@ -22,7 +22,7 @@ public:
 		return &_rms;
 	}
 
-	void calculateNext(Kernel kernel) {
+	void calculateNext(int windowSize, Kernel kernel) {
 
 		//make sure not called twice on same frame
 		if (_sampleLastCalculated == _m->_currentSample) {
@@ -33,23 +33,23 @@ public:
 		//dependencies
 		//none
 
-		if (_sampleLastCalculated != -1 && _m->_previousSample != -1 && _m->_currentSample - _m->_previousSample < _m->_N) { //save compute power if window only adjusted by a bit
+		if (_sampleLastCalculated != -1 && _m->_previousSample != -1 && _m->_currentSample - _m->_previousSample < windowSize) { //save compute power if window only adjusted by a bit
 			for (int i = _m->_previousSample; i < _m->_currentSample; i++) {
 				_sumOfSamplesSquared -= _m->_audioData[i] * _m->_audioData[i];
 			}
 
-			for (int i = _m->_previousSample + _m->_N; i < _m->_currentSample + _m->_N; i++) {
+			for (int i = _m->_previousSample + windowSize; i < _m->_currentSample + windowSize; i++) {
 				_sumOfSamplesSquared += _m->_audioData[i] * _m->_audioData[i];
 			}
 		}
 		else {
 			_sumOfSamplesSquared = 0;
-			for (int i = _m->_currentSample; i < _m->_currentSample + _m->_N; i++) {
+			for (int i = _m->_currentSample; i < _m->_currentSample + windowSize; i++) {
 				_sumOfSamplesSquared += _m->_audioData[i] * _m->_audioData[i];
 			}
 		}
 
-		_rms.add(sqrtf(_sumOfSamplesSquared / _m->_N), _m->_currentSample);
+		_rms.add(sqrtf(_sumOfSamplesSquared / windowSize), _m->_currentSample);
 	}
 
 private:

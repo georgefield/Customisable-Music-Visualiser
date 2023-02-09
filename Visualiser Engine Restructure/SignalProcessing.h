@@ -1,5 +1,6 @@
 #pragma once
 #include "Master.h"
+#include "FFTs.h"
 #include "NoteOnset.h"
 #include "Energy.hpp"
 #include "RMS.hpp"
@@ -10,20 +11,22 @@
 class SignalProcessing {
 public:
 	SignalProcessing() :
-		_master(4096, 2049),
+		_master(),
 		_rms(2049),
 		_energy(2049),
 		_noteOnset(2049),
-		_tempoDetection(2049)
+		_tempoDetection(2049),
+		_FFTs(20, 4096)
 	{
 	}
 
 	void init(float* audioData, int sampleRate) {
 		_master.init(audioData, sampleRate);
 		
+		_FFTs.init(&_master);
 		_rms.init(&_master);
 		_energy.init(&_master);
-		_noteOnset.init(&_master, &_energy);
+		_noteOnset.init(&_master, &_energy, &_FFTs);
 		_tempoDetection.init(&_master, &_noteOnset);
 	}
 
@@ -35,14 +38,7 @@ public:
 		_master.endCalculations();
 	}
 
-	void calculateFft() {
-		_master.calculateFft();
-	}
-
-	void calculateTimeConvolvedFft() {
-		_master.calculateTimeConvolvedFft();
-	}
-
+	FFTs _FFTs;
 	RMS _rms;
 	Energy _energy;
 	NoteOnset _noteOnset;
@@ -50,16 +46,8 @@ public:
 
 	void updateSSBOwithHistory(History<float>* history, GLuint id, GLint binding);
 
-	float* getFftOutput() {
-		return _master._fftOutput->newest();
-	}
-
-	float* getConvolvedFftOutput() {
-		return _master._timeConvolvedFftOutput.newest();
-	}
-
 	int getNumHarmonics() {
-		return _master.getNumHarmonics();
+		return _FFTs._numHarmonics;
 	}
 
 private:

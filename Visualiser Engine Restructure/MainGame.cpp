@@ -26,7 +26,7 @@ MainGame::MainGame() :
 
 //RESTRUCTURE ENTIRE ENGINE, CLONE THIS PROJECT AS BACKUP
 
-const std::string musicFilepath = "Music/MPH - Nova.wav";
+const std::string musicFilepath = "Music/Gorillaz - On Melancholy Hill.wav";
 
 
 void MainGame::run() {
@@ -136,7 +136,7 @@ void MainGame::gameLoop() {
 
 	Vengine::MyTiming::startTimer(_globalTimer);
 
-	//_song.playSound();
+	_song.playSound();
 
 	Vengine::MyTiming::setNumSamplesForFPS(100);
 	Vengine::MyTiming::setFPSlimit(2500);
@@ -195,16 +195,23 @@ void MainGame::drawVis() {
 	float elapsed = Vengine::MyTiming::readTimer(_globalTimer);
 	_currSample = max((int)(elapsed * _sampleRate) + _sampleOffsetToSound * _sampleRate, 0);
 
+
 	_signalProc.beginCalculations(_currSample);
 
+	_signalProc._noteOnset.setFourierTransformToUseForSpectralDistance(FourierTransformType::SMOOTHED);
 	_signalProc._noteOnset.calculateNext(NoteOnset::DataExtractionAlgorithm::SPECTRAL_DISTANCE_CONVOLVED_HARMONICS, NoteOnset::PeakPickingAlgorithm::CONVOLVE_THEN_THRESHOLD);
 	_signalProc._tempoDetection.calculateNext();
-	//_signalProc.calculateFft();
 
 	_signalProc.endCalculations();
 
-	//Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, _signalProc.getFftOutput(), _signalProc.getNumHarmonics() * sizeof(float));
-	_signalProc.updateSSBOwithHistory(_signalProc._noteOnset.getCONVonsetHistory(), _ssboHarmonicDataID, 1);
+	//Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, _signalProc._FFTs.getFftHistory(FourierTransformType::SMOOTHED)->newest(), _signalProc.getNumHarmonics() * sizeof(float));
+	
+	_signalProc.updateSSBOwithHistory(_signalProc._tempoDetection.getTimeToNextBeatHistory(), _ssboHarmonicDataID, 1);
+	if (_signalProc._tempoDetection.hasData()) {
+		ImGui::Begin("tempo");
+		ImGui::Text(std::to_string(_signalProc._tempoDetection.getTempoHistory()->newest()).c_str());
+		ImGui::End();
+	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 

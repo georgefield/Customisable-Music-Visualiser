@@ -57,6 +57,9 @@
     <ClCompile Include="Tools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FFTs.cpp">
+      <Filter>Source Files\Signal Processing</Filter>
+    </ClCompile>
     <ClCompile Include="TempoDetection.cpp">
       <Filter>Source Files\Signal Processing</Filter>
     </ClCompile>
@@ -92,9 +95,6 @@
     <ClInclude Include="Master.h">
       <Filter>Header Files\Signal Processing</Filter>
     </ClInclude>
-    <ClInclude Include="Energy.hpp">
-      <Filter>Source Files\Signal Processing</Filter>
-    </ClInclude>
     <ClInclude Include="NoteOnset.h">
       <Filter>Header Files\Signal Processing</Filter>
     </ClInclude>
@@ -104,9 +104,6 @@
     <ClInclude Include="SignalProcessing.h">
       <Filter>Header Files\Signal Processing</Filter>
     </ClInclude>
-    <ClInclude Include="RMS.hpp">
-      <Filter>Source Files\Signal Processing</Filter>
-    </ClInclude>
     <ClInclude Include="Tools.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -114,6 +111,21 @@
       <Filter>Header Files\Signal Processing</Filter>
     </ClInclude>
     <ClInclude Include="Threshold.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FFTs.h">
+      <Filter>Header Files\Signal Processing</Filter>
+    </ClInclude>
+    <ClInclude Include="DixonAlgorithmStructures.h">
+      <Filter>Header Files\Signal Processing</Filter>
+    </ClInclude>
+    <ClInclude Include="Energy.hpp">
+      <Filter>Header Files\Signal Processing</Filter>
+    </ClInclude>
+    <ClInclude Include="RMS.hpp">
+      <Filter>Header Files\Signal Processing</Filter>
+    </ClInclude>
+    <ClInclude Include="RollingAverage.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

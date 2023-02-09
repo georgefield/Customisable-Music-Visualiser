@@ -4,6 +4,7 @@
 #include <math.h>
 
 #include "Threshold.h"
+#include "Tools.h"
 
 class Limiter {
 public:
@@ -48,7 +49,7 @@ public:
 			factorToHitMedian = MAX_GAIN_FACTOR; //clamp gain to MAX_GAIN_FACTOR to stop any craziness
 		}
 
-		_currentGainAdjustment = lerp(1.0f, factorToHitMedian, _thresholder.getFractionFull()); //only use full power when thresholder data full
+		_currentGainAdjustment = Tools::lerp(1.0f, factorToHitMedian, _thresholder.getFractionFull()); //only use full power when thresholder data full
 
 		return value * _currentGainAdjustment;
 	} 
@@ -62,13 +63,13 @@ public:
 		float desiredC = _ceiling / _previousHigh; //desiredC the C value that would cause the previous high = ceiling
 		//take _C to desiredC in attack time
 		if (_previousHigh > _ceiling && _timeSinceLastHigh < _attack) {
-			_C = lerp(_C, desiredC, _timeSinceLastHigh / _attack);
+			_C = Tools::lerp(_C, desiredC, _timeSinceLastHigh / _attack);
 		}
 		//start to release after attack period
 		else if (_timeSinceLastHigh > _attack) {
 
 			//_C goes back from desiredC to 1
-			_C = lerp(desiredC, 1, ((_timeSinceLastHigh - _attack) / (_release * desiredC)));
+			_C = Tools::lerp(desiredC, 1, ((_timeSinceLastHigh - _attack) / (_release * desiredC)));
 
 			if (_C > 1) { _C = 1; } //clamp to 1 as only decrease gain
 		}
@@ -87,11 +88,6 @@ public:
 private:
 
 	const float MAX_GAIN_FACTOR = 100.0f;
-
-	//t ranging from 0 to 1, c1 -> c2
-	float lerp(float c1, float c2, float t) {
-		return ((1 - t) * c1) + (t * c2);
-	}
 
 	int _timerID;
 	float _timeOfLastHigh;

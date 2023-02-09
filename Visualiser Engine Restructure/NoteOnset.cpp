@@ -12,37 +12,52 @@ void NoteOnset::calculateNext(DataExtractionAlgorithm dataAlg, PeakPickingAlgori
 	//onset detection
 	float onsetValue = 0;
 	if (dataAlg == DataExtractionAlgorithm::DER_OF_LOG_ENERGY) {
-		_energy->calculateNext(LINEAR_PYRAMID); //depends on energy
+		_energy->calculateNext(4096, LINEAR_PYRAMID); //depends on energy
 		onsetValue = derivativeOfLogEnergy();
 		onsetValue *= 10; //somewhat normalise
 	}
 	if (dataAlg == DataExtractionAlgorithm::SPECTRAL_DISTANCE) {
-		_m->calculateFft(); //depends on fft for spectral information
-		onsetValue = spectralDistanceOfHarmonics();
+		_FFTs->calculateFft(_fourierTransformTypeForSpectralDistance); //depends on fft for spectral information
+		onsetValue = spectralDistanceOfHarmonics(_FFTs->getFftHistory(_fourierTransformTypeForSpectralDistance));
 	}
 	if (dataAlg == DataExtractionAlgorithm::SPECTRAL_DISTANCE_CONVOLVED_HARMONICS) {
-		_m->calculateTimeConvolvedFft(); //depends on time convolved fft
-		onsetValue = spectralDistanceOfTimeConvolvedHarmonics();
-		onsetValue *= 10; //somewhat normalise
+		_FFTs->calculateFft(_fourierTransformTypeForSpectralDistance); //depends on fft for spectral information
+		onsetValue = spectralDistanceOfConvolvedHarmonics(_FFTs->getFftHistory(_fourierTransformTypeForSpectralDistance));
+		onsetValue *= 1; //somewhat normalise
 	}
+
 	_onsetDetectionHistory.add(onsetValue, _m->_currentSample);
 
 	_CONVonsetDetectionHistory.add(
-		_m->sumOfConvolutionOfHistory(&_onsetDetectionHistory, 20, LINEAR_PYRAMID),
+		_m->sumOfConvolutionOfHistory(&_onsetDetectionHistory, 15, LINEAR_PYRAMID),
 		_m->_currentSample
 	);
 
 	//peak detection
-	bool isPeak = false;
+	bool aboveThreshold = false;
 	if (peakAlg == PeakPickingAlgorithm::THRESHOLD) {
-		isPeak = thresholdPercent(getOnsetHistory(), 10); //peak if in top 10%
+		aboveThreshold = thresholdPercent(getOnsetHistory(), 5); //peak if in top 5%
 	}
 	if (peakAlg == PeakPickingAlgorithm::CONVOLVE_THEN_THRESHOLD) {
-		isPeak = thresholdPercent(getCONVonsetHistory(), 10); //peak if in top 10%
+		aboveThreshold = thresholdPercent(getCONVonsetHistory(), 5); //peak if in top 5%
 	}
-	if (isPeak) {
-		//std::cout << _m->_currentSample << std::endl;
-		_onsetPeaks.add({ _m->_currentSample, onsetValue });
+
+	//wait for highest point before adding peak, means the timing will be 1 frame off but not big deal. 
+	//Can fix if change tempo detection to assume current sample is the last peaks
+	if (_onsetDetectionHistory.newest() <=_onsetDetectionHistory.previous()) {
+		if (!_goingDownFromPeak && _lastAboveThresh) {
+			std::cout << _onsetDetectionHistory.previousSample() << ", " << _onsetDetectionHistory.previous() << std::endl;
+			_onsetPeaks.add({ _onsetDetectionHistory.previousSample(), _onsetDetectionHistory.previous() });
+			_goingDownFromPeak = true;
+		}
+	}
+
+	if (aboveThreshold && !_lastAboveThresh) {
+		_lastAboveThresh = true;
+	}
+	if (!aboveThreshold) {
+		_goingDownFromPeak = false;
+		_lastAboveThresh = false;
 	}
 }
 
@@ -64,32 +79,33 @@ float NoteOnset::derivativeOfLogEnergy() {
 	//--
 }
 
-float NoteOnset::spectralDistanceOfHarmonics() {
 
-	float one_over_dt = ((float)_m->_sampleRate / (float)(_m->_currentSample - _m->_previousSample)) * 0.001; //do dt in ms as otherwise numbers too big
-
-	//--spectral distance, take fourier transform as N dimension point, calculates L2norm from previous transform to current
-	float spectralDistance = Tools::L2normIncreasingDimensionsOnly(
-		_m->_fftOutput->newest(),
-		_m->_fftOutput->previous(),
-		_m->getNumHarmonics()
-	);
-
-	spectralDistance *= one_over_dt; //must be scaled for time
-
-	return spectralDistance;
-	//--
-}
-
-float NoteOnset::spectralDistanceOfTimeConvolvedHarmonics() {
-
+float NoteOnset::spectralDistanceOfHarmonics(History<float*>* fftHistoryToUse) {
 	float one_over_dt = ((float)_m->_sampleRate / (float)(_m->_currentSample - _m->_previousSample)) * 0.001; //do dt in ms as otherwise numbers too big
 
 	//same as above but with the convolved harmonics--
 	float spectralDistanceConvolvedHarmonics = Tools::L2normIncreasingDimensionsOnly(
-		_m->_timeConvolvedFftOutput.newest(),
-		_m->_timeConvolvedFftOutput.previous(),
-		_m->getNumHarmonics()
+		fftHistoryToUse->newest(),
+		fftHistoryToUse->previous(),
+		fftHistoryToUse->totalSize()
+	);
+	spectralDistanceConvolvedHarmonics *= one_over_dt;
+
+	return spectralDistanceConvolvedHarmonics;
+	//--
+}
+
+float NoteOnset::spectralDistanceOfConvolvedHarmonics(History<float*>* fftHistoryToUse) {
+	float one_over_dt = ((float)_m->_sampleRate / (float)(_m->_currentSample - _m->_previousSample)) * 0.001; //do dt in ms as otherwise numbers too big
+
+	_FFTs->convolveOverHarmonics(fftHistoryToUse->newest(), _currentConvolvedHarmonics, 5, LINEAR_PYRAMID);
+	_FFTs->convolveOverHarmonics(fftHistoryToUse->previous(), _previousConvolvedHarmonics, 5, LINEAR_PYRAMID);
+
+	//same as above but with the convolved harmonics--
+	float spectralDistanceConvolvedHarmonics = Tools::HFCweightedL2normIncreasingDimensionsOnly(
+		_currentConvolvedHarmonics,
+		_previousConvolvedHarmonics,
+		fftHistoryToUse->totalSize()
 	);
 	spectralDistanceConvolvedHarmonics *= one_over_dt;
 
@@ -102,8 +118,5 @@ float NoteOnset::spectralDistanceOfTimeConvolvedHarmonics() {
 bool NoteOnset::thresholdPercent(History<float>* historyToUse, float topXpercent)
 {
 	_thresholder.addValue(historyToUse->newest());
-	bool aboveThresh = _thresholder.testThreshold(historyToUse->newest(), topXpercent);
-	bool aboveAndNoSpam = (!_lastAboveThresh && aboveThresh);
-	_lastAboveThresh = aboveThresh;
-	return aboveAndNoSpam;
+	return _thresholder.testThreshold(historyToUse->newest(), topXpercent);
 }

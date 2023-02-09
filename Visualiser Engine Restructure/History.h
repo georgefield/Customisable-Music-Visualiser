@@ -25,6 +25,7 @@ public:
 	void add(T value, int currentSample = -1) {
 		_start = (_start == 0 ? _size - 1 : _start - 1);
 		_data[_start] = value;
+		_assocSampleData[_start] = currentSample;
 		_addCalls++;
 	};
 
@@ -35,20 +36,31 @@ public:
 	}
 
 	//getters
-	std::vector<T> getAsVector(int firstXentries = -1) {
+	std::vector<T> getAsVector(bool newestFirst = true, int firstXentries = -1) {
 		std::vector<T> toReturn;
 		if (firstXentries == -1) { //get all
 			firstXentries = entries();
-			
+		}
+		else if (firstXentries > entries()) {
+			Vengine::warning("Requested more entries than history has as a vector, defaulting to all entries");
+			firstXentries = entries();
 		}
 		toReturn.reserve(firstXentries);
 
-		for (int i = 0; i < firstXentries; i++) {
-			toReturn.push_back(get(i));
+		if (newestFirst) {
+			for (int i = 0; i < firstXentries; i++) {
+				toReturn.push_back(get(i));
+			}
+		}
+		else {
+			for (int i = firstXentries - 1; i >=0; i--) {
+				toReturn.push_back(get(i));
+			}
 		}
 
 		return toReturn;
 	}
+
 
 	T oldest() { return get(std::min(_addCalls - 1, _size - 1)); }
 	T newest() { return get(0); }
@@ -60,6 +72,7 @@ public:
 	
 	int oldestSample() { return getSample(std::min(_addCalls - 1, _size - 1)); };
 	int newestSample() { return getSample(0); }
+	int previousSample() { return getSample(1); }
 	int getSample(int recency) {
 		if (_addCalls == 0) { Vengine::fatalError("No entries in history"); }
 		return _assocSampleData[(_start + recency) % _size];

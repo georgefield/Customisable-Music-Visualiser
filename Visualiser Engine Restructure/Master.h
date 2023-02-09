@@ -8,19 +8,16 @@
 
 /// <summary>
 /// class that contains all basic calculation information used in many signal processing algorithms
+/// also contains helper functions that are used a lot with audio maths
 /// </summary>
 
-class Master {
-public:
-	Master(int sampleWindowForFft, int historySize);
+struct Master {
+	Master();
 
 	void init(float* audioData, int sampleRate);
 
 	void beginCalculations(int currentSample);
 	void endCalculations();
-
-	void calculateFft();
-	void calculateTimeConvolvedFft();
 
 	void reset();
 
@@ -28,18 +25,7 @@ public:
 	int _sampleRate;
 	int _previousSample;
 	int _currentSample;
-	int _N; //sample window for fft
 
-	History<float*>* _fftOutput;
-	History<float*> _timeConvolvedFftOutput;
-
-	//helper function
+	//helper functions
 	float sumOfConvolutionOfHistory(History<float>* history, int entries = 0, Kernel kernel = LINEAR_PYRAMID);
-
-	int getNumHarmonics() { return _fft.numHarmonics(); }
-private:
-	int _sampleTimeConvolvedFftLastCalculated;
-	int _sampleFftLastCalculated;
-
-	FFTW _fft;
 };

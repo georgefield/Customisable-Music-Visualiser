@@ -1,2 +1,40 @@
-﻿  MyTiming.cpp
+﻿  imgui.cpp
+  imgui_demo.cpp
+  imgui_draw.cpp
+  imgui_impl_opengl3.cpp
+  imgui_impl_sdl.cpp
+  imgui_impl_sdlrenderer.cpp
+  imgui_tables.cpp
+  imgui_widgets.cpp
+  Audio.cpp
+  ComputeShader.cpp
+  DrawFunctions.cpp
+  Model.cpp
+  MyErrors.cpp
+  GLSLProgram.cpp
+C:\Users\George\Documents\3rd year project\Project\Vengine\GLSLProgram.cpp(83,8): warning C4101: 'i': unreferenced local variable
+C:\Users\George\Documents\3rd year project\Project\Vengine\GLSLProgram.cpp(126,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\George\Documents\3rd year project\Project\Vengine\GLSLProgram.cpp(132,20): warning C4018: '<': signed/unsigned mismatch
+  InputManager.cpp
+  IOManager.cpp
+C:\Users\George\Documents\3rd year project\Project\Vengine\IOManager.cpp(63,15): warning C4244: 'initializing': conversion from 'std::streamoff' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Vengine\IOManager.cpp(65,24): warning C4244: '-=': conversion from 'std::streamoff' to 'int', possible loss of data
+  MyTiming.cpp
+  picoPNG.cpp
+  ResourceManager.cpp
+C:\Users\George\Documents\3rd year project\Project\Vengine\ResourceManager.cpp(42,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Vengine\ResourceManager.cpp(57,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Vengine\ResourceManager.cpp(90,11): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Vengine\ResourceManager.cpp(119,20): warning C4018: '<': signed/unsigned mismatch
+  ShaderCache.cpp
+  Generating Code...
+  Compiling...
+  Sprite.cpp
+  SpriteBatch.cpp
+C:\Users\George\Documents\3rd year project\Project\Vengine\SpriteBatch.cpp(52,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\George\Documents\3rd year project\Project\Vengine\SpriteBatch.cpp(59,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\George\Documents\3rd year project\Project\Vengine\SpriteBatch.cpp(105,12): warning C4018: '<': signed/unsigned mismatch
+  TextureCache.cpp
+  Window.cpp
+  Generating Code...
   Vengine.vcxproj -> C:\Users\George\Documents\3rd year project\Project\Debug\Vengine.lib

@@ -16,7 +16,12 @@ public:
 	}
 
 
+
+
 	//*** MATHS ***
+	static float lerp(float c1, float c2, float t) {
+		return ((1 - t) * c1) + (t * c2);
+	}
 
 	static float L1norm(float* v1, float* v2, int dim) {
 
@@ -30,7 +35,7 @@ public:
 
 		float ret = 0;
 		for (int i = 0; i < dim; i++) {
-			ret += (v1[i] - v2[i]) * (v1[i] - v2[i]);
+			ret += sqrtf((v1[i] - v2[i]) * (v1[i] - v2[i]));
 		}
 		return ret;
 	}
@@ -42,8 +47,19 @@ public:
 				ret += (v1[i] - v2[i]) * (v1[i] - v2[i]);
 			}
 		}
-		return ret;
+		return sqrt(ret);
 	}
+	static float HFCweightedL2normIncreasingDimensionsOnly(float* v1, float* v2, int dim) {
+
+		float ret = 0;
+		for (int i = 0; i < dim; i++) {
+			if (v1[i] - v2[i] > 0) {
+				ret += (i + 10) * (i + 10) * (v1[i] - v2[i]) * (v1[i] - v2[i]);
+			}
+		}
+		return sqrt(ret);
+	}
+
 
 
 
