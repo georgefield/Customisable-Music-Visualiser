@@ -87,6 +87,8 @@ void TempoDetection::calculateNext() {
 		if (_noteOnset->getPeakHistory()->entries() < 5) {
 			return;
 		}
+
+		//do dixon alg
 		if (!_initialCalculated) {
 			_initialCalculated = true;
 			initialDixonAlg();
@@ -94,13 +96,21 @@ void TempoDetection::calculateNext() {
 		else {
 			continuousDixonAlg();
 		}
-	}
+		_agents->calculateScoresAccountingForClusterIntervalScores(_clusters);
+		_agents->sortAgentsByScoresAccountingForIntervalScores();
+		_agents->shrinkSetToSize(40); //only keep this many best agents after every round
+		_agents->calculateConfidenceInBestAgent(_clusters->_clusterRadius);
+		_agents->devalueScores(0.954); //multiply each agent score by this factor. (0.954 means 15 beats to half)
 
-	//add values to histories
-	if (_initialCalculated) {
-		//tempo calc
+		//add to rolling avgs
 		float tempo = 60.0f * float(_m->_sampleRate) / float(_agents->_highestScoringAgent->_beatInterval);
 		_tempoRollingAvg.add(tempo);
+
+		_confidenceRollingAvg.add(_agents->_confidenceInBestAgent);
+	}
+
+	//add values to histories, do every call if initialised
+	if (_initialCalculated) {
 		_tempoHistory.add(_tempoRollingAvg.get(), _m->_currentSample);
 
 		//predictions calc
@@ -111,7 +121,7 @@ void TempoDetection::calculateNext() {
 		_timeToNextBeatHistory.add(timeToNextBeat);
 
 		//add confidence value (can improve confidence calc later pretty bad atm)
-		_confidenceHistory.add(_agents->getConfidenceInBestAgent());
+		_confidenceHistory.add(_confidenceRollingAvg.get(), _m->_currentSample);
 	}
 }
 
@@ -164,11 +174,6 @@ void TempoDetection::initialDixonAlg() {
 		}
 	}
 	computeAgents(_agents, _peaks);
-
-	_agents->sortAgentsByScoreAccountingForIntervalScore(_clusters);
-	//agents.debug2();
-	//std::cout << _agents->set.back()._accountingForIntervalScore << std::endl;
-	//std::cout << _agents->set.back()._beatInterval << std::endl;
 }
 
 void TempoDetection::continuousDixonAlg()
@@ -194,11 +199,6 @@ void TempoDetection::continuousDixonAlg()
 	}
 
 	computeAgents(_agents, single);
-	_agents->sortAgentsByScoreAccountingForIntervalScore(_clusters);
-
-	//agents.debug2();
-	//std::cout << _agents->set.back()._accountingForIntervalScore << std::endl;
-	//std::cout << _agents->set.back()._beatInterval << std::endl;
 }
 
 void TempoDetection::computeClusters(ClusterSet* clusters, std::vector<Peak>& peaks) {
@@ -254,8 +254,7 @@ void TempoDetection::computeAgents(AgentSet* agents, std::vector<Peak>& peaks)
 
 	int tolInner = 0.05 * _m->_sampleRate; // 50 ms
 
-	float longerTimeoutForHigherScoreFactor = 8.0f; //best agent can wait for 8 beats of min tempo
-	int timeOut = (60 / MIN_TEMPO) * _m->_sampleRate; //how long after last peak that aligns with beat hypothesis before deleteing that agent, 
+	int timeOut = 8 * (60 / MIN_TEMPO) * _m->_sampleRate; //how long after last peak that aligns with beat hypothesis before deleteing that agent, 
 
 	float correctionFactor = 0.2; //how fast tempo changes to incorporate new beat information, 0->1, 1 instant, 0 not at all
 	int tolPre, tolPost;
@@ -268,15 +267,11 @@ void TempoDetection::computeAgents(AgentSet* agents, std::vector<Peak>& peaks)
 			tolPost = tolPostPercentage * (*A)._beatInterval;
 			//std::cout << "tol pre " << tolPre << " post " << tolPost << std::endl;
 
-			float agentExtraTimeFactor = 1; //protect against deleting best agent on long pauses
-			if (_agents->_highestScoringAgent != nullptr) {
-				//extra time factor between longertimeout num and 0 depending on what fraction of the highest score the agent has
-				//clamped to min of 1 so every agent has atleast the timeout amount of time
-				float agentExtraTimeFactor = fmaxf((longerTimeoutForHigherScoreFactor * (*A)._accountingForIntervalScore) / agents->_highestScoringAgent->_accountingForIntervalScore, 1);
-			}
 
-
-			if (peak.onset - (*A)._lastEvent.onset > (timeOut * agentExtraTimeFactor)) {
+			if (peak.onset - (*A)._lastEvent.onset > timeOut) {
+				if (&(*A) == _agents->_highestScoringAgent) {
+					std::cout << "OH NO" << std::endl;
+				}
 				//after specified time passes since last matching beat then discontinue this agent
 				//std::cout << (*A)._lastEvent.onset << " <- last event TIMEOUT" << std::endl;
 				auto nextA = std::next(A);
@@ -299,7 +294,6 @@ void TempoDetection::computeAgents(AgentSet* agents, std::vector<Peak>& peaks)
 				if ((*A)._prediction - tolPre <= peak.onset && (*A)._prediction + tolPost >= peak.onset) {
 					if (SDL_abs((*A)._prediction - peak.onset) > tolInner) { //outside in tolerance but inside outer tolerance
 						agents->storeUnmodifiedVersionOfAgent(A); //create new agent that does not count this peak as beat time to protect against wrong decision
-						//std::cout << " not inner, ";
 					}
 					//std::cout << " in outer";
 

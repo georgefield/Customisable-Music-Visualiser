@@ -26,7 +26,7 @@ MainGame::MainGame() :
 
 //RESTRUCTURE ENTIRE ENGINE, CLONE THIS PROJECT AS BACKUP
 
-const std::string musicFilepath = "Music/Gorillaz - On Melancholy Hill.wav";
+const std::string musicFilepath = "Music/King Geedorah - Next Levels.wav";
 
 
 void MainGame::run() {
@@ -206,7 +206,7 @@ void MainGame::drawVis() {
 
 	//Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, _signalProc._FFTs.getFftHistory(FourierTransformType::SMOOTHED)->newest(), _signalProc.getNumHarmonics() * sizeof(float));
 	
-	_signalProc.updateSSBOwithHistory(_signalProc._tempoDetection.getTimeToNextBeatHistory(), _ssboHarmonicDataID, 1);
+	_signalProc.updateSSBOwithHistory(_signalProc._tempoDetection.getConfidenceInTempoHistory(), _ssboHarmonicDataID, 1);
 	if (_signalProc._tempoDetection.hasData()) {
 		ImGui::Begin("tempo");
 		ImGui::Text(std::to_string(_signalProc._tempoDetection.getTempoHistory()->newest()).c_str());

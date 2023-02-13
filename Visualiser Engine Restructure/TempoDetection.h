@@ -16,7 +16,8 @@ public:
 		_confidenceHistory(historySize),
 		_lastPeakOnset(-1),
 		_initialCalculated(false),
-		_tempoRollingAvg(5)
+		_tempoRollingAvg(5),
+		_confidenceRollingAvg(8)
 	{}
 
 	void init(Master* master, NoteOnset* noteOnset) {
@@ -45,6 +46,7 @@ public:
 	}
 private:
 	RollingAverage _tempoRollingAvg;
+	RollingAverage _confidenceRollingAvg;
 
 	Master* _m;
 	NoteOnset* _noteOnset;

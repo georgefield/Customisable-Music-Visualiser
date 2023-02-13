@@ -201,14 +201,16 @@ struct Agent {
 struct AgentSet {
 
 	AgentSet(int sampleRate) :
-		_sampleRate(sampleRate)
+		_sampleRate(sampleRate),
+		_highestScoringAgent(nullptr),
+		_confidenceInBestAgent(0.0f)
 	{
-		_tempoMinDifference = 0.01 * _sampleRate; //10ms
-		_phaseMinDifference = 0.02 * _sampleRate; //20ms
+		_tempoMinDifference = 0.01 * _sampleRate; //20ms
+		_phaseMinDifference = 0.02 * _sampleRate; //40ms
 	}
 
-	Agent* _highestScoringAgent = nullptr;
-	Agent* _secondHighestScoringAgent = nullptr;
+	Agent* _highestScoringAgent;
+	float _confidenceInBestAgent;
 	std::list<Agent> set;
 
 	void debug() {
@@ -280,15 +282,17 @@ struct AgentSet {
 		}
 	}
 
-	void sortAgentsByScore() {
-		set.sort([](const Agent& a, const Agent& b) { return a._score < b._score; });
+	void sortAgentsByScoresAccountingForIntervalScores() {
+		set.sort([](const Agent& a, const Agent& b) { return a._accountingForIntervalScore < b._accountingForIntervalScore; });
 	}
 
-	void sortAgentsByScoreAccountingForIntervalScore(ClusterSet* clusters) {
+	void calculateScoresAccountingForClusterIntervalScores(ClusterSet* clusters) {
 		if (set.size() < 2) {
 			Vengine::warning("Set too small");
 			return;
 		}
+
+
 
 		std::list<Cluster>::iterator nearest;
 		bool isNearestAbove;
@@ -303,10 +307,12 @@ struct AgentSet {
 				relativeErrorFromClosest = 1.0f - (float(distanceToNearest) / float((*nearest)._avgInterval));
 			}
 			(*it)._accountingForIntervalScore = relativeErrorFromClosest * (*nearest)._score * (*it)._score;
+
+			//set highest scoring agent variable
+			if (_highestScoringAgent == nullptr || (*it)._accountingForIntervalScore > _highestScoringAgent->_accountingForIntervalScore) {
+				_highestScoringAgent = &(*it);
+			}
 		}
-		set.sort([](const Agent& a, const Agent& b) { return a._accountingForIntervalScore < b._accountingForIntervalScore; });
-		_highestScoringAgent = &(*std::prev(set.end()));
-		_secondHighestScoringAgent = &(*std::prev(std::prev(set.end())));
 	}
 
 	void sortAgentsByPrediction() {
@@ -323,13 +329,50 @@ struct AgentSet {
 		}
 	}
 
-	float getConfidenceInBestAgent() {
-		//0 if second highest equal in score, 1 if second highest 0 in score
-		if (_highestScoringAgent == nullptr || _secondHighestScoringAgent == nullptr) {
-			Vengine::warning("Please call sortAgentsByScoreAccountingForIntervalScore first");
-			return 0.0f;
+	void calculateConfidenceInBestAgent(int clusterRadius) { //increase cluster radius bruh bruh bruh
+		if (set.size() <= 1) {
+			_confidenceInBestAgent = 1.0f;
 		}
-		return 1.0f - (_secondHighestScoringAgent->_accountingForIntervalScore / _highestScoringAgent->_accountingForIntervalScore);
+		auto it = set.end();
+		it--;
+		int bestInterval = _highestScoringAgent->_beatInterval;
+		int skips = 0;
+		do {
+
+			if (it == set.begin()) {
+				_confidenceInBestAgent = 1.0f;
+				return;
+			}
+			it--;
+			if (fabsf((*it)._beatInterval - bestInterval) < (2 * clusterRadius)) {
+				skips++;
+			}
+		} while (fabsf((*it)._beatInterval - bestInterval) < (2*clusterRadius)); //2* garuntees that agents accounting for same cluster inteval score skipped to first thats not
+
+		std::cout << "--------:: " << skips << " skips " << std::endl;
+
+		float secondBestScore = (*it)._accountingForIntervalScore; //first agent with interval not near best agent interval
+
+		_confidenceInBestAgent = 1.0f - (secondBestScore / _highestScoringAgent->_accountingForIntervalScore); //squared because better
+	}
+
+	void shrinkSetToSize(int size) {
+		//have to be in this order
+
+		if (set.size() <= size) {
+			return;
+		}
+
+		int howManyToErase = (set.size() - size);
+		for (int i = 0; i < howManyToErase; i++) {
+			set.erase(set.begin()); //erase lowest scores
+		}
+	}
+
+	void devalueScores(float factor) {
+		for (auto it = set.begin(); it != set.end(); it++) {
+			(*it)._score *= factor;
+		}
 	}
 private:
 	//duplicate thresholds
@@ -339,4 +382,4 @@ private:
 	int _sampleRate;
 
 	std::vector<Agent> pushToSetOnEnd;
-};
+}; 
