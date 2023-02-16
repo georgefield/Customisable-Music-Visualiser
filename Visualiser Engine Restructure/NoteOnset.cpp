@@ -1,7 +1,7 @@
 #include "NoteOnset.h"
 
 
-void NoteOnset::calculateNext(DataExtractionAlgorithm dataAlg, PeakPickingAlgorithm peakAlg) {
+void NoteOnset::calculateNext(DataExtractionAlg dataAlg, PeakPickingAlg peakAlg) {
 
 	//make sure not called twice on same frame
 	if (_sampleLastCalculated == _m->_currentSample) {
@@ -11,19 +11,17 @@ void NoteOnset::calculateNext(DataExtractionAlgorithm dataAlg, PeakPickingAlgori
 
 	//onset detection
 	float onsetValue = 0;
-	if (dataAlg == DataExtractionAlgorithm::DER_OF_LOG_ENERGY) {
+	if (dataAlg == DataExtractionAlg::DER_OF_LOG_ENERGY) {
 		_energy->calculateNext(4096, LINEAR_PYRAMID); //depends on energy
 		onsetValue = derivativeOfLogEnergy();
 		onsetValue *= 10; //somewhat normalise
 	}
-	if (dataAlg == DataExtractionAlgorithm::SPECTRAL_DISTANCE) {
-		_FFTs->calculateFft(_fourierTransformTypeForSpectralDistance); //depends on fft for spectral information
-		onsetValue = spectralDistanceOfHarmonics(_FFTs->getFftHistory(_fourierTransformTypeForSpectralDistance));
-	}
-	if (dataAlg == DataExtractionAlgorithm::SPECTRAL_DISTANCE_CONVOLVED_HARMONICS) {
-		_FFTs->calculateFft(_fourierTransformTypeForSpectralDistance); //depends on fft for spectral information
-		onsetValue = spectralDistanceOfConvolvedHarmonics(_FFTs->getFftHistory(_fourierTransformTypeForSpectralDistance));
-		onsetValue *= 1; //somewhat normalise
+	if (dataAlg == DataExtractionAlg::SPECTRAL_DISTANCE) {
+		_ftForSpectralDistance.beginCalculation();
+		_ftForSpectralDistance.applyFunction(FourierTransform::SMOOTH);
+		_ftForSpectralDistance.applyFunction(FourierTransform::FREQUENCY_CONVOLVE);
+		_ftForSpectralDistance.endCalculation();
+		onsetValue = 20*spectralDistanceOfHarmonics();
 	}
 
 	_onsetDetectionHistory.add(onsetValue, _m->_currentSample);
@@ -35,10 +33,10 @@ void NoteOnset::calculateNext(DataExtractionAlgorithm dataAlg, PeakPickingAlgori
 
 	//peak detection
 	bool aboveThreshold = false;
-	if (peakAlg == PeakPickingAlgorithm::THRESHOLD) {
+	if (peakAlg == PeakPickingAlg::THRESHOLD) {
 		aboveThreshold = thresholdPercent(getOnsetHistory(), 5); //peak if in top 5%
 	}
-	if (peakAlg == PeakPickingAlgorithm::CONVOLVE_THEN_THRESHOLD) {
+	if (peakAlg == PeakPickingAlg::CONVOLVE_THEN_THRESHOLD) {
 		aboveThreshold = thresholdPercent(getCONVonsetHistory(), 5); //peak if in top 5%
 	}
 
@@ -80,32 +78,14 @@ float NoteOnset::derivativeOfLogEnergy() {
 }
 
 
-float NoteOnset::spectralDistanceOfHarmonics(History<float*>* fftHistoryToUse) {
+float NoteOnset::spectralDistanceOfHarmonics() {
 	float one_over_dt = ((float)_m->_sampleRate / (float)(_m->_currentSample - _m->_previousSample)) * 0.001; //do dt in ms as otherwise numbers too big
 
 	//same as above but with the convolved harmonics--
 	float spectralDistanceConvolvedHarmonics = Tools::L2normIncreasingDimensionsOnly(
-		fftHistoryToUse->newest(),
-		fftHistoryToUse->previous(),
-		fftHistoryToUse->totalSize()
-	);
-	spectralDistanceConvolvedHarmonics *= one_over_dt;
-
-	return spectralDistanceConvolvedHarmonics;
-	//--
-}
-
-float NoteOnset::spectralDistanceOfConvolvedHarmonics(History<float*>* fftHistoryToUse) {
-	float one_over_dt = ((float)_m->_sampleRate / (float)(_m->_currentSample - _m->_previousSample)) * 0.001; //do dt in ms as otherwise numbers too big
-
-	_FFTs->convolveOverHarmonics(fftHistoryToUse->newest(), _currentConvolvedHarmonics, 5, LINEAR_PYRAMID);
-	_FFTs->convolveOverHarmonics(fftHistoryToUse->previous(), _previousConvolvedHarmonics, 5, LINEAR_PYRAMID);
-
-	//same as above but with the convolved harmonics--
-	float spectralDistanceConvolvedHarmonics = Tools::HFCweightedL2normIncreasingDimensionsOnly(
-		_currentConvolvedHarmonics,
-		_previousConvolvedHarmonics,
-		fftHistoryToUse->totalSize()
+		_ftForSpectralDistance.getOutput()->newest(),
+		_ftForSpectralDistance.getOutput()->previous(),
+		_ftForSpectralDistance.getOutput()->numHarmonics()
 	);
 	spectralDistanceConvolvedHarmonics *= one_over_dt;
 

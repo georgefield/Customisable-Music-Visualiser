@@ -84,7 +84,7 @@ void TempoDetection::calculateNext() {
 
 		//new peak => calculate
 
-		if (_noteOnset->getPeakHistory()->entries() < 5) {
+		if (_noteOnset->getPeakHistory()->entries() < 8) { //8 onsets atleast before starting to calculate
 			return;
 		}
 

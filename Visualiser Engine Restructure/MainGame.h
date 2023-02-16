@@ -70,5 +70,7 @@ private:
 	Vengine::Audio _song;
 
 	int _globalTimer;
+
+	int _testFTid;
 };
 

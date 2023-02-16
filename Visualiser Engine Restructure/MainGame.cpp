@@ -26,7 +26,7 @@ MainGame::MainGame() :
 
 //RESTRUCTURE ENTIRE ENGINE, CLONE THIS PROJECT AS BACKUP
 
-const std::string musicFilepath = "Music/King Geedorah - Next Levels.wav";
+const std::string musicFilepath = "Music/Gorillaz - On Melancholy Hill.wav";
 
 
 void MainGame::run() {
@@ -57,7 +57,7 @@ void MainGame::initSystems() {
 	_song.loadWav(musicFilepath, _sampleRate);
 
 	//set up signal processing unit
-	_signalProc.init(_song.getNormalisedWavData(), _sampleRate);
+	_signalProc.init(_song.getNormalisedWavData(), _sampleRate) ;
 
 	//create SSBO for waveform data (input entire file)
 	Vengine::DrawFunctions::createSSBO(_ssboWavDataID, 0, _song.getNormalisedWavData(), _song.getWavLength(), GL_STATIC_COPY);
@@ -141,6 +141,8 @@ void MainGame::gameLoop() {
 	Vengine::MyTiming::setNumSamplesForFPS(100);
 	Vengine::MyTiming::setFPSlimit(2500);
 
+	_signalProc.createFourierTransform(_testFTid, 1, 0, 20000, 0.01f);
+	_signalProc.get(_testFTid)->setFrequencyConvolvingVars(5, LINEAR_PYRAMID);
 
 	//main while loop
 	while (_gameState != GameState::EXIT) {
@@ -198,15 +200,21 @@ void MainGame::drawVis() {
 
 	_signalProc.beginCalculations(_currSample);
 
-	_signalProc._noteOnset.setFourierTransformToUseForSpectralDistance(FourierTransformType::SMOOTHED);
-	_signalProc._noteOnset.calculateNext(NoteOnset::DataExtractionAlgorithm::SPECTRAL_DISTANCE_CONVOLVED_HARMONICS, NoteOnset::PeakPickingAlgorithm::CONVOLVE_THEN_THRESHOLD);
+	//note onset and tempo setup
+	FourierTransform* test = _signalProc.get(_testFTid);
+	test->beginCalculation();
+	test->applyFunction(FourierTransform::SMOOTH);
+	test->applyFunction(FourierTransform::FREQUENCY_CONVOLVE);
+	test->endCalculation();
+
+	_signalProc._noteOnset.calculateNext();
 	_signalProc._tempoDetection.calculateNext();
 
 	_signalProc.endCalculations();
 
-	//Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, _signalProc._FFTs.getFftHistory(FourierTransformType::SMOOTHED)->newest(), _signalProc.getNumHarmonics() * sizeof(float));
+	Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, test->getOutput()->newest(), test->getOutput()->numHarmonics() * sizeof(float));
 	
-	_signalProc.updateSSBOwithHistory(_signalProc._tempoDetection.getConfidenceInTempoHistory(), _ssboHarmonicDataID, 1);
+	//_signalProc.updateSSBOwithHistory(_signalProc._tempoDetection.getConfidenceInTempoHistory(), _ssboHarmonicDataID, 1);
 	if (_signalProc._tempoDetection.hasData()) {
 		ImGui::Begin("tempo");
 		ImGui::Text(std::to_string(_signalProc._tempoDetection.getTempoHistory()->newest()).c_str());

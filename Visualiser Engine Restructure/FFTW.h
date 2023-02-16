@@ -1,20 +1,20 @@
 #pragma once
-#include <vector>
 #include <fftw3.h>
-#include "History.h"
 
 class FFTW
 {
 public:
-	FFTW(int historySize, int N);
-	void calculate(float* samples, int currentSample, float divFac);
+	FFTW(int N);
+	void calculate(float* audioData, int currentSample, float* store, float gain = 1.0f, float (*slidingWindowFunction)(float) = nullptr);
 	~FFTW();
-	float* getFft() { return _fftHistory.newest(); }
-	History<float*>* getFftHistory() { return &_fftHistory; }
-	int numHarmonics() { return (_N / 2) + 1; }
+	//getters
+	int windowSize() const { return _windowSize; }
+	int numHarmonics() const { return _numHarmonics; }
 private:
-	History<float*> _fftHistory;
-	int _N;
+	float* _samplesAfterWindowFunction;
+
+	int _windowSize;
+	int _numHarmonics;
 	fftwf_complex* _out;
 	fftwf_plan _p;
 };

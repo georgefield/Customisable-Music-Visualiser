@@ -349,8 +349,6 @@ struct AgentSet {
 			}
 		} while (fabsf((*it)._beatInterval - bestInterval) < (2*clusterRadius)); //2* garuntees that agents accounting for same cluster inteval score skipped to first thats not
 
-		std::cout << "--------:: " << skips << " skips " << std::endl;
-
 		float secondBestScore = (*it)._accountingForIntervalScore; //first agent with interval not near best agent interval
 
 		_confidenceInBestAgent = 1.0f - (secondBestScore / _highestScoringAgent->_accountingForIntervalScore); //squared because better

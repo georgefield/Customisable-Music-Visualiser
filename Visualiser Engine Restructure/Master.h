@@ -4,7 +4,9 @@
 #include "FFTW.h"
 #include <GL/glew.h>
 #include "History.h"
+#include "FourierTransformHistory.h"
 #include "Kernels.h"
+#include "FFTW.h"
 
 /// <summary>
 /// class that contains all basic calculation information used in many signal processing algorithms
@@ -25,7 +27,15 @@ struct Master {
 	int _sampleRate;
 	int _previousSample;
 	int _currentSample;
+	FourierTransformHistory _fftHistory;
+
+	void calculateFourierTransform();
 
 	//helper functions
 	float sumOfConvolutionOfHistory(History<float>* history, int entries = 0, Kernel kernel = LINEAR_PYRAMID);
+
+private:
+	int _sampleFftLastCalculated;
+	FFTW _fftwAPI;
+
 };

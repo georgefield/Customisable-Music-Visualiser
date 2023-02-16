@@ -19,6 +19,12 @@
     <Filter Include="Header Files\Signal Processing">
       <UniqueIdentifier>{53bf489d-29e8-4d99-bc20-7ffe23c47f8a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Data Structures">
+      <UniqueIdentifier>{c9e38de4-4cd4-49e3-ade3-635be07328f8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Tools">
+      <UniqueIdentifier>{10de74fd-7791-49a9-99cb-ee632dd8657b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -54,13 +60,13 @@
     <ClCompile Include="SignalProcessing.cpp">
       <Filter>Source Files\Signal Processing</Filter>
     </ClCompile>
-    <ClCompile Include="Tools.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="FFTs.cpp">
+    <ClCompile Include="FourierTransform.cpp">
       <Filter>Source Files\Signal Processing</Filter>
     </ClCompile>
     <ClCompile Include="TempoDetection.cpp">
+      <Filter>Source Files\Signal Processing</Filter>
+    </ClCompile>
+    <ClCompile Include="MFCCs.cpp">
       <Filter>Source Files\Signal Processing</Filter>
     </ClCompile>
   </ItemGroup>
@@ -75,15 +81,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SpriteManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="History.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Kernels.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Limiter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="UI.h">
@@ -104,16 +101,10 @@
     <ClInclude Include="SignalProcessing.h">
       <Filter>Header Files\Signal Processing</Filter>
     </ClInclude>
-    <ClInclude Include="Tools.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="TempoDetection.h">
       <Filter>Header Files\Signal Processing</Filter>
     </ClInclude>
-    <ClInclude Include="Threshold.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FFTs.h">
+    <ClInclude Include="FourierTransform.h">
       <Filter>Header Files\Signal Processing</Filter>
     </ClInclude>
     <ClInclude Include="DixonAlgorithmStructures.h">
@@ -125,8 +116,29 @@
     <ClInclude Include="RMS.hpp">
       <Filter>Header Files\Signal Processing</Filter>
     </ClInclude>
+    <ClInclude Include="Threshold.h">
+      <Filter>Header Files\Data Structures</Filter>
+    </ClInclude>
     <ClInclude Include="RollingAverage.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Data Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="Limiter.h">
+      <Filter>Header Files\Data Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="History.h">
+      <Filter>Header Files\Data Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="Tools.h">
+      <Filter>Header Files\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Kernels.h">
+      <Filter>Header Files\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="MFCCs.h">
+      <Filter>Header Files\Signal Processing</Filter>
+    </ClInclude>
+    <ClInclude Include="FourierTransformHistory.h">
+      <Filter>Header Files\Data Structures</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

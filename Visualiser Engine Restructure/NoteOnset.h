@@ -4,7 +4,7 @@
 #include "Threshold.h"
 
 #include "Energy.hpp"
-#include "FFTs.h"
+#include "FourierTransform.h"
 
 #include <set>
 #include "Limiter.h"
@@ -16,13 +16,12 @@ struct Peak {
 
 class NoteOnset {
 public:
-	enum class DataExtractionAlgorithm {
+	static enum DataExtractionAlg {
 		SPECTRAL_DISTANCE,
-		SPECTRAL_DISTANCE_CONVOLVED_HARMONICS,
 		DER_OF_LOG_ENERGY
 	};
 
-	enum class PeakPickingAlgorithm {
+	static enum PeakPickingAlg {
 		CONVOLVE_THEN_THRESHOLD,
 		THRESHOLD
 	};
@@ -31,32 +30,33 @@ public:
 		_onsetDetectionHistory(historySize),
 		_onsetPeaks(historySize),
 		_CONVonsetDetectionHistory(historySize),
+
 		_generalLimiter(1.0, 0.5, 10.0, 0.2),
 		_lastAboveThresh(false),
 		_goingDownFromPeak(false),
-		_thresholder(500)
+
+		_thresholder(500),
+
+		_ftForSpectralDistance(2)
 	{}
 
-	void init(Master* master, Energy* energy, FFTs* FFTs) {
+	FourierTransform _ftForSpectralDistance;
+
+	void init(Master* master, Energy* energy) {
 		_m = master;
 		_energy = energy;
-		_FFTs = FFTs;
 
 		_sampleLastCalculated = -1;
+
 		//thresholding vars
 		_justGoneOverThreshold = false;
 
-		_currentConvolvedHarmonics = new float[_FFTs->_numHarmonics];
-		_previousConvolvedHarmonics = new float[_FFTs->_numHarmonics];
-	}
-
-	void setFourierTransformToUseForSpectralDistance(FourierTransformType type) {
-		_fourierTransformTypeForSpectralDistance = type;
+		_ftForSpectralDistance.init(_m);
 	}
 
 	void calculateNext(
-		DataExtractionAlgorithm dataAlg = DataExtractionAlgorithm::SPECTRAL_DISTANCE_CONVOLVED_HARMONICS,
-		PeakPickingAlgorithm peakAlg = PeakPickingAlgorithm::THRESHOLD
+		DataExtractionAlg dataAlg = DataExtractionAlg::SPECTRAL_DISTANCE,
+		PeakPickingAlg peakAlg = PeakPickingAlg::CONVOLVE_THEN_THRESHOLD
 	);
 
 	History<float>* getOnsetHistory() {
@@ -73,14 +73,11 @@ public:
 private:
 	Master* _m;
 	Energy* _energy;
-	FFTs* _FFTs;
 
-	FourierTransformType _fourierTransformTypeForSpectralDistance;
 	int _sampleLastCalculated;
 	
 	float derivativeOfLogEnergy();
-	float spectralDistanceOfHarmonics(History<float*>* fftHistoryToUse);
-	float spectralDistanceOfConvolvedHarmonics(History<float*>* fftHistoryToUse);
+	float spectralDistanceOfHarmonics();
 
 	bool thresholdPercent(History<float>* historyToUse, float topXpercent);
 
@@ -94,7 +91,4 @@ private:
 
 	History<Peak> _onsetPeaks; //in sample time
 	bool _justGoneOverThreshold;
-
-	float* _currentConvolvedHarmonics;
-	float* _previousConvolvedHarmonics;
 };

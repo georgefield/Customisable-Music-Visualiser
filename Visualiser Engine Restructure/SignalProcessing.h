@@ -1,12 +1,14 @@
 #pragma once
 #include "Master.h"
-#include "FFTs.h"
 #include "NoteOnset.h"
 #include "Energy.hpp"
 #include "RMS.hpp"
 #include "TempoDetection.h"
+#include "FourierTransform.h"
+#include "MFCCs.h"
 
 #include <GL/glew.h>
+#include <unordered_map>
 
 class SignalProcessing {
 public:
@@ -15,41 +17,58 @@ public:
 		_rms(2049),
 		_energy(2049),
 		_noteOnset(2049),
-		_tempoDetection(2049),
-		_FFTs(20, 4096)
+		_tempoDetection(2049)
 	{
 	}
 
 	void init(float* audioData, int sampleRate) {
 		_master.init(audioData, sampleRate);
 		
-		_FFTs.init(&_master);
 		_rms.init(&_master);
 		_energy.init(&_master);
-		_noteOnset.init(&_master, &_energy, &_FFTs);
+		_noteOnset.init(&_master, &_energy);
 		_tempoDetection.init(&_master, &_noteOnset);
+		_mfccs.init(&_master, 5, 1000, 6000);
 	}
+
 
 	void beginCalculations(int currentSample) {
 		_master.beginCalculations(currentSample);
+		_master.calculateFourierTransform(); //always calculate fourier
+		_mfccs.debug();
 	}
 
 	void endCalculations() {
 		_master.endCalculations();
 	}
 
-	FFTs _FFTs;
+	//fourier transform managing--
+	void createFourierTransform(int& id, int historySize, float cutOffLow = 0.0f, float cutOffHigh = 22050.0f, float cutoffSmoothFrac = 0.0f) {
+		id = _fourierTransforms.size();
+		_fourierTransforms[id] = new FourierTransform(historySize, cutOffLow, cutOffHigh, cutoffSmoothFrac);
+		_fourierTransforms[id]->init(&_master);
+	}
+
+	void eraseFourierTransform(int id) {
+		delete _fourierTransforms[id];
+		_fourierTransforms.erase(id);
+	}
+
+	FourierTransform* get(int id) {
+		return _fourierTransforms[id];
+	}
+	//--
+
 	RMS _rms;
 	Energy _energy;
 	NoteOnset _noteOnset;
 	TempoDetection _tempoDetection;
+	MFCCs _mfccs;
 
 	void updateSSBOwithHistory(History<float>* history, GLuint id, GLint binding);
 
-	int getNumHarmonics() {
-		return _FFTs._numHarmonics;
-	}
-
 private:
 	Master _master;
+
+	std::unordered_map<int, FourierTransform*> _fourierTransforms;
 };
