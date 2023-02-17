@@ -143,7 +143,8 @@ void MainGame::gameLoop() {
 
 	_signalProc.createFourierTransform(_testFTid, 1, 0, 20000, 0.01f);
 	_signalProc.get(_testFTid)->setFrequencyConvolvingVars(5, LINEAR_PYRAMID);
-	_signalProc._selfSimilarityMatrix.linkToDebug();
+	_signalProc._selfSimilarityMatrix.linkToMFCCs(&_signalProc._mfccs);
+	//_signalProc._selfSimilarityMatrix.linkToDebug();
 
 	//main while loop
 	while (_gameState != GameState::EXIT) {
@@ -198,6 +199,12 @@ void MainGame::drawVis() {
 	float elapsed = Vengine::MyTiming::readTimer(_globalTimer);
 	_currSample = max((int)(elapsed * _sampleRate) + _sampleOffsetToSound * _sampleRate, 0);
 
+	static int correlationWindowSize = 1;
+	if (_inputManager.isKeyPressed(SDLK_1)) {
+		correlationWindowSize++;
+		_signalProc._selfSimilarityMatrix.setCorrelationWindowSize(correlationWindowSize);
+		std::cout << "+1\n";
+	}
 
 	_signalProc.beginCalculations(_currSample);
 
@@ -214,8 +221,7 @@ void MainGame::drawVis() {
 
 	_signalProc.endCalculations();
 
-	//_signalProc._selfSimilarityMatrix.debug();
-	_signalProc._selfSimilarityMatrix.debug();
+	std::cout << _signalProc._selfSimilarityMatrix.getSelfSimilarityMatrixValue(0, 100) << std::endl;
 
 	Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, test->getHistory()->newest(), test->getHistory()->numHarmonics() * sizeof(float));
 	//_signalProc.updateSSBOwithVector(_signalProc._mfccs.getBandEnergy(), _ssboHarmonicDataID, 1);

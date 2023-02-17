@@ -19,7 +19,7 @@ public:
 		_energy(2049),
 		_noteOnset(2049),
 		_tempoDetection(2049),
-		_selfSimilarityMatrix(10)
+		_selfSimilarityMatrix(500)
 	{
 	}
 

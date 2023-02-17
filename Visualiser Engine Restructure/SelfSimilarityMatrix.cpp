@@ -1,7 +1,5 @@
 #include "SelfSimilarityMatrix.h"
 
-static bool ayo = true;
-
 void SelfSimilarityMatrix::calculateNext()
 {
 	if (_linkedTo == NONE) {
@@ -27,25 +25,25 @@ void SelfSimilarityMatrix::calculateNext()
 	}
 
 	if (_linkedTo == DEBUG) {
-		std::vector<float> lol;
-		if (ayo) {
+		std::vector<float> debugVec;
+		if (_switch) {
 
-			lol.push_back(1);
-			lol.push_back(0);
+			debugVec.push_back(1);
+			debugVec.push_back(0);
 		}
 		else {
-			lol.push_back(0);
-			lol.push_back(1);
+			debugVec.push_back(0);
+			debugVec.push_back(1);
 		}
 
 		std::cout << Vengine::MyTiming::readTimer(_debugTimerId) << std::endl;
-		if (Vengine::MyTiming::readTimer(_debugTimerId) > 0.5) {
+		if (Vengine::MyTiming::readTimer(_debugTimerId) > 1.0) {
 			Vengine::MyTiming::stopTimer(_debugTimerId);
 			Vengine::MyTiming::startTimer(_debugTimerId);
-			ayo = !ayo;
+			_switch = !_switch;
 		}
 
-		_similarityMatrix.add(lol);
+		_similarityMatrix.add(debugVec);
 		return;
 	}
 }
@@ -78,4 +76,17 @@ void SelfSimilarityMatrix::linkToDebug()
 {
 	_linkedTo = DEBUG;
 	Vengine::MyTiming::startTimer(_debugTimerId);
+	_switch = true;
+}
+
+void SelfSimilarityMatrix::debug()
+{
+	int n = std::min(10, _similarityMatrix.sideLength());
+	for (int i = 0; i < n; i++) {
+		for (int j = 0; j < n; j++) {
+			std::cout << std::fixed << std::setprecision(2) << getSelfSimilarityMatrixValue(i, j) << ", ";
+		}
+		std::cout << std::endl;
+	}
+	std::cout << "-------" << std::endl;
 }

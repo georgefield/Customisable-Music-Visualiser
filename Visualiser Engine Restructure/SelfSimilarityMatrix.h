@@ -25,6 +25,10 @@ public:
 	{
 
 		_useCorrelationWindow = (_correlationWindowSize >= 2); // size 1 correlation window data = data, only needed for size 2 and up
+		if (_correlationWindowSize > sideLength) {
+			Vengine::warning("Correlation window cannot be greater than side length, defaulting to side length");
+			_correlationWindowSize = sideLength;
+		}
 
 		//main data
 		_data = new float* [_sideLength];
@@ -33,11 +37,7 @@ public:
 			memset(_data[i], 0.0f, _sideLength * sizeof(float));
 		}
 
-		if (!_useCorrelationWindow) {
-			return;
-		}
-
-		//only set aside memory if using correlation window
+		//set aside memory if using correlation window
 		_dataWindowedCorrelation = new float* [_sideLength];
 		for (int i = 0; i < _sideLength; i++) {
 			_dataWindowedCorrelation[i] = new float[_sideLength];
@@ -75,10 +75,11 @@ public:
 		if (!_useCorrelationWindow) {
 			return;
 		}
+		std::cout << "using";
 
 		//correlation window must be done after basic similarity matrix updated as is an average
 		for (int i = 0; i < _vectorHistory.entries(); i++) {
-			float correlationMeasure = correlationOverWindow(_start + i, _start);
+			float correlationMeasure = correlationOverWindow(i);
 			(*getPtrToCoord(i, 0, true)) = correlationMeasure; //do both sides as symmetrical around y = -x diagonal
 			(*getPtrToCoord(0, i, true)) = correlationMeasure;
 		}
@@ -98,6 +99,11 @@ public:
 		_start = 0;
 		_vectorDim = -1;
 		_vectorHistory = VectorHistory(_sideLength); //replace vector history
+	}
+
+	void setCorrelationWindowSize(int windowSize) {
+		_correlationWindowSize = windowSize;
+		_useCorrelationWindow = (_correlationWindowSize >= 2);
 	}
 
 	//getters
@@ -144,10 +150,11 @@ private:
 	}
 
 
-	float correlationOverWindow(int x, int y) {
+	float correlationOverWindow(int i) {
+		int windowSizeLimitedByDataSize = std::min(_correlationWindowSize, _sideLength - i);
 		float sum = 0;
-		for (int i = 0; i < _correlationWindowSize; i++) {
-			sum += *getPtrToCoord(x + i, y + i, false);
+		for (int j = 0; j < windowSizeLimitedByDataSize; j++) {
+			sum += *getPtrToCoord(i + j, j, false);
 		}
 		sum /= float(_correlationWindowSize);
 		return sum;
@@ -160,7 +167,7 @@ class SelfSimilarityMatrix
 public:
 
 	SelfSimilarityMatrix(int size) :
-		_similarityMatrix(size, 2), //no correlation for now
+		_similarityMatrix(size, 1), //default small correlation (computationally expensive)
 
 		_linkedTo(NONE),
 		_mfccsPtr(nullptr),
@@ -180,16 +187,12 @@ public:
 		return _similarityMatrix.get(i, j);
 	}
 
-	void debug() {
-		int n = std::min(10, _similarityMatrix.sideLength());
-		for (int i = 0; i < n; i++) {
-			for (int j = 0; j < n; j++) {
-				std::cout << std::fixed << std::setprecision(2) << getSelfSimilarityMatrixValue(i, j) << ", ";
-			}
-			std::cout << std::endl;
-		}
-		std::cout << "-------" << std::endl;
+	void setCorrelationWindowSize(int windowSize) //reduces noise (smooths matrix), computationally expensive
+	{
+		_similarityMatrix.setCorrelationWindowSize(windowSize);
 	}
+
+	void debug();
 
 private:
 	static enum LinkedTo {
@@ -208,6 +211,8 @@ private:
 	MFCCs* _mfccsPtr;
 	FourierTransform* _ftPtr;
 
+	//debug
 	int _debugTimerId;
+	bool _switch;
 };
 
