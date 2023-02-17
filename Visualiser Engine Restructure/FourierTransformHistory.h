@@ -23,6 +23,7 @@ public:
 
 
 	~FourierTransformHistory(){
+		std::cout << "destructor called" << std::endl;
 		if (_numHarmonics != -1) { //only delete if initialised
 			for (int i = 0; i < _history.totalSize(); i++) { //avoid memory leak
 				delete[] _history.get(i);
@@ -70,7 +71,7 @@ public:
 	int entries() {
 		return std::min(_added, totalSize());
 	}
-//private:
+private:
 	int _added;
 	int _numHarmonics;
 	History<float*> _history;

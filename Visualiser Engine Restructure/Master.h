@@ -36,6 +36,6 @@ struct Master {
 
 private:
 	int _sampleFftLastCalculated;
-	FFTW _fftwAPI;
+	FFTWfft _fftwAPI;
 
 };

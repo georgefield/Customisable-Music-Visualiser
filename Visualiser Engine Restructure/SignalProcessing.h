@@ -28,14 +28,13 @@ public:
 		_energy.init(&_master);
 		_noteOnset.init(&_master, &_energy);
 		_tempoDetection.init(&_master, &_noteOnset);
-		_mfccs.init(&_master, 5, 1000, 6000);
+		_mfccs.init(&_master, 25, 0, 20000);
 	}
 
 
 	void beginCalculations(int currentSample) {
 		_master.beginCalculations(currentSample);
 		_master.calculateFourierTransform(); //always calculate fourier
-		_mfccs.debug();
 	}
 
 	void endCalculations() {
@@ -66,6 +65,7 @@ public:
 	MFCCs _mfccs;
 
 	void updateSSBOwithHistory(History<float>* history, GLuint id, GLint binding);
+	void updateSSBOwithVector(std::vector<float> vector, GLuint id, GLint binding); //slow shouldnt use
 
 private:
 	Master _master;

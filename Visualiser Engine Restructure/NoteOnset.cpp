@@ -83,9 +83,9 @@ float NoteOnset::spectralDistanceOfHarmonics() {
 
 	//same as above but with the convolved harmonics--
 	float spectralDistanceConvolvedHarmonics = Tools::L2normIncreasingDimensionsOnly(
-		_ftForSpectralDistance.getOutput()->newest(),
-		_ftForSpectralDistance.getOutput()->previous(),
-		_ftForSpectralDistance.getOutput()->numHarmonics()
+		_ftForSpectralDistance.getHistory()->newest(),
+		_ftForSpectralDistance.getHistory()->previous(),
+		_ftForSpectralDistance.getHistory()->numHarmonics()
 	);
 	spectralDistanceConvolvedHarmonics *= one_over_dt;
 

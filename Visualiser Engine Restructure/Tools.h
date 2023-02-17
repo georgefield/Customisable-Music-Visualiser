@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include <Vengine/Window.h>
 #include <Vengine/Viewport.h>
+#include <vector>
 
 class Tools
 {
@@ -21,6 +22,14 @@ public:
 	//*** MATHS ***
 	static float lerp(float c1, float c2, float t) {
 		return ((1 - t) * c1) + (t * c2);
+	}
+
+	static float dot(float* v1, float* v2, int dim) {
+		float ret = 0;
+		for (int i = 0; i < dim; i++) {
+			ret += v1[i] * v2[i];
+		}
+		return ret;
 	}
 
 	static float L1norm(float* v1, float* v2, int dim) {

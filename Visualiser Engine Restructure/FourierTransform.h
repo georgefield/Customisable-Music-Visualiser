@@ -32,7 +32,7 @@ public:
 			delete[] _smoothedFt;
 			delete[] _smoothedFtDot;
 		}
-	}
+ 	}
 	
 	void init(Master* master){
 		_initialised = true;
@@ -59,8 +59,6 @@ public:
 
 		//calculate num harmonics
 		_numHarmonics = (_harmonicHigh - _harmonicLow) + 1;
-
-		std::cout << _numHarmonics << std::endl;
 
 		_working1.init(_numHarmonics);
 		_working2.init(_numHarmonics);
@@ -116,8 +114,12 @@ public:
 	//--
 
 	//getters
-	FourierTransformHistory* getOutput() {
+	FourierTransformHistory* getHistory() {
 		return _current;
+	}
+
+	float* getOutput() {
+		return _current->newest();
 	}
 
 	float getCutoffLow() {
@@ -126,6 +128,10 @@ public:
 
 	float getCutoffHigh() {
 		return _cutOffHigh;
+	}
+
+	int getNumHarmonics() {
+		return _current->numHarmonics();
 	}
 
 private:

@@ -143,6 +143,7 @@
     <ClCompile Include="Master.cpp" />
     <ClCompile Include="MyFuncs.cpp" />
     <ClCompile Include="SignalProcessing.cpp" />
+    <ClCompile Include="SelfSimilarityMatrix.cpp" />
     <ClCompile Include="SpriteManager.cpp" />
     <ClCompile Include="TempoDetection.cpp" />
     <ClCompile Include="UI.cpp" />
@@ -166,6 +167,7 @@
     <ClInclude Include="RMS.hpp" />
     <ClInclude Include="RollingAverage.h" />
     <ClInclude Include="SignalProcessing.h" />
+    <ClInclude Include="SelfSimilarityMatrix.h" />
     <ClInclude Include="SpriteManager.h" />
     <ClInclude Include="TempoDetection.h" />
     <ClInclude Include="Threshold.h" />

@@ -1,7 +1,9 @@
 #include "FFTW.h"
 #include <Vengine/MyErrors.h>
 
-FFTW::FFTW(int windowSize) : //N is window size
+//*** FFTWfft ***
+
+FFTWfft::FFTWfft(int windowSize) : //N is window size
 	_p(nullptr),
 	_out(nullptr),
 	_windowSize(windowSize),
@@ -11,7 +13,7 @@ FFTW::FFTW(int windowSize) : //N is window size
 	_samplesAfterWindowFunction = new float[_windowSize];
 }
 
-void FFTW::calculate(float* audioData, int currentSample, float* storage, float gain, float (*slidingWindowFunction)(float))
+void FFTWfft::calculate(float* audioData, int currentSample, float* storage, float gain, float (*slidingWindowFunction)(float))
 {
 	//sliding window function = nullptr => no window function, use samples no function (rectangle window)
 	float* arrayToUse;
@@ -37,6 +39,30 @@ void FFTW::calculate(float* audioData, int currentSample, float* storage, float 
 	}
 }
 
-FFTW::~FFTW() {
+FFTWfft::~FFTWfft() {
 	fftwf_free(_out);
+}
+
+//*** FFTWdct ***
+
+FFTWdct::FFTWdct() : 
+	_p(nullptr),
+	_out(nullptr)
+{
+}
+
+void FFTWdct::init(int windowSize)
+{
+	_windowSize = windowSize;
+
+	//dct type 2, n in, n out
+	_out = (float*)fftwf_malloc(sizeof(float) * _windowSize);
+}
+
+void FFTWdct::calculate(float* dataIn)
+{
+	_p = fftwf_plan_r2r_1d(_windowSize, dataIn, _out, fftwf_r2r_kind::FFTW_REDFT10, FFTW_ESTIMATE);
+
+	fftwf_execute(_p);
+	fftwf_destroy_plan(_p);
 }

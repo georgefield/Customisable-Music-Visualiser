@@ -201,19 +201,18 @@ void MainGame::drawVis() {
 	_signalProc.beginCalculations(_currSample);
 
 	//note onset and tempo setup
-	FourierTransform* test = _signalProc.get(_testFTid);
-	test->beginCalculation();
-	test->applyFunction(FourierTransform::SMOOTH);
-	test->applyFunction(FourierTransform::FREQUENCY_CONVOLVE);
-	test->endCalculation();
-
-	_signalProc._noteOnset.calculateNext();
-	_signalProc._tempoDetection.calculateNext();
-
+	//FourierTransform* test = _signalProc.get(_testFTid);
+	//test->beginCalculation();
+	//test->applyFunction(FourierTransform::SMOOTH);
+	//test->applyFunction(FourierTransform::FREQUENCY_CONVOLVE);
+	//test->endCalculation();
+	//_signalProc._noteOnset.calculateNext();
+	//_signalProc._tempoDetection.calculateNext();
+	_signalProc._mfccs.calculateNext();
 	_signalProc.endCalculations();
 
-	Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, test->getOutput()->newest(), test->getOutput()->numHarmonics() * sizeof(float));
-	
+	//Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, test->getHistory()->newest(), test->getHistory()->numHarmonics() * sizeof(float));
+	_signalProc.updateSSBOwithVector(_signalProc._mfccs.getMfccs(), _ssboHarmonicDataID, 1);
 	//_signalProc.updateSSBOwithHistory(_signalProc._tempoDetection.getConfidenceInTempoHistory(), _ssboHarmonicDataID, 1);
 	if (_signalProc._tempoDetection.hasData()) {
 		ImGui::Begin("tempo");
