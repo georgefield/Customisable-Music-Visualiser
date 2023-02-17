@@ -31,8 +31,16 @@ public:
 		}
 		return ret;
 	}
+	
+	static float L2norm(float* v1, int dim) {
+		float ret = 0;
+		for (int i = 0; i < dim; i++) {
+			ret += v1[i] * v1[i];
+		}
+		return sqrtf(ret);
+	}
 
-	static float L1norm(float* v1, float* v2, int dim) {
+	static float L1distanceMetric(float* v1, float* v2, int dim) {
 
 		float ret = 0;
 		for (int i = 0; i < dim; i++) {
@@ -40,7 +48,7 @@ public:
 		}
 		return ret;
 	}
-	static float L2norm(float* v1, float* v2, int dim) {
+	static float L2distanceMetric(float* v1, float* v2, int dim) {
 
 		float ret = 0;
 		for (int i = 0; i < dim; i++) {
@@ -48,7 +56,7 @@ public:
 		}
 		return ret;
 	}
-	static float L2normIncreasingDimensionsOnly(float* v1, float* v2, int dim) {
+	static float L2distanceMetricIncDimOnly(float* v1, float* v2, int dim) {
 
 		float ret = 0;
 		for (int i = 0; i < dim; i++) {
@@ -58,7 +66,7 @@ public:
 		}
 		return sqrt(ret);
 	}
-	static float HFCweightedL2normIncreasingDimensionsOnly(float* v1, float* v2, int dim) {
+	static float HFCweightedL2distanceMetricIncDimOnly(float* v1, float* v2, int dim) {
 
 		float ret = 0;
 		for (int i = 0; i < dim; i++) {

@@ -1,78 +1,43 @@
 #pragma once
-#include "History.h"
+#include "VectorHistory.h"
 
+//interface for vector history but with some function names changed to make code more readable when using
 class FourierTransformHistory {
 
 public:
-	FourierTransformHistory(int historySize):
-		_history(historySize),
-		_added(0),
-		_numHarmonics(-1)
-	{
-
-	}
+	FourierTransformHistory(int historySize) :
+		_history(historySize)
+	{}
 
 	void init(int numHarmonics) {
-		_numHarmonics = numHarmonics;
 
-		for (int i = 0; i < _history.totalSize(); i++) { //allocate memory for history (init memory to 0)
-			_history.add(new float[_numHarmonics]);
-			memset(_history.newest(), 0.0f, (_numHarmonics * sizeof(float)));
-		}
+		_history.init(numHarmonics);
 	}
 
-
-	~FourierTransformHistory(){
-		std::cout << "destructor called" << std::endl;
-		if (_numHarmonics != -1) { //only delete if initialised
-			for (int i = 0; i < _history.totalSize(); i++) { //avoid memory leak
-				delete[] _history.get(i);
-			}
-		}
-	}
-
-	//unique functions
-	float* workingArray() //modify values here in memory
+	float* workingArray()
 	{
-		if (_numHarmonics == -1) {
-			Vengine::fatalError("FourierTransformHistory used without being initialised");
-		}
-		return _history.oldest(); //work on oldest entries
+		return _history.workingArray();
 	}
 
-	void addWorkingArrayToHistory(int currentSample = -1) //call after setting to add to front of history
+	void addWorkingArrayToHistory(int currentSample = -1)
 	{
-		_history.add(_history.oldest(), currentSample);
-		_added++;
+		_history.addWorkingArrayToHistory(currentSample);
 	}
 
 	int numHarmonics() {
-		return _numHarmonics;
+		return _history.vectorDim();
 	}
 
 	//same functionality as history required
-	float* get(int index) {
-		if (_numHarmonics == -1) {
-			Vengine::fatalError("FourierTransformHistory used without being initialised");
-		}
-		return _history.get(index);
-	}
-	float* newest() {
-		return _history.get(0);
-	}
-	float* previous() {
-		return _history.get(1);
-	}
+	float* get(int index) { return _history.get(index); }
 
-	int totalSize() {
-		return _history.totalSize();
-	}
+	float* newest() { return _history.get(0); }
 
-	int entries() {
-		return std::min(_added, totalSize());
-	}
+	float* previous() { return _history.get(1); }
+
+	int totalSize() { return _history.totalSize(); }
+
+	int entries() { return _history.entries(); }
 private:
-	int _added;
-	int _numHarmonics;
-	History<float*> _history;
+	VectorHistory _history;
 };

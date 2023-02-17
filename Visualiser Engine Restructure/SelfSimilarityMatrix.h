@@ -5,10 +5,10 @@
 #include "History.h"
 
 #include <glm/glm.hpp>
+#include <iomanip>
 
-struct IntCoord {
-	int x, y;
-};
+#include <Vengine/MyTiming.h>
+
 
 class SimilarityMatrixStructure {
 public:
@@ -17,10 +17,14 @@ public:
 		_correlationWindowSize(correlationWindowSize),
 		_start(_sideLength - 1), //start br and move up to tl then wrap around
 
+		_vectorDim(-1), //test against to ensure all vectors same dimension, -1 indicates not set yet
+		_vectorHistory(_sideLength),
+
 		_data(nullptr),
 		_dataWindowedCorrelation(nullptr) //init to nullptr as might not be initialised in constructor
 	{
-		_useCorrelationWindow = (_correlationWindowSize <= 1); // size 1 correlation window data = data, only needed for size 2 and up
+
+		_useCorrelationWindow = (_correlationWindowSize >= 2); // size 1 correlation window data = data, only needed for size 2 and up
 
 		//main data
 		_data = new float* [_sideLength];
@@ -37,7 +41,7 @@ public:
 		_dataWindowedCorrelation = new float* [_sideLength];
 		for (int i = 0; i < _sideLength; i++) {
 			_dataWindowedCorrelation[i] = new float[_sideLength];
-			memset(_data[i], 0.0f, _sideLength * sizeof(float));
+			memset(_dataWindowedCorrelation[i], 0.0f, _sideLength * sizeof(float));
 		}
 	}
 
@@ -47,15 +51,25 @@ public:
 		}
 	}
 
-	void add(std::vector<float> v1) {
-		_start--;
-		_entries = std::min(_entries + 1, _sideLength);
-
-		for (int i = 0; i < _sideLength; i++) {
-			(*getPtrToCoord(_start + i, _start, false)) = similarityMeasure(v1, v2);
+	void add(std::vector<float> v) {
+		if (_vectorDim == -1) {
+			_vectorDim = v.size();
+			_vectorHistory.init(_vectorDim);
 		}
-		for (int i = 0; i < _sideLength; i++) {
-			(*getPtrToCoord(_start, _start + i, false)) = similarityMeasure(v1, v2);
+		else if (_vectorDim != v.size()) {
+			Vengine::fatalError("Tried to add a vector of different dimension to others to self similarity matrix");
+		}
+
+		_start--;
+		if (_start < 0) { //wrap round, just like history class
+			_start = _sideLength - 1;
+		}
+		_vectorHistory.add(v);
+
+		for (int i = 0; i < _vectorHistory.entries(); i++) {
+			float measure = similarityMeasure(&(v[0]), _vectorHistory.get(i));
+			(*getPtrToCoord(i, 0, false)) = measure; //do both sides as symmetrical around y = -x diagonal
+			(*getPtrToCoord(0, i, false)) = measure;
 		}
 
 		if (!_useCorrelationWindow) {
@@ -63,39 +77,45 @@ public:
 		}
 
 		//correlation window must be done after basic similarity matrix updated as is an average
-		for (int i = 0; i < _sideLength; i++) {
-			(*getPtrToCoord(_start + i, _start, true)) = correlationOverWindow(_start + i, _start);
+		for (int i = 0; i < _vectorHistory.entries(); i++) {
+			float correlationMeasure = correlationOverWindow(_start + i, _start);
+			(*getPtrToCoord(i, 0, true)) = correlationMeasure; //do both sides as symmetrical around y = -x diagonal
+			(*getPtrToCoord(0, i, true)) = correlationMeasure;
 		}
-		for (int i = 0; i < _sideLength; i++) {
-			(*getPtrToCoord(_start, _start + i, true)) = correlationOverWindow(_start, _start + i);
+	}
+
+	void add(float* v, int dim) //overload for if given float* not vector
+	{
+		std::vector<float> arrayAsVector;
+		arrayAsVector.resize(dim);
+		for (int i = 0; i < dim; i++) {
+			arrayAsVector[i] = v[i];
 		}
+		add(arrayAsVector);
 	}
 
 	void clear() {
 		_start = 0;
-		_entries = 0;
+		_vectorDim = -1;
+		_vectorHistory = VectorHistory(_sideLength); //replace vector history
 	}
 
 	//getters
 
 	float get(int i, int j) { //only to be used from outside of class, use get ptr inside
-		if (i > _entries || j > _entries) {
-			return 0.0f; //
+		if (i > _vectorHistory.entries() || j > _vectorHistory.entries()) {
+			return 0.0f;
 		}
 
-		if (_correlationWindowSize == -1) {
-			return *getPtrToCoord(i, j, false);
-		}
-		return *getPtrToCoord(i, j, true);
+		return *getPtrToCoord(i, j, _useCorrelationWindow);
 	}
 
 	int sideLength() const { return _sideLength; }
-	bool full() const { return _entries == _sideLength; }
-	int entries() const { return _entries; }
+	bool full() { return (_vectorHistory.entries() == _vectorHistory.totalSize()); }
+	int entries() { return _vectorHistory.entries(); }
 private:
 	int _sideLength;
 	int _start;
-	int _entries;
 
 	float** _data; //store s(i,j)
 
@@ -103,25 +123,22 @@ private:
 	int _correlationWindowSize;
 	float** _dataWindowedCorrelation; //store 1/w * sum{k = [0,w - 1]]}(s(i + k, j + k))
 	
-
+	int _vectorDim;
+	VectorHistory _vectorHistory;
 
 	float* getPtrToCoord(int i, int j, bool getWindowedCorrelation) {
 		if (getWindowedCorrelation) {
 			return &_dataWindowedCorrelation[(_start + i) % _sideLength][(_start + j) % _sideLength];
 		}
-
 		return &_data[(_start + i) % _sideLength][(_start + j) % _sideLength];
 
 	}
 
-	float similarityMeasure(std::vector<float> v1, std::vector<float> v2) {
-		if (v1.size() != v2.size()) {
-			Vengine::fatalError("Vector sizes sent for similarity measure have unequal dimension");
-		}
+	float similarityMeasure(float* v1, float* v2, bool debug = false) {
 
-		float dot = Tools::dot(&(v1[0]), &(v2[0]), v1.size());
-		float n1 = Tools::L2norm(&(v1[0]), &(v1[0]), v1.size());
-		float n2 = Tools::L2norm(&(v2[0]), &(v2[0]), v2.size());
+		float dot = Tools::dot(v1, v2, _vectorDim);
+		float n1 = Tools::L2norm(v1, _vectorDim);
+		float n2 = Tools::L2norm(v2, _vectorDim);
 
 		return dot / (n1 * n2);
 	}
@@ -130,9 +147,7 @@ private:
 	float correlationOverWindow(int x, int y) {
 		float sum = 0;
 		for (int i = 0; i < _correlationWindowSize; i++) {
-			if (x + i < _entries && y + i < _entries) { //only include valid values
-				sum += *getPtrToCoord(x + i, y + i, false);
-			}
+			sum += *getPtrToCoord(x + i, y + i, false);
 		}
 		sum /= float(_correlationWindowSize);
 		return sum;
@@ -140,13 +155,12 @@ private:
 };
 
 
-class SimilarityMatrix
+class SelfSimilarityMatrix
 {
 public:
 
-	SimilarityMatrix(Master* m, int size) :
-		_m(m),
-		_similarityMatrix(size),
+	SelfSimilarityMatrix(int size) :
+		_similarityMatrix(size, 2), //no correlation for now
 
 		_linkedTo(NONE),
 		_mfccsPtr(nullptr),
@@ -160,22 +174,40 @@ public:
 	void linkToMelBandEnergies(MFCCs* mfcc);
 	void linkToMelSpectrogram(MFCCs* mfcc);
 	void linkToFourierTransform(FourierTransform* ft);
+	void linkToDebug();
+
+	float getSelfSimilarityMatrixValue(int i, int j) {
+		return _similarityMatrix.get(i, j);
+	}
+
+	void debug() {
+		int n = std::min(10, _similarityMatrix.sideLength());
+		for (int i = 0; i < n; i++) {
+			for (int j = 0; j < n; j++) {
+				std::cout << std::fixed << std::setprecision(2) << getSelfSimilarityMatrixValue(i, j) << ", ";
+			}
+			std::cout << std::endl;
+		}
+		std::cout << "-------" << std::endl;
+	}
 
 private:
 	static enum LinkedTo {
 		NONE,
+		DEBUG,
 		MFCC,
 		MelBandEnergies,
 		MelSpectrogram,
 		FT
 	};
 
-	Master* _m;
 	SimilarityMatrixStructure _similarityMatrix;
 	LinkedTo _linkedTo;
 
 	//link ptrs
 	MFCCs* _mfccsPtr;
 	FourierTransform* _ftPtr;
+
+	int _debugTimerId;
 };
 

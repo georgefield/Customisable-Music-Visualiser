@@ -174,6 +174,7 @@
     <ClInclude Include="Tools.h" />
     <ClInclude Include="UI.h" />
     <ClInclude Include="UniformSetting.h" />
+    <ClInclude Include="VectorHistory.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

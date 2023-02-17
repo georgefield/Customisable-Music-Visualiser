@@ -143,6 +143,7 @@ void MainGame::gameLoop() {
 
 	_signalProc.createFourierTransform(_testFTid, 1, 0, 20000, 0.01f);
 	_signalProc.get(_testFTid)->setFrequencyConvolvingVars(5, LINEAR_PYRAMID);
+	_signalProc._selfSimilarityMatrix.linkToDebug();
 
 	//main while loop
 	while (_gameState != GameState::EXIT) {
@@ -201,18 +202,23 @@ void MainGame::drawVis() {
 	_signalProc.beginCalculations(_currSample);
 
 	//note onset and tempo setup
-	//FourierTransform* test = _signalProc.get(_testFTid);
-	//test->beginCalculation();
-	//test->applyFunction(FourierTransform::SMOOTH);
-	//test->applyFunction(FourierTransform::FREQUENCY_CONVOLVE);
-	//test->endCalculation();
+	FourierTransform* test = _signalProc.get(_testFTid);
+	test->beginCalculation();
+	test->applyFunction(FourierTransform::SMOOTH);
+	test->applyFunction(FourierTransform::FREQUENCY_CONVOLVE);
+	test->endCalculation();
 	//_signalProc._noteOnset.calculateNext();
 	//_signalProc._tempoDetection.calculateNext();
 	_signalProc._mfccs.calculateNext();
+	_signalProc._selfSimilarityMatrix.calculateNext();
+
 	_signalProc.endCalculations();
 
-	//Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, test->getHistory()->newest(), test->getHistory()->numHarmonics() * sizeof(float));
-	_signalProc.updateSSBOwithVector(_signalProc._mfccs.getMfccs(), _ssboHarmonicDataID, 1);
+	//_signalProc._selfSimilarityMatrix.debug();
+	_signalProc._selfSimilarityMatrix.debug();
+
+	Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, test->getHistory()->newest(), test->getHistory()->numHarmonics() * sizeof(float));
+	//_signalProc.updateSSBOwithVector(_signalProc._mfccs.getBandEnergy(), _ssboHarmonicDataID, 1);
 	//_signalProc.updateSSBOwithHistory(_signalProc._tempoDetection.getConfidenceInTempoHistory(), _ssboHarmonicDataID, 1);
 	if (_signalProc._tempoDetection.hasData()) {
 		ImGui::Begin("tempo");

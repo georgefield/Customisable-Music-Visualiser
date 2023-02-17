@@ -93,6 +93,10 @@ public:
 		return _bandEnergy;
 	}
 
+	std::vector<float> getMelSpectrogram() {
+		return _melSpectrogram;
+	}
+
 	std::vector<float> getMfccs() {
 		return _mfccs;
 	}

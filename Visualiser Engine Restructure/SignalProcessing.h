@@ -6,6 +6,7 @@
 #include "TempoDetection.h"
 #include "FourierTransform.h"
 #include "MFCCs.h"
+#include "SelfSimilarityMatrix.h"
 
 #include <GL/glew.h>
 #include <unordered_map>
@@ -17,7 +18,8 @@ public:
 		_rms(2049),
 		_energy(2049),
 		_noteOnset(2049),
-		_tempoDetection(2049)
+		_tempoDetection(2049),
+		_selfSimilarityMatrix(10)
 	{
 	}
 
@@ -63,6 +65,7 @@ public:
 	NoteOnset _noteOnset;
 	TempoDetection _tempoDetection;
 	MFCCs _mfccs;
+	SelfSimilarityMatrix _selfSimilarityMatrix;
 
 	void updateSSBOwithHistory(History<float>* history, GLuint id, GLint binding);
 	void updateSSBOwithVector(std::vector<float> vector, GLuint id, GLint binding); //slow shouldnt use

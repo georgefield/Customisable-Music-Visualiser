@@ -38,7 +38,7 @@ void MFCCs::calculateMfccs()
 	float* out = _dct.getOutput();
 	_mfccs.clear();
 	for (int i = 0; i < _dct.windowSize(); i++) {
-		_mfccs.push_back(out[i] * 0.001);
+		_mfccs.push_back(out[i]);
 	}
 }
 

@@ -82,7 +82,7 @@ float NoteOnset::spectralDistanceOfHarmonics() {
 	float one_over_dt = ((float)_m->_sampleRate / (float)(_m->_currentSample - _m->_previousSample)) * 0.001; //do dt in ms as otherwise numbers too big
 
 	//same as above but with the convolved harmonics--
-	float spectralDistanceConvolvedHarmonics = Tools::L2normIncreasingDimensionsOnly(
+	float spectralDistanceConvolvedHarmonics = Tools::L2distanceMetricIncDimOnly(
 		_ftForSpectralDistance.getHistory()->newest(),
 		_ftForSpectralDistance.getHistory()->previous(),
 		_ftForSpectralDistance.getHistory()->numHarmonics()

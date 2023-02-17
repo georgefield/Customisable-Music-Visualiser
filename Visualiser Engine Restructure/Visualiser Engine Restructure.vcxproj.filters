@@ -140,11 +140,14 @@
     <ClInclude Include="MFCCs.h">
       <Filter>Header Files\Signal Processing</Filter>
     </ClInclude>
-    <ClInclude Include="FourierTransformHistory.h">
-      <Filter>Header Files\Data Structures</Filter>
-    </ClInclude>
     <ClInclude Include="SelfSimilarityMatrix.h">
       <Filter>Header Files\Signal Processing</Filter>
+    </ClInclude>
+    <ClInclude Include="VectorHistory.h">
+      <Filter>Header Files\Data Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="FourierTransformHistory.h">
+      <Filter>Header Files\Data Structures</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
