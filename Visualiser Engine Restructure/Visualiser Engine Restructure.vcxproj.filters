@@ -25,12 +25,21 @@
     <Filter Include="Header Files\Tools">
       <UniqueIdentifier>{10de74fd-7791-49a9-99cb-ee632dd8657b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Shader Managing">
+      <UniqueIdentifier>{1ef56cff-a0d3-4cd8-92ce-55c130ffff63}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Shader Managing">
+      <UniqueIdentifier>{9cee2f9c-7fae-4c33-a730-587704a25571}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Visualiser Managing">
+      <UniqueIdentifier>{0b24ddfe-3ce0-4a34-b2b2-692e010f5e0d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Visualiser Managing">
+      <UniqueIdentifier>{55bee5f9-b572-472e-be7c-326afaa820e9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MainGame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FFTW.cpp">
@@ -46,9 +55,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="UI.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="UniformSetting.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Master.cpp">
@@ -72,6 +78,24 @@
     <ClCompile Include="SelfSimilarityMatrix.cpp">
       <Filter>Source Files\Signal Processing</Filter>
     </ClCompile>
+    <ClCompile Include="UniformSetting.cpp">
+      <Filter>Source Files\Shader Managing</Filter>
+    </ClCompile>
+    <ClCompile Include="VisualiserShader.cpp">
+      <Filter>Source Files\Shader Managing</Filter>
+    </ClCompile>
+    <ClCompile Include="Visualiser.cpp">
+      <Filter>Source Files\Visualiser Managing</Filter>
+    </ClCompile>
+    <ClCompile Include="VisualiserManager.cpp">
+      <Filter>Source Files\Visualiser Managing</Filter>
+    </ClCompile>
+    <ClCompile Include="VisualiserShaderManager.cpp">
+      <Filter>Source Files\Visualiser Managing</Filter>
+    </ClCompile>
+    <ClCompile Include="MainGame.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainGame.h">
@@ -87,9 +111,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="UI.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="UniformSetting.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Master.h">
@@ -148,6 +169,24 @@
     </ClInclude>
     <ClInclude Include="FourierTransformHistory.h">
       <Filter>Header Files\Data Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="VisualiserShader.h">
+      <Filter>Header Files\Shader Managing</Filter>
+    </ClInclude>
+    <ClInclude Include="UniformSetting.h">
+      <Filter>Header Files\Shader Managing</Filter>
+    </ClInclude>
+    <ClInclude Include="Visualiser.h">
+      <Filter>Header Files\Visualiser Managing</Filter>
+    </ClInclude>
+    <ClInclude Include="VisualiserManager.h">
+      <Filter>Header Files\Visualiser Managing</Filter>
+    </ClInclude>
+    <ClInclude Include="VisualiserShaderManager.h">
+      <Filter>Header Files\Visualiser Managing</Filter>
+    </ClInclude>
+    <ClInclude Include="ConfigManager.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

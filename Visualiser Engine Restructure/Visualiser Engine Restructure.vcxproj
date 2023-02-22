@@ -148,8 +148,13 @@
     <ClCompile Include="TempoDetection.cpp" />
     <ClCompile Include="UI.cpp" />
     <ClCompile Include="UniformSetting.cpp" />
+    <ClCompile Include="Visualiser.cpp" />
+    <ClCompile Include="VisualiserShader.cpp" />
+    <ClCompile Include="VisualiserManager.cpp" />
+    <ClCompile Include="VisualiserShaderManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ConfigManager.h" />
     <ClInclude Include="CustomisableSprite.h" />
     <ClInclude Include="DixonAlgorithmStructures.h" />
     <ClInclude Include="Energy.hpp" />
@@ -175,6 +180,10 @@
     <ClInclude Include="UI.h" />
     <ClInclude Include="UniformSetting.h" />
     <ClInclude Include="VectorHistory.h" />
+    <ClInclude Include="Visualiser.h" />
+    <ClInclude Include="VisualiserShader.h" />
+    <ClInclude Include="VisualiserManager.h" />
+    <ClInclude Include="VisualiserShaderManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

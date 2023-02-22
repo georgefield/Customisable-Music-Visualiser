@@ -42,9 +42,7 @@ private:
 
 	void initShaders();
 
-
 	Vengine::Sprite _eq;
-	SpriteManager _spriteManager;
 
 	Vengine::SpriteBatch _spriteBatch;
 
@@ -61,15 +59,9 @@ private:
 
 	float* _negArr;
 
-	int _currSample;
-	int _prevSample;
-	float _sampleOffsetToSound;
-
 	SignalProcessing _signalProc;
 
-	Vengine::Audio _song;
-
-	int _globalTimer;
+	Vengine::Audio _audio;
 
 	int _testFTid;
 };

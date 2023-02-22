@@ -35,6 +35,9 @@ public:
 
 
 	void beginCalculations(int currentSample) {
+		if (currentSample < 0) {
+			Vengine::warning("currentSample parameter passed to signal processor class was negative");
+		}
 		_master.beginCalculations(currentSample);
 		_master.calculateFourierTransform(); //always calculate fourier
 	}

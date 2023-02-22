@@ -10,38 +10,37 @@
 class SpriteManager
 {
 public:
-	SpriteManager();
-	~SpriteManager();
+	static void reset();
 
-	void init(Vengine::Viewport* viewport, Vengine::Window* window);
+	static void init(Vengine::Viewport* viewport, Vengine::Window* window);
 
-	void addSprite(glm::vec2 pos, glm::vec2 dim, float depth = 0.0f, std::string textureFilepath = "", GLuint glDrawType = GL_DYNAMIC_DRAW);
-	void deleteSprite(int id);
+	static void addSprite(glm::vec2 pos, glm::vec2 dim, float depth = 0.0f, std::string textureFilepath = "", GLuint glDrawType = GL_DYNAMIC_DRAW);
+	static void deleteSprite(int id);
 
-	void drawAll(bool batching);
+	static void drawAll(bool batching);
 
-	void processInput(Vengine::InputManager* inputManager);
+	static void processInput(Vengine::InputManager* inputManager);
 
-	void updateDepthSortedSprites();
+	static void updateDepthSortedSprites();
 
 	//getters
-	std::vector<CustomisableSprite*> getDepthSortedSprites()  { return _depthSortedSprites; }
+	static std::vector<CustomisableSprite*> getDepthSortedSprites()  { return _depthSortedSprites; }
 
 private:
-	void drawNoBatching();
-	void drawWithBatching();
+	static void drawNoBatching();
+	static void drawWithBatching();
 
-	int _selectedSpriteId;
+	static int _selectedSpriteId;
 
-	Vengine::Viewport* _viewport;
-	Vengine::Window* _window;
+	static Vengine::Viewport* _viewport;
+	static Vengine::Window* _window;
 
-	Vengine::SpriteBatch _spriteBatch;
+	static Vengine::SpriteBatch _spriteBatch;
 
 	//sprite containers
-	std::unordered_map<int, CustomisableSprite*> _userAddedSprites; //main container
-	std::vector<CustomisableSprite*> _depthSortedSprites; //work with this when rendering, updates to match main container when 'updateDepthSortSprites' called
+	static std::unordered_map<int, CustomisableSprite*> _userAddedSprites; //main container
+	static std::vector<CustomisableSprite*> _depthSortedSprites; //work with this when rendering, updates to match main container when 'updateDepthSortSprites' called
 
-	GLuint _vao, _vbo;
+	static GLuint _vao, _vbo;
 };
 

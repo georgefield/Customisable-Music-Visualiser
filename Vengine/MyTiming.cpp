@@ -19,8 +19,6 @@ std::vector<long long> MyTiming::_frameTimings(_numFPSsamples);
 int MyTiming::_frameCount = 0;
 std::map<int, MyTiming::WhenRead> MyTiming::_whenTimerRead;
 
-bool MyTiming::_isPaused = false;
-long long MyTiming::_pauseStartTicks = -1;
 
 
 void MyTiming::frameDone() {
@@ -65,6 +63,7 @@ void MyTiming::setFPSlimit(unsigned int limit) {
 
 ///timer stuff--------------
 std::map<int, long long> MyTiming::_timerStartTicks;
+std::map<int, long long> MyTiming::_timerPauseTicks;
 
 void MyTiming::startTimer(int& id) {
 
@@ -82,8 +81,8 @@ float MyTiming::readTimer(int id) { //returns seconds elapsed
 
 	long long ticks;
 
-	if (_isPaused) { //if paused then return time when paused by taking away time since paused
-		ticks = _pauseStartTicks - _timerStartTicks[id];
+	if (_timerPauseTicks.find(id) != _timerPauseTicks.end()) { //if paused then return time when paused by taking away time since paused
+		ticks = _timerPauseTicks[id] - _timerStartTicks[id];
 	}
 	else {
 		ticks = MyTiming::ticksSinceEpoch() - _timerStartTicks[id];
@@ -104,28 +103,25 @@ bool Vengine::MyTiming::timerReadLastFrame(int id)
 	return _whenTimerRead[id].readLastFrame;
 }
 
-void Vengine::MyTiming::pauseTimers()
+void Vengine::MyTiming::pauseTimer(int id)
 {
-	if (_isPaused) {
-		warning("timers already paused");
+	if (_timerPauseTicks.find(id) != _timerPauseTicks.end()) {
+		warning("timer already paused");
 		return;
 	}
-	_pauseStartTicks = MyTiming::ticksSinceEpoch();
-	_isPaused = true;
+	_timerPauseTicks[id] = MyTiming::ticksSinceEpoch();
 }
 
-void Vengine::MyTiming::unpauseTimers()
+void Vengine::MyTiming::unpauseTimer(int id)
 {
-	if (!_isPaused) {
-		warning("timers not paused");
+	if (_timerPauseTicks.find(id) == _timerPauseTicks.end()) {
+		warning("timer not paused");
 		return;
 	}
 
-	long long timePaused = (MyTiming::ticksSinceEpoch() - _pauseStartTicks);
-	for (auto& it : _timerStartTicks) {
-		it.second += timePaused; //shift start ticks forward by time paused
-	}
-	_isPaused = false;
+	long long timePaused = (MyTiming::ticksSinceEpoch() - _timerPauseTicks[id]);
+	_timerStartTicks[id] += timePaused;
+	_timerPauseTicks.erase(id);
 }
 
 

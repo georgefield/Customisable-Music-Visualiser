@@ -14,11 +14,7 @@ const int N = 4096; //number of frequencies in the fourier transform (= half the
 
 MainGame::MainGame() :
 	_gameState(GameState::PLAY),
-	_currSample(0),
-	_prevSample(-44100),
-	_globalTimer(-1),
-	_sampleOffsetToSound(-0.0f),
-	_song(),
+	_audio(),
 	_UI(),
 	_viewport(screenWidth, screenHeight)
 {
@@ -43,7 +39,7 @@ void MainGame::initSystems() {
 	//use Vengine to create window
 	_window.create("visualiser", screenWidth, screenHeight, SDL_WINDOW_OPENGL);
 
-	_spriteManager.init(&_viewport, &_window);
+	SpriteManager::init(&_viewport, &_window);
 
 	UniformSetting::init(&_signalProc);
 
@@ -53,14 +49,15 @@ void MainGame::initSystems() {
 
 	_spriteBatch.init();
 
-	//load song
-	_song.loadWav(musicFilepath, _sampleRate);
+	//load song & queue it
+	_audio.loadWav(musicFilepath);
+	_audio.queueLoadedWav();
 
 	//set up signal processing unit
-	_signalProc.init(_song.getNormalisedWavData(), _sampleRate) ;
+	_signalProc.init(_audio.getNormalisedWavData(), _audio.getSampleRate());
 
 	//create SSBO for waveform data (input entire file)
-	Vengine::DrawFunctions::createSSBO(_ssboWavDataID, 0, _song.getNormalisedWavData(), _song.getWavLength(), GL_STATIC_COPY);
+	Vengine::DrawFunctions::createSSBO(_ssboWavDataID, 0, _audio.getNormalisedWavData(), _audio.getWavLength(), GL_STATIC_COPY);
 
 	//debug for when doing ft on cpu
 	_harmonicData.resize((N / 2) + 1);
@@ -79,7 +76,7 @@ void MainGame::initSystems() {
 	//create 2 draw buffers
 	Vengine::DrawFunctions::createDrawBuffers(_frameBufferIDs, _frameBufferTextureIDs, _window.getScreenWidth(), _window.getScreenHeight(), _numFrameBuffers);
 
-	_UI.init(&_window, &_spriteManager, &_inputManager);
+	_UI.init(&_window, &_inputManager);
 
 	//enable alpha belnding
 	glEnable(GL_BLEND);
@@ -128,15 +125,11 @@ void MainGame::processInput() {
 	}
 
 	if (_UI.getShowUi()) {
-		_spriteManager.processInput(&_inputManager);
+		SpriteManager::processInput(&_inputManager);
 	}
 }
 
 void MainGame::gameLoop() {
-
-	Vengine::MyTiming::startTimer(_globalTimer);
-
-	_song.playSound();
 
 	Vengine::MyTiming::setNumSamplesForFPS(100);
 	Vengine::MyTiming::setFPSlimit(2500);
@@ -160,14 +153,12 @@ void MainGame::gameLoop() {
 				printf("%f fps\n", Vengine::MyTiming::getFPS());
 			}
 			if (_inputManager.isKeyPressed(SDLK_ESCAPE)) {
-				Vengine::MyTiming::pauseTimers();
-				_song.pauseSound();
-				Vengine::MyTiming::readTimer(_globalTimer);
-				system("PAUSE");
-				Vengine::MyTiming::unpauseTimers();
-				_song.unpauseSound();
-				Vengine::MyTiming::readTimer(_globalTimer);
-
+				if (_audio.isAudioPlaying()) {
+					_audio.pause();
+				}
+				else {
+					_audio.play();
+				}
 			}
 
 			drawVis(); //visualiser first to draw ui on top of visualiser
@@ -193,12 +184,6 @@ void MainGame::endFrame() {
 
 void MainGame::drawVis() {
 
-	ImGui::ShowDemoWindow();
-
-	///compute current sample and run eq compute shader to find harmonic values
-	float elapsed = Vengine::MyTiming::readTimer(_globalTimer);
-	_currSample = max((int)(elapsed * _sampleRate) + _sampleOffsetToSound * _sampleRate, 0);
-
 	static int correlationWindowSize = 1;
 	if (_inputManager.isKeyPressed(SDLK_1)) {
 		correlationWindowSize++;
@@ -206,13 +191,13 @@ void MainGame::drawVis() {
 		std::cout << "+1\n";
 	}
 
-	_signalProc.beginCalculations(_currSample);
+	_signalProc.beginCalculations(_audio.getCurrentSample());
 
 	//note onset and tempo setup
 	FourierTransform* test = _signalProc.get(_testFTid);
 	test->beginCalculation();
-	test->applyFunction(FourierTransform::SMOOTH);
-	test->applyFunction(FourierTransform::FREQUENCY_CONVOLVE);
+	//test->applyFunction(FourierTransform::SMOOTH);
+	//test->applyFunction(FourierTransform::FREQUENCY_CONVOLVE);
 	test->endCalculation();
 	//_signalProc._noteOnset.calculateNext();
 	//_signalProc._tempoDetection.calculateNext();
@@ -221,7 +206,7 @@ void MainGame::drawVis() {
 
 	_signalProc.endCalculations();
 
-	std::cout << _signalProc._selfSimilarityMatrix.getSelfSimilarityMatrixValue(0, 100) << std::endl;
+	//std::cout << _signalProc._selfSimilarityMatrix.getSelfSimilarityMatrixValue(0, 100) << std::endl;
 
 	Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, test->getHistory()->newest(), test->getHistory()->numHarmonics() * sizeof(float));
 	//_signalProc.updateSSBOwithVector(_signalProc._mfccs.getBandEnergy(), _ssboHarmonicDataID, 1);
@@ -238,7 +223,7 @@ void MainGame::drawVis() {
 	glViewport(0,0,_viewport.width,_viewport.height);
 
 	//batch if not showing ui
-	_spriteManager.drawAll(!_UI.getShowUi());
+	SpriteManager::drawAll(!_UI.getShowUi());
 
 	///draw eq to screen
 	Vengine::ResourceManager::getShaderProgram("Shaders/Preset/eq")->use();
@@ -253,6 +238,7 @@ void MainGame::drawVis() {
 
 void MainGame::drawUi(){
 
+	_UI.errorMessages();
 	_UI.toolbar();
 	_UI.sidebar();
 	_UI.processInput();

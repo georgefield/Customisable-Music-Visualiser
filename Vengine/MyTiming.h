@@ -24,8 +24,8 @@ namespace Vengine {
 		static float stopTimer(int id);
 		static bool timerReadLastFrame(int id);
 
-		static void pauseTimers();
-		static void unpauseTimers();
+		static void pauseTimer(int id);
+		static void unpauseTimer(int id);
 	private:
 
 		static long long ticksSinceEpoch();
@@ -39,10 +39,8 @@ namespace Vengine {
 		static std::vector<long long> _frameTimings;
 		static int _frameCount;
 
-		static bool _isPaused;
-		static long long _pauseStartTicks;
-
 		static std::map<int, long long> _timerStartTicks; //used to store start timer time
+		static std::map<int, long long> _timerPauseTicks; //used to store when timer paused so can take away when timer unpaused
 
 		static void updateWhenRead();
 		static std::map<int, WhenRead> _whenTimerRead;

@@ -7,6 +7,9 @@
 class Tools
 {
 public:
+
+	//*** HELPERS ***
+
 	static bool posWithinRect(glm::vec2 pos, glm::vec4 rect)
 	{
 		if (pos.x >= rect.x && pos.x <= rect.x + rect.z
@@ -15,9 +18,6 @@ public:
 		}
 		return false;
 	}
-
-
-
 
 	//*** MATHS ***
 	static float lerp(float c1, float c2, float t) {

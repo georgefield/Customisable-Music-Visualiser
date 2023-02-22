@@ -4,18 +4,28 @@
 
 #include <algorithm>
 
-SpriteManager::SpriteManager() :
-	_viewport(nullptr),
-	_window(nullptr),
-	_selectedSpriteId(-1)
-{
-}
+int SpriteManager::_selectedSpriteId = -1;
 
-SpriteManager::~SpriteManager()
+Vengine::Viewport* SpriteManager::_viewport = nullptr;
+Vengine::Window* SpriteManager::_window = nullptr;
+
+Vengine::SpriteBatch SpriteManager::_spriteBatch;
+
+//sprite containers
+std::unordered_map<int, CustomisableSprite*> SpriteManager::_userAddedSprites; //main container
+std::vector<CustomisableSprite*> SpriteManager::_depthSortedSprites; //work with this when rendering, updates to match main container when 'updateDepthSortSprites' called
+
+GLuint SpriteManager::_vao, SpriteManager::_vbo;
+
+//wipe customisable sprite containers
+void SpriteManager::reset()
 {
 	for (auto& it : _userAddedSprites) { //clean up
 		delete it.second;
 	}
+	
+	_userAddedSprites.clear();
+	_depthSortedSprites.clear();
 }
 
 void SpriteManager::init(Vengine::Viewport* viewport, Vengine::Window* window)

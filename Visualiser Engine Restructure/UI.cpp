@@ -1,20 +1,54 @@
 #include "UI.h"
 #include <Vengine/MyImgui.h>
+#include "VisualiserManager.h"
+#include "Tools.h"
+#include <algorithm>
 
+#include <portable-file-dialogs.h>
 
-UI::UI()
+UI::UI():
+	_errorMessageTimerId(-1)
 {}
 
 
-void UI::init(Vengine::Window* window, SpriteManager* spriteManager, Vengine::InputManager* inputManager) {
+void UI::init(Vengine::Window* window, Vengine::InputManager* inputManager) {
 	_showUi = true;
 
 	_window = window;
-	_spriteManager = spriteManager;
 	_inputManager = inputManager;
 
 	_toolbarSizePx = 100;
 	_sidebarSizePx = 200;
+}
+
+
+const float ERROR_MESSAGE_DISPLAY_TIME = 3.0f;
+void UI::errorMessages() {
+	if (_errorQueue.size() == 0) { return; }
+
+	//display oldest queued error for 1 second then pop from vector front
+	if (_errorMessageTimerId == -1) {
+		Vengine::MyTiming::startTimer(_errorMessageTimerId);
+	}
+	else if (Vengine::MyTiming::readTimer(_errorMessageTimerId) > ERROR_MESSAGE_DISPLAY_TIME){
+		Vengine::MyTiming::stopTimer(_errorMessageTimerId);
+		_errorMessageTimerId = -1;
+		_errorQueue.erase(_errorQueue.begin());
+		return;
+	}
+
+	//create window that only displays error text
+	ImGui::SetNextWindowPos(ImVec2(0, _window->getScreenHeight() - 30));
+
+	ImGui::Begin("Message", (bool*)0,
+		ImGuiWindowFlags_NoMove |
+		ImGuiWindowFlags_NoTitleBar |
+		ImGuiWindowFlags_AlwaysAutoResize
+	);
+
+	ImGui::Text(("Error: " + _errorQueue[0]).c_str());
+
+	ImGui::End();
 }
 
 
@@ -44,6 +78,10 @@ void UI::toolbar() {
 		ImGui::EndMenu();
 	}
 
+	if (_save || _saveAs || _load) {
+		fileMenuAction();
+	}
+
 	if (ImGui::BeginMenu("View")) {
 		if (ImGui::MenuItem("Toggle UI (tab)")) {
 			_showUi = false;
@@ -60,10 +98,10 @@ void UI::toolbar() {
 	}
 	if (ImGui::BeginPopup("add menu")) {
 		if (ImGui::Selectable("Quad")) {
-			_spriteManager->addSprite(glm::vec2(-0.5), glm::vec2(1));
+			SpriteManager::addSprite(glm::vec2(-0.5), glm::vec2(1));
 		}
 		if (ImGui::Selectable("Circle")) {
-			_spriteManager->addSprite(glm::vec2(-0.25), glm::vec2(0.5));
+			SpriteManager::addSprite(glm::vec2(-0.25), glm::vec2(0.5));
 		}
 		ImGui::EndPopup();
 	}
@@ -84,10 +122,10 @@ void UI::sidebar() {
 
 	//change sprite values from sidebar--
 
-	std::vector<CustomisableSprite*> spritesByDepthOrder = _spriteManager->getDepthSortedSprites();
+	std::vector<CustomisableSprite*> spritesByDepthOrder = SpriteManager::getDepthSortedSprites();
 
 	ImGui::Text("Sprites");
-	ImGui::BeginChild("Sprites", ImVec2(ImGui::GetContentRegionAvail().x, std::min(_window->getScreenHeight() * 0.8f, 500.0f)), true);
+	ImGui::BeginChild("Sprites", ImVec2(ImGui::GetContentRegionAvail().x, min(_window->getScreenHeight() * 0.8f, 500.0f)), true);
 
 	bool sortRequired = false;
 	for (int i = spritesByDepthOrder.size() - 1; i >= 0; i--) {
@@ -126,7 +164,7 @@ void UI::sidebar() {
 	ImGui::EndChild();
 
 	if (sortRequired) {
-		_spriteManager->updateDepthSortedSprites(); //in case any change in depth
+		SpriteManager::updateDepthSortedSprites(); //in case any change in depth
 	}
 
 	//--
@@ -158,6 +196,93 @@ Vengine::Viewport UI::getViewport()
 
 	Vengine::Viewport tmp(desiredX, desiredY);
 	return tmp;
+}
+
+void UI::fileMenuAction()
+{
+	if (_save) {
+		if (!VisualiserManager::save()) {
+			_errorQueue.push_back("Failed to save, likely no visualiser loaded");
+		}
+		_save = false;
+		return;
+	}
+
+	if (_saveAs) {
+		static char nameBuf[25];
+		nameBuf[0] = NULL;
+		if (textInputPrompt("Save as", nameBuf)) {
+			if (!VisualiserManager::saveAsNew(nameBuf)) {
+				_errorQueue.push_back("Failed to save, likely no visualiser loaded");
+			}
+			_saveAs = false;
+		}
+	}
+
+	if (_load) {
+		std::string visualiserPath = "";
+		if (folderChooser(Vengine::IOManager::getProjectDirectory() + "/Visualisers", visualiserPath, false)) {
+			//will always work as cannot go outside of start path
+			visualiserPath = visualiserPath.substr(Vengine::IOManager::getProjectDirectory().size());
+
+			if (!VisualiserManager::loadVisualiser(visualiserPath)) {
+				_errorQueue.push_back("Failed to save, likely no visualiser loaded");
+			}
+		}
+
+		_load = false;
+	}
+}
+
+bool UI::textInputPrompt(const std::string& message, char* out)
+{
+	bool promptNotForceClosed = true;
+	bool confirmedName = false;
+
+	//create window
+	ImGui::SetNextWindowPos(ImVec2(100,100));
+	ImGui::SetNextWindowSize(ImVec2(300, 200));
+
+	ImGui::Begin(message.c_str(), &promptNotForceClosed,
+		ImGuiWindowFlags_NoMove |
+		ImGuiWindowFlags_NoResize |
+		ImGuiWindowFlags_MenuBar
+	);
+
+	ImGui::InputTextWithHint("##", "Enter text here", out, IM_ARRAYSIZE(out));
+	ImGui::SameLine();
+	if (ImGui::Button("Confirm")) {
+		if (out[0] != NULL) { //string is length > 0
+			confirmedName = true;
+		}
+	}
+
+	ImGui::End();
+	return promptNotForceClosed;
+}
+
+bool UI::folderChooser(std::string startPath, std::string& out, bool loadFromOutsideStartPath)
+{
+	// Check that a backend is available
+	if (!pfd::settings::available())
+	{
+		_errorQueue.push_back("Portable File Dialogs are not available on this platform");
+		return false;
+	}
+
+	std::replace(startPath.begin(), startPath.end(), '/', '\\');
+
+	// Directory selection
+	std::string folderPath = pfd::select_folder("Select visualiser directory", startPath).result();
+
+	if (!loadFromOutsideStartPath && folderPath.substr(0, startPath.size()) != startPath) {
+		_errorQueue.push_back("Cannot load from outside " + startPath);
+		return false;
+	}
+
+	out = folderPath;
+
+	return true;
 }
 
 

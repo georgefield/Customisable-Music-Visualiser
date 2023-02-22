@@ -4,6 +4,7 @@
 
 #include <fstream>
 #include <filesystem>
+#include <direct.h>
 
 
 using namespace Vengine;
@@ -67,6 +68,50 @@ bool IOManager::readFileToBuffer(const std::string& filepath, std::vector<unsign
 	buffer.resize(fileSize);
 	file.read((char*)&(buffer[0]), fileSize); //pretends were reading to char array, doesnt matter as reading binary
 	return true;
+} //for binary mainly
+
+bool IOManager::readTextFileToBuffer(const std::string& filepath, std::vector<std::string>& buffer) {
+
+	std::ifstream file(filepath);
+	if (file.fail()) {
+		perror(filepath.c_str());
+		return false;
+	}
+
+	//line by line in vector
+	buffer.clear();
+	buffer.push_back("");
+	while (std::getline(file, buffer.back())) {
+		buffer.push_back("");
+	}
+
+	return true;
+} //for ascii mainly
+
+bool Vengine::IOManager::outputTextFile(const std::string& filepath, std::vector<std::string>& fileContents){
+
+		std::ofstream file(filepath); // create file object
+		if (file.is_open()) { // check if file was successfully opened
+			for (const auto& content : fileContents) {
+				file << content << "\n"; // write each string in vector to file with newline character
+			}
+			file.close(); // close file
+			return true;
+		}
+
+		Vengine::warning("Was not able to create/open then output to file " + filepath);
+		return false;
+}
+
+bool Vengine::IOManager::clearTextFile(const std::string& filepath)
+{
+	if (!std::filesystem::exists(filepath)) {
+		Vengine::warning("Tried to clear text file that does not exist");
+		return false;
+	}
+	std::ofstream file(filepath, std::ios::trunc); //trunc flag removes all preexisting data
+	file.close();
+	return true;
 }
 
 void IOManager::getFilesInDir(const std::string& dirPath, std::vector<std::string>& files, bool showExtension, std::string extension)
@@ -78,3 +123,54 @@ void IOManager::getFilesInDir(const std::string& dirPath, std::vector<std::strin
 		}
 	}
 }
+
+bool IOManager::createFolder(const std::string& folderPath, bool isHidden = false) {
+	int status;
+	if (isHidden) {
+		status = _mkdir((folderPath + ".").c_str());
+	}
+	else {
+		status = _mkdir(folderPath.c_str());
+	}
+
+	if (status == 0) {
+		return true;
+	}
+	else {
+		Vengine::warning("Was not able to create folder " + folderPath);
+		return false;
+	}
+}
+
+bool IOManager::directoryExists(std::string path) {
+	std::filesystem::path directoryPath = path;
+
+	return std::filesystem::exists(directoryPath) && std::filesystem::is_directory(directoryPath);
+}
+
+
+void IOManager::copyDirectory(const std::string& source, const std::string& destination) {
+	const std::filesystem::path sourcePath(source);
+	const std::filesystem::path destinationPath(destination);
+
+	if (!std::filesystem::exists(destinationPath)) {
+		std::filesystem::create_directory(destinationPath);
+	}
+
+	for (const auto& entry : std::filesystem::directory_iterator(sourcePath)) {
+		const auto& path = entry.path();
+		const auto& newPath = destinationPath / path.filename();
+		if (std::filesystem::is_directory(path)) {
+			copyDirectory(path.string(), newPath.string());
+		}
+		else {
+			std::filesystem::copy_file(path, newPath, std::filesystem::copy_options::overwrite_existing);
+		}
+	}
+}
+
+std::string Vengine::IOManager::getProjectDirectory()
+{
+	return std::filesystem::current_path().generic_string();
+}
+
