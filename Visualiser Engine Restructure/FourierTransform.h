@@ -24,6 +24,8 @@ public:
 
 		_numHarmonics(-1)
 	{
+		_maxLowResOutputSize = 50;
+
 	}
 
 	~FourierTransform()
@@ -72,6 +74,11 @@ public:
 
 		_smoothedFtDot = new float[_numHarmonics];
 		memset(_smoothedFtDot, 0.0f, sizeof(float) * _numHarmonics);
+
+		//low res spectrum vars
+		_lowResOutputSize = std::min(_maxLowResOutputSize, _numHarmonics);
+		_lowResOutputLogScale = new float[_lowResOutputSize];
+		memset(_lowResOutputLogScale, 0.0f, _lowResOutputSize * sizeof(float));
 	}
 
 	void beginCalculation() //applying filters must be between begin and end
@@ -94,6 +101,18 @@ public:
 
 	void endCalculation() {
 		_current->addWorkingArrayToHistory(_m->_currentSample);
+
+		//do not worry about lots of variables, c++ compiler optimises away
+		//calculate low res output
+		memset(_lowResOutputLogScale, 0.0f, _lowResOutputSize * sizeof(float));
+
+		for (int i = 0; i < _numHarmonics; i++) {
+
+			int index = int(powf(float(i) / float(_numHarmonics), 2) * float(_numHarmonics));
+			int outIndex = int((float(i) / float(_numHarmonics)) * float(_lowResOutputSize));
+
+			_lowResOutputLogScale[outIndex] += _current->newest()[index];
+		}
 	}
 
 	void applyFunction(FunctionType type); //must be called in every frame to work
@@ -122,6 +141,14 @@ public:
 		return _current->newest();
 	}
 
+	float* getLowResOutput() {
+		return _lowResOutputLogScale;
+	}
+
+	int getLowResOutputSize() {
+		return _lowResOutputSize;
+	}
+
 	float getCutoffLow() {
 		return _cutOffLow;
 	}
@@ -140,6 +167,10 @@ private:
 
 	FourierTransformHistory _working1;
 	FourierTransformHistory _working2;
+
+	int _maxLowResOutputSize;
+	int _lowResOutputSize;
+	float* _lowResOutputLogScale;
 
 	bool _initialised;
 	Master* _m;

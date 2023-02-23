@@ -14,7 +14,7 @@ bool VisualiserManager::createNewVisualiser(std::string name)
 		return false;
 	}
 	//init if it does
-	_current.initNew(name, USER_CREATED_VISUALISER_PATH + name);
+	_current.initNew(USER_CREATED_VISUALISER_PATH + name);
 
 	return true;
 }
@@ -57,8 +57,8 @@ bool VisualiserManager::saveAsNew(std::string name)
 	}
 
 	//create copy
-	Vengine::IOManager::copyDirectory(_current._config.fullPath, USER_CREATED_VISUALISER_PATH + name);
-
+	Vengine::IOManager::copyDirectory(_current.getPath(), USER_CREATED_VISUALISER_PATH + name);
+	
 	//set current visualiser to be the copy
 	_current = Visualiser();
 	_current.initExisting(USER_CREATED_VISUALISER_PATH + name);

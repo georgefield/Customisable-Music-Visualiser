@@ -75,7 +75,6 @@ public:
 		if (!_useCorrelationWindow) {
 			return;
 		}
-		std::cout << "using";
 
 		//correlation window must be done after basic similarity matrix updated as is an average
 		for (int i = 0; i < _vectorHistory.entries(); i++) {

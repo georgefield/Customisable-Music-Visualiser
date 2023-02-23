@@ -7,6 +7,9 @@
 #include "MyFuncs.h"
 #include "UniformSetting.h"
 
+#include "FourierTransformManager.h"
+#include "VisualiserShaderManager.h"
+
 const int screenWidth = 1024;
 const int screenHeight = 768;
 
@@ -55,6 +58,7 @@ void MainGame::initSystems() {
 
 	//set up signal processing unit
 	_signalProc.init(_audio.getNormalisedWavData(), _audio.getSampleRate());
+	FourierTransformManager::setMaster(_signalProc.getMaster());
 
 	//create SSBO for waveform data (input entire file)
 	Vengine::DrawFunctions::createSSBO(_ssboWavDataID, 0, _audio.getNormalisedWavData(), _audio.getWavLength(), GL_STATIC_COPY);
@@ -76,7 +80,7 @@ void MainGame::initSystems() {
 	//create 2 draw buffers
 	Vengine::DrawFunctions::createDrawBuffers(_frameBufferIDs, _frameBufferTextureIDs, _window.getScreenWidth(), _window.getScreenHeight(), _numFrameBuffers);
 
-	_UI.init(&_window, &_inputManager);
+	_UI.init(&_window, &_inputManager, &_signalProc);
 
 	//enable alpha belnding
 	glEnable(GL_BLEND);
@@ -134,8 +138,6 @@ void MainGame::gameLoop() {
 	Vengine::MyTiming::setNumSamplesForFPS(100);
 	Vengine::MyTiming::setFPSlimit(2500);
 
-	_signalProc.createFourierTransform(_testFTid, 1, 0, 20000, 0.01f);
-	_signalProc.get(_testFTid)->setFrequencyConvolvingVars(5, LINEAR_PYRAMID);
 	_signalProc._selfSimilarityMatrix.linkToMFCCs(&_signalProc._mfccs);
 	//_signalProc._selfSimilarityMatrix.linkToDebug();
 
@@ -194,11 +196,16 @@ void MainGame::drawVis() {
 	_signalProc.beginCalculations(_audio.getCurrentSample());
 
 	//note onset and tempo setup
-	FourierTransform* test = _signalProc.get(_testFTid);
-	test->beginCalculation();
-	//test->applyFunction(FourierTransform::SMOOTH);
-	//test->applyFunction(FourierTransform::FREQUENCY_CONVOLVE);
-	test->endCalculation();
+	std::vector<int> FTs = FourierTransformManager::idArr();
+	for (int i = 0; i < FTs.size(); i++) {
+		FourierTransform* tmp = FourierTransformManager::getFourierTransform(FTs[i]);
+		tmp->beginCalculation();
+		//test->applyFunction(FourierTransform::SMOOTH);
+		//test->applyFunction(FourierTransform::FREQUENCY_CONVOLVE);
+		tmp->endCalculation();
+	}
+
+
 	//_signalProc._noteOnset.calculateNext();
 	//_signalProc._tempoDetection.calculateNext();
 	_signalProc._mfccs.calculateNext();
@@ -208,7 +215,7 @@ void MainGame::drawVis() {
 
 	//std::cout << _signalProc._selfSimilarityMatrix.getSelfSimilarityMatrixValue(0, 100) << std::endl;
 
-	Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, test->getHistory()->newest(), test->getHistory()->numHarmonics() * sizeof(float));
+	//Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, test->getHistory()->newest(), test->getHistory()->numHarmonics() * sizeof(float));
 	//_signalProc.updateSSBOwithVector(_signalProc._mfccs.getBandEnergy(), _ssboHarmonicDataID, 1);
 	//_signalProc.updateSSBOwithHistory(_signalProc._tempoDetection.getConfidenceInTempoHistory(), _ssboHarmonicDataID, 1);
 	if (_signalProc._tempoDetection.hasData()) {
@@ -234,6 +241,8 @@ void MainGame::drawVis() {
 	_eq.draw(); //draws to screen
 
 	Vengine::ResourceManager::getShaderProgram("Shaders/Preset/eq")->unuse(); 
+	VisualiserShaderManager::updateDynamicSSBOs();
+	
 }
 
 void MainGame::drawUi(){

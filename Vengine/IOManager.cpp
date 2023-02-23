@@ -5,6 +5,7 @@
 #include <fstream>
 #include <filesystem>
 #include <direct.h>
+#include <iostream>
 
 
 using namespace Vengine;
@@ -78,11 +79,16 @@ bool IOManager::readTextFileToBuffer(const std::string& filepath, std::vector<st
 		return false;
 	}
 
+	if (!file.is_open()) {
+		Vengine::warning("Failed to open file " + filepath);
+		return false;
+	}
+
 	//line by line in vector
 	buffer.clear();
-	buffer.push_back("");
-	while (std::getline(file, buffer.back())) {
-		buffer.push_back("");
+	std::string tmp = "";
+	while (std::getline(file, tmp)) {
+		buffer.push_back(tmp);
 	}
 
 	return true;

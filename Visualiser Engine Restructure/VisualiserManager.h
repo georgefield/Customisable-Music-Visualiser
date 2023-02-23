@@ -12,6 +12,8 @@ public:
 
 	static bool save();
 	static bool saveAsNew(std::string name);
+
+	static bool isVisualiserLoaded() { return _current.isInitialised(); }
 private:
 	static Visualiser _current;
 };

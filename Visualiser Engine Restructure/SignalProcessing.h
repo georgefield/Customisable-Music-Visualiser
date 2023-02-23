@@ -46,22 +46,9 @@ public:
 		_master.endCalculations();
 	}
 
-	//fourier transform managing--
-	void createFourierTransform(int& id, int historySize, float cutOffLow = 0.0f, float cutOffHigh = 22050.0f, float cutoffSmoothFrac = 0.0f) {
-		id = _fourierTransforms.size();
-		_fourierTransforms[id] = new FourierTransform(historySize, cutOffLow, cutOffHigh, cutoffSmoothFrac);
-		_fourierTransforms[id]->init(&_master);
+	Master* getMaster() {
+		return &_master;
 	}
-
-	void eraseFourierTransform(int id) {
-		delete _fourierTransforms[id];
-		_fourierTransforms.erase(id);
-	}
-
-	FourierTransform* get(int id) {
-		return _fourierTransforms[id];
-	}
-	//--
 
 	RMS _rms;
 	Energy _energy;

@@ -136,6 +136,7 @@
     <ClCompile Include="CustomisableSprite.cpp" />
     <ClCompile Include="FourierTransform.cpp" />
     <ClCompile Include="FFTW.cpp" />
+    <ClCompile Include="FourierTransformManager.cpp" />
     <ClCompile Include="MFCCs.cpp" />
     <ClCompile Include="NoteOnset.cpp" />
     <ClCompile Include="main.cpp" />
@@ -161,6 +162,7 @@
     <ClInclude Include="FourierTransform.h" />
     <ClInclude Include="FFTW.h" />
     <ClInclude Include="FourierTransformHistory.h" />
+    <ClInclude Include="FourierTransformManager.h" />
     <ClInclude Include="MFCCs.h" />
     <ClInclude Include="NoteOnset.h" />
     <ClInclude Include="History.h" />

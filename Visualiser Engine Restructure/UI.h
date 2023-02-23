@@ -4,12 +4,14 @@
 #include <glm/glm.hpp>
 #include <unordered_map>
 
+#include "SignalProcessing.h"
+
 
 class UI
 {
 public:
 	UI();
-	void init(Vengine::Window* window, Vengine::InputManager* inputManager);
+	void init(Vengine::Window* window, Vengine::InputManager* inputManager, SignalProcessing* signalProcessor);
 
 	void toolbar();
 	void sidebar();
@@ -25,6 +27,7 @@ private:
 
 	Vengine::Window* _window;
 	Vengine::InputManager* _inputManager;
+	SignalProcessing* _signalProcPtr;
 
 	bool _showUi;
 	//ImGui variables--
@@ -39,10 +42,16 @@ private:
 
 	int _errorMessageTimerId;
 
-	void fileMenuAction();
+	//ui functions
+	void fourierTransformsUi();
+	void noteOnsetUi();
+	void tempoDetectionUi();
+
+	//process functions
+	void processFileMenuSelection();
 
 	//helper gui functions
-	bool textInputPrompt(const std::string& message, char* out);
+	bool textInputPrompt(const std::string& message, char* buf, int bufSize, bool& useText);
 	bool folderChooser(std::string startPath, std::string& out, bool loadFromOutsideStartPath);
 
 	std::vector<std::string> _errorQueue;

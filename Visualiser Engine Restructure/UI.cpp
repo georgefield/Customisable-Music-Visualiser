@@ -1,6 +1,7 @@
 #include "UI.h"
 #include <Vengine/MyImgui.h>
 #include "VisualiserManager.h"
+#include "FourierTransformManager.h"
 #include "Tools.h"
 #include <algorithm>
 
@@ -11,11 +12,12 @@ UI::UI():
 {}
 
 
-void UI::init(Vengine::Window* window, Vengine::InputManager* inputManager) {
+void UI::init(Vengine::Window* window, Vengine::InputManager* inputManager, SignalProcessing* signalProcessor) {
 	_showUi = true;
 
 	_window = window;
 	_inputManager = inputManager;
+	_signalProcPtr = signalProcessor;
 
 	_toolbarSizePx = 100;
 	_sidebarSizePx = 200;
@@ -52,7 +54,12 @@ void UI::errorMessages() {
 }
 
 
+static bool SHOW_TEMPO_DETECTION_WINDOW = false;
+static bool SHOW_NOTE_ONSET_WINDOW = false;
+static bool SHOW_FOURIER_TRANSFORMS_WINDOW = false;
+
 void UI::toolbar() {
+
 	if (!_showUi) {
 		return;
 	}
@@ -79,7 +86,7 @@ void UI::toolbar() {
 	}
 
 	if (_save || _saveAs || _load) {
-		fileMenuAction();
+		processFileMenuSelection();
 	}
 
 	if (ImGui::BeginMenu("View")) {
@@ -106,7 +113,21 @@ void UI::toolbar() {
 		ImGui::EndPopup();
 	}
 
+	//signal processing check boxes
+	ImGui::SameLine();
+	ImGui::Checkbox("Fourier Transforms", &SHOW_FOURIER_TRANSFORMS_WINDOW);
+
+	ImGui::SameLine();
+	ImGui::Checkbox("Note Onset", &SHOW_NOTE_ONSET_WINDOW);
+
+	ImGui::SameLine();
+	ImGui::Checkbox("Tempo Detection", &SHOW_TEMPO_DETECTION_WINDOW);
+
 	ImGui::End();
+
+	if (SHOW_FOURIER_TRANSFORMS_WINDOW) {
+		fourierTransformsUi();
+	}
 }
 
 
@@ -198,11 +219,109 @@ Vengine::Viewport UI::getViewport()
 	return tmp;
 }
 
-void UI::fileMenuAction()
+const int MAX_FOURIER_TRANSFORMS = 4;
+const int FOURIER_TRANSFORM_FIRST_SSBO_BINDING = 1;
+void UI::fourierTransformsUi()
 {
+	ImGui::ShowDemoWindow();
+	ImGui::Begin("Fourier Tranforms", &SHOW_FOURIER_TRANSFORMS_WINDOW, ImGuiWindowFlags_AlwaysAutoResize);
+
+	//get id array
+	std::vector<int> fourierTransformIds = FourierTransformManager::idArr();
+
+	//*** modify existing transform ***
+
+	//display already created ft and info about them
+	for (int i = 0; i < fourierTransformIds.size(); i++) {
+		int id = fourierTransformIds[i];
+
+		if (FourierTransformManager::fourierTransformExists(id)) {
+			ImGui::PushID(i);
+
+			//name of ft
+			ImGui::Text(("Fourier transform " + std::to_string(id)).c_str());
+
+			//plot low res graph of ft
+			ImGui::PlotLines("##", FourierTransformManager::getFourierTransform(id)->getLowResOutput(), FourierTransformManager::getFourierTransform(id)->getLowResOutputSize());
+
+			//show cutoff information
+			float cutoffLow = FourierTransformManager::getFourierTransform(id)->getCutoffLow();
+			ImGui::Text(("Cutoff low: " + std::to_string(cutoffLow)).c_str());
+			ImGui::SameLine();
+			float cutoffHigh = FourierTransformManager::getFourierTransform(id)->getCutoffHigh();
+			ImGui::Text(("Cutoff high: " + std::to_string(cutoffHigh)).c_str());
+
+			//attaching to ssbo ui
+			if (ImGui::Button("Attach to SSBO")) {
+				ImGui::OpenPopup("binding menu");
+			}
+			if (ImGui::BeginPopup("binding menu")) {
+				for (int j = FOURIER_TRANSFORM_FIRST_SSBO_BINDING; j < FOURIER_TRANSFORM_FIRST_SSBO_BINDING + MAX_FOURIER_TRANSFORMS; j++) {
+					ImGui::PushID(j);
+					
+					if (ImGui::Selectable(std::to_string(j).c_str())) {
+						if (!FourierTransformManager::bindOutputToSSBO(id, j)) {
+							_errorQueue.push_back("Could not bind to SSBO " + std::to_string(j));
+						}
+					}
+
+					ImGui::PopID();
+				}
+				ImGui::EndPopup();
+			}
+			ImGui::SameLine();
+			ImGui::Text((FourierTransformManager::SSBObindingStatus(id)).c_str());
+
+			//remove ft
+			if (ImGui::Button("Erase")) {
+				FourierTransformManager::eraseFourierTransform(id);
+			}
+
+			ImGui::Separator();
+
+			ImGui::PopID();
+		}
+	}
+
+	//*** create another transform ***
+
+	//imgui vars
+	static float nextCutoffLow = 0.0f;
+	static float nextCutoffHigh = _signalProcPtr->getMaster()->_sampleRate / 2.0f;
+
+	if (FourierTransformManager::numTransforms() < MAX_FOURIER_TRANSFORMS){
+		ImGui::Text("Ctrl+Click to edit manually");
+		ImGui::SliderFloat("Cutoff Hz low", &nextCutoffLow, 0.0f, _signalProcPtr->getMaster()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+		ImGui::SliderFloat("Cutoff Hz high", &nextCutoffHigh, 0.0f, _signalProcPtr->getMaster()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+
+		if (ImGui::Button("Create new")) {
+			if (nextCutoffHigh < nextCutoffLow) {
+				_errorQueue.push_back("Cutoff low cannot be above cutoff high");
+			}
+			else {
+				int id;
+				FourierTransformManager::createFourierTransform(id, 1, nextCutoffLow, nextCutoffHigh);
+			}
+		}
+	}
+
+	ImGui::ShowDemoWindow();
+
+	ImGui::End();
+}
+
+void UI::processFileMenuSelection()
+{
+	//stop common problem
+	if ((_save || _saveAs) && !VisualiserManager::isVisualiserLoaded()) {
+		_errorQueue.push_back("Cannot save, no visualiser loaded");
+		_save = false;
+		_saveAs = false;
+	}
+
 	if (_save) {
 		if (!VisualiserManager::save()) {
-			_errorQueue.push_back("Failed to save, likely no visualiser loaded");
+			_errorQueue.push_back("Failed to save");
 		}
 		_save = false;
 		return;
@@ -210,20 +329,22 @@ void UI::fileMenuAction()
 
 	if (_saveAs) {
 		static char nameBuf[25];
-		nameBuf[0] = NULL;
-		if (textInputPrompt("Save as", nameBuf)) {
-			if (!VisualiserManager::saveAsNew(nameBuf)) {
-				_errorQueue.push_back("Failed to save, likely no visualiser loaded");
+		bool confirmedName = false;
+		if (textInputPrompt("Save as", nameBuf, 25, confirmedName)) {
+			if (confirmedName && !VisualiserManager::saveAsNew(nameBuf)) {
+				_errorQueue.push_back("Failed to save as " + std::string(nameBuf));
 			}
+			nameBuf[0] = NULL; //reset
 			_saveAs = false;
 		}
 	}
 
 	if (_load) {
+
 		std::string visualiserPath = "";
 		if (folderChooser(Vengine::IOManager::getProjectDirectory() + "/Visualisers", visualiserPath, false)) {
 			//will always work as cannot go outside of start path
-			visualiserPath = visualiserPath.substr(Vengine::IOManager::getProjectDirectory().size());
+			visualiserPath = visualiserPath.substr(Vengine::IOManager::getProjectDirectory().size() + 1); //+1 to remove '/' at start
 
 			if (!VisualiserManager::loadVisualiser(visualiserPath)) {
 				_errorQueue.push_back("Failed to save, likely no visualiser loaded");
@@ -234,31 +355,33 @@ void UI::fileMenuAction()
 	}
 }
 
-bool UI::textInputPrompt(const std::string& message, char* out)
+bool UI::textInputPrompt(const std::string& message, char* buf, int bufSize, bool& useText)
 {
 	bool promptNotForceClosed = true;
 	bool confirmedName = false;
 
 	//create window
-	ImGui::SetNextWindowPos(ImVec2(100,100));
-	ImGui::SetNextWindowSize(ImVec2(300, 200));
+	ImGui::SetNextWindowPos(ImVec2(100,_toolbarSizePx + 30));
 
 	ImGui::Begin(message.c_str(), &promptNotForceClosed,
 		ImGuiWindowFlags_NoMove |
 		ImGuiWindowFlags_NoResize |
-		ImGuiWindowFlags_MenuBar
+		ImGuiWindowFlags_AlwaysAutoResize |
+		ImGuiWindowFlags_NoCollapse
 	);
 
-	ImGui::InputTextWithHint("##", "Enter text here", out, IM_ARRAYSIZE(out));
+	ImGui::InputTextWithHint("##", "Enter text here", buf, bufSize);
 	ImGui::SameLine();
 	if (ImGui::Button("Confirm")) {
-		if (out[0] != NULL) { //string is length > 0
+		if (buf[0] != NULL) { //string is length > 0
 			confirmedName = true;
 		}
 	}
 
 	ImGui::End();
-	return promptNotForceClosed;
+
+	useText = confirmedName;
+	return !promptNotForceClosed || confirmedName; //return true when user either closes window or confirms name of copy
 }
 
 bool UI::folderChooser(std::string startPath, std::string& out, bool loadFromOutsideStartPath)
@@ -273,13 +396,15 @@ bool UI::folderChooser(std::string startPath, std::string& out, bool loadFromOut
 	std::replace(startPath.begin(), startPath.end(), '/', '\\');
 
 	// Directory selection
-	std::string folderPath = pfd::select_folder("Select visualiser directory", startPath).result();
+	std::string folderPath = pfd::select_folder("Select visualiser directory", startPath, pfd::opt::force_path).result();
 
 	if (!loadFromOutsideStartPath && folderPath.substr(0, startPath.size()) != startPath) {
 		_errorQueue.push_back("Cannot load from outside " + startPath);
 		return false;
 	}
 
+	//standard is '/' instead of '\' throughout code so rereplace
+	std::replace(folderPath.begin(), folderPath.end(), '\\', '/');
 	out = folderPath;
 
 	return true;

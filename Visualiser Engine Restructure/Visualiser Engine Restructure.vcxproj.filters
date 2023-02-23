@@ -37,6 +37,12 @@
     <Filter Include="Header Files\Visualiser Managing">
       <UniqueIdentifier>{55bee5f9-b572-472e-be7c-326afaa820e9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Static Manager Classes">
+      <UniqueIdentifier>{5d31fc93-f7f3-460d-a3b9-abc70841b159}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Static Manager Classes">
+      <UniqueIdentifier>{8866842f-b067-4dd1-b7ad-69244ce35cab}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -95,6 +101,9 @@
     </ClCompile>
     <ClCompile Include="MainGame.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FourierTransformManager.cpp">
+      <Filter>Source Files\Static Manager Classes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -187,6 +196,9 @@
     </ClInclude>
     <ClInclude Include="ConfigManager.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FourierTransformManager.h">
+      <Filter>Header Files\Static Manager Classes</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

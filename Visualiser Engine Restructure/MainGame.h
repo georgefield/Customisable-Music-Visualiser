@@ -62,7 +62,5 @@ private:
 	SignalProcessing _signalProc;
 
 	Vengine::Audio _audio;
-
-	int _testFTid;
 };
 

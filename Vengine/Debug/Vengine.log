@@ -1,8 +1,4 @@
-﻿  Audio.cpp
-  IOManager.cpp
-C:\Users\George\Documents\3rd year project\Project\Vengine\IOManager.cpp(64,15): warning C4244: 'initializing': conversion from 'std::streamoff' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Vengine\IOManager.cpp(66,24): warning C4244: '-=': conversion from 'std::streamoff' to 'int', possible loss of data
-  ShaderCache.cpp
-  TextureCache.cpp
-  Generating Code...
+﻿  IOManager.cpp
+C:\Users\George\Documents\3rd year project\Project\Vengine\IOManager.cpp(65,15): warning C4244: 'initializing': conversion from 'std::streamoff' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Vengine\IOManager.cpp(67,24): warning C4244: '-=': conversion from 'std::streamoff' to 'int', possible loss of data
   Vengine.vcxproj -> C:\Users\George\Documents\3rd year project\Project\Debug\Vengine.lib
