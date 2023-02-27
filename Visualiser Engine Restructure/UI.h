@@ -23,6 +23,10 @@ public:
 
 	Vengine::Viewport getViewport();
 
+	//can push to error queue anywhere 'UI.h' is included
+	static std::vector<std::string> _errorQueue;
+
+	static std::string ImGuiComboStringMaker(std::vector<std::string>& options);
 private:
 
 	Vengine::Window* _window;
@@ -33,6 +37,7 @@ private:
 	//ImGui variables--
 	int _toolbarSizePx, _sidebarSizePx;
 
+	bool _new;
 	bool _save;
 	bool _saveAs;
 	bool _load;
@@ -52,8 +57,6 @@ private:
 
 	//helper gui functions
 	bool textInputPrompt(const std::string& message, char* buf, int bufSize, bool& useText);
-	bool folderChooser(std::string startPath, std::string& out, bool loadFromOutsideStartPath);
 
-	std::vector<std::string> _errorQueue;
 };
 

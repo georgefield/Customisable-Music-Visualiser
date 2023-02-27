@@ -105,6 +105,9 @@
     <ClCompile Include="FourierTransformManager.cpp">
       <Filter>Source Files\Static Manager Classes</Filter>
     </ClCompile>
+    <ClCompile Include="PFDapi.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainGame.h">
@@ -199,6 +202,12 @@
     </ClInclude>
     <ClInclude Include="FourierTransformManager.h">
       <Filter>Header Files\Static Manager Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="PFDapi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="UniformSetter.h">
+      <Filter>Header Files\Data Structures</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

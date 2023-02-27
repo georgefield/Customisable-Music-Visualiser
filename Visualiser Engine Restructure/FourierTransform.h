@@ -106,12 +106,26 @@ public:
 		//calculate low res output
 		memset(_lowResOutputLogScale, 0.0f, _lowResOutputSize * sizeof(float));
 
-		for (int i = 0; i < _numHarmonics; i++) {
+		float numParentHarmonics = _m->_fftHistory.numHarmonics();
 
-			int index = int(powf(float(i) / float(_numHarmonics), 2) * float(_numHarmonics));
-			int outIndex = int((float(i) / float(_numHarmonics)) * float(_lowResOutputSize));
+		float logHzFracLow = logf(_harmonicLow + 1.0f) / logf(numParentHarmonics + 1.0f);
+		float logHzFracHigh = logf(_harmonicHigh + 1.0f) / logf(numParentHarmonics + 1.0f);
 
-			_lowResOutputLogScale[outIndex] += _current->newest()[index];
+		int previousOutputIndex = -1;
+		for (int i = _harmonicLow; i <= _harmonicHigh; i++) {
+			float logHzFrac = logf(i + 1.0f) / logf(numParentHarmonics + 1.0f);
+			
+			float outputFrac = (logHzFrac - logHzFracLow) / (logHzFracHigh - logHzFracLow);
+			int outputIndex = int(outputFrac * _lowResOutputSize);
+
+			//some frequency convolution
+			_lowResOutputLogScale[outputIndex] += _current->newest()[i - _harmonicLow];
+
+			//in case skipped
+			for (int j = previousOutputIndex + 1; j < outputIndex; j++) {
+				_lowResOutputLogScale[j] = _lowResOutputLogScale[outputIndex];
+			}
+			previousOutputIndex = outputIndex;
 		}
 	}
 

@@ -17,5 +17,5 @@ void main(){
 	
 	fragmentPosition = vertexPosition; //all will be interpolated between vertices
 	fragmentColour = vertexColour;
-	fragmentUV = vec2(vertexUV.x, 1- vertexUV.y); //flip y because openGL is wierd
+	fragmentUV = vertexUV;
 }

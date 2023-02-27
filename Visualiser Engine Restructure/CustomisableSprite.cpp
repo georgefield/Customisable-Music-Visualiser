@@ -3,6 +3,10 @@
 
 #include "MyFuncs.h"
 #include "Tools.h"
+#include "VisualiserManager.h"
+#include "VisualiserShaderManager.h"
+#include "PFDapi.h"
+#include "UI.h" //for the static functions
 
 //#include <imgui_stdlib.h> //for input text functions
 
@@ -30,11 +34,11 @@ void CustomisableSprite::init(Vengine::Model* model, glm::vec2 pos, glm::vec2 di
 	Sprite::init(model, pos, dim, depth, textureFilepath, glDrawType);
 	_justCreated = true;
 
-	Vengine::IOManager::getFilesInDir("Textures/", _textureFileNames);
-	Vengine::IOManager::getFilesInDir("Shaders/", _shaderFolders);
-	Vengine::IOManager::getFilesInDir("Shaders/" + _shaderFolders[0] + "/", _shaderFileNames, false, ".frag");
-
+	_visualiserShader = VisualiserShaderManager::getShader(VisualiserShaderManager::getDefaultFragmentShaderPath());
 	_texture = Vengine::ResourceManager::getTexture("Resources/NO_TEXTURE.png");
+
+	Vengine::IOManager::getFilesInDir(VisualiserManager::texturesFolder(), _textureFileNames);
+	Vengine::IOManager::getFilesInDir(VisualiserManager::shadersFolder(), _shaderFileNames, true, ".frag");
 }
 
 
@@ -55,6 +59,7 @@ void CustomisableSprite::draw(){
 }
 
 void CustomisableSprite::drawUi() {
+
 	//-- using set next is faster
 	updateOptionsRect();
 	glm::vec2 optionsTLpx = Tools::openGLposToPx({ _optionsRect.x, _optionsRect.y + _optionsRect.w }, _window, _viewport);
@@ -80,54 +85,25 @@ void CustomisableSprite::drawUi() {
 	}
 	//--
 
-	//choose whether texture or not
-	static bool applyTexture = false;
-	ImGui::Checkbox("Apply Texture", &applyTexture);
-	if (ImGui::IsItemEdited() && !applyTexture) {
-		_texture = Vengine::ResourceManager::getTexture("Resources/NO_TEXTURE.png");
-	}
-	if (applyTexture) {
+	ImGui::Separator();
 
-		//choose texture--
-		ImGui::BeginChild("Texture options", ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 130), true, ImGuiWindowFlags_HorizontalScrollbar);
-		if (ImGui::Button("Refresh")) {
-			Vengine::IOManager::getFilesInDir("Textures/", _textureFileNames);
-		}
-		for (int i = 0; i < _textureFileNames.size(); i++) {
-			if (ImGui::SmallButton(_textureFileNames[i].c_str())) { //<- explore arrow button option, might be included directory chooser?, slows down program, maybe get user to type filename (still show list)
-				_texture = Vengine::ResourceManager::getTexture("Textures/" + _textureFileNames[i]);
-			}
-		}
-		ImGui::EndChild();
-		//--
+	//choose shader for sprite
+	shaderChooser();
+
+	//if shader contains texture uniform then
+	if (_visualiserShader->containsTextureUniform()) {
+		ImGui::Separator();
+		textureChooser();
+	}
+	else {
+		ImGui::Text("No texture uniform in shader");
 	}
 
-	//ImGui::ShowDemoWindow();
+	ImGui::Separator();
 
-	//select shader folder--
-	if (ImGui::Button("Refresh")) {
-		Vengine::IOManager::getFilesInDir("Shaders/", _shaderFolders);
-	}
+	uniformSetterUi();
 
-	static int folderID = 0;
-	std::string folderName = (folderID >= 0 && folderID < _shaderFolders.size()) ? _shaderFolders[folderID] : "Unknown";
-	ImGui::SliderInt("Folder", &folderID, 0, _shaderFolders.size() - 1, folderName.c_str());
-	std::string shadersPath = "Shaders/" + folderName + "/";
-	if (ImGui::IsItemEdited() || ImGui::IsItemDeactivated()) {
-		Vengine::IOManager::getFilesInDir(shadersPath, _shaderFileNames, false, ".frag");
-	}
-	//--
-
-	//choose shader--
-	ImGui::BeginChild("Shader options", ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 130), true, ImGuiWindowFlags_HorizontalScrollbar);
-
-	for (int i = 0; i < _shaderFileNames.size(); i++) {
-		if (ImGui::SmallButton(_shaderFileNames[i].c_str())) {
-			attachShader(Vengine::ResourceManager::getShaderProgram(shadersPath + _shaderFileNames[i]));
-		}
-	}
-	ImGui::EndChild();
-	//--
+	ImGui::Separator();
 
 	glm::vec4 modelRect = getModelBoundingBox();
 	//choose pos--
@@ -203,6 +179,144 @@ void CustomisableSprite::drawUi() {
 
 	ImGui::End();
 	//***
+}
+
+void CustomisableSprite::textureChooser()
+{
+	ImGui::Text("Set texture to pass to shader:");
+
+	//choose whether texture or not
+	static bool applyTexture = false;
+	ImGui::Checkbox("Apply Texture", &applyTexture);
+	if (ImGui::IsItemEdited() && !applyTexture) {
+		_texture = Vengine::ResourceManager::getTexture("Resources/NO_TEXTURE.png");
+	}
+
+	if (applyTexture) {
+
+		ImGui::SameLine();
+		if (ImGui::Button("Use external texture")) {
+			std::string chosenFile = "";
+			if (PFDapi::fileChooser("Choose texture", Vengine::IOManager::getProjectDirectory(), chosenFile, { "PNG images (.png)", "*.png" }, true)) {
+				std::cout << chosenFile << " < chosen" << std::endl;
+				//copy to textures folder and then load that texture
+				_texture = Vengine::ResourceManager::getTexture(VisualiserManager::externalToInternalTexture(chosenFile));
+				//refresh files
+				Vengine::IOManager::getFilesInDir(VisualiserManager::texturesFolder(), _textureFileNames, true, ".png"); //refresh
+			}
+		}
+
+		//choose texture--
+		ImGui::BeginChild("Texture options", ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 130), true, ImGuiWindowFlags_HorizontalScrollbar);
+		if (ImGui::Button("Refresh")) {
+			Vengine::IOManager::getFilesInDir(VisualiserManager::texturesFolder(), _textureFileNames, true, ".png");
+		}
+		for (int i = 0; i < _textureFileNames.size(); i++) {
+			if (ImGui::SmallButton(_textureFileNames[i].c_str())) { //<- explore arrow button option, might be included directory chooser?, slows down program, maybe get user to type filename (still show list)
+				_texture = Vengine::ResourceManager::getTexture(VisualiserManager::texturesFolder() + "/" + _textureFileNames[i]);
+			}
+		}
+		ImGui::EndChild();
+		//--
+	}
+
+}
+
+void CustomisableSprite::shaderChooser()
+{
+	ImGui::Text("Set sprite shader:");
+
+	//select shader folder
+	if (ImGui::Button("Refresh")) {
+		Vengine::IOManager::getFilesInDir(VisualiserManager::shadersFolder(), _shaderFileNames, true, ".frag");
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Use external shader")) {
+		std::string chosenFile = "";
+		if (PFDapi::fileChooser("Choose shader to add", Vengine::IOManager::getProjectDirectory(), chosenFile, { "Fragment Files (.frag)", "*.frag" }, true)) {
+			_visualiserShader = VisualiserShaderManager::getShader(chosenFile);
+			Vengine::IOManager::getFilesInDir(VisualiserManager::shadersFolder(), _shaderFileNames, true, ".frag"); //refresh
+		}
+	}
+
+
+	//choose shader
+	ImGui::BeginChild("Shader options", ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 130), true, ImGuiWindowFlags_HorizontalScrollbar);
+
+	for (int i = 0; i < _shaderFileNames.size(); i++) {
+		if (ImGui::SmallButton(_shaderFileNames[i].c_str())) {
+			_visualiserShader = VisualiserShaderManager::getShader(VisualiserManager::shadersFolder() + "/" + _shaderFileNames[i]);
+		}
+	}
+	ImGui::EndChild();
+}
+
+void CustomisableSprite::uniformSetterUi()
+{
+	//show current pairing information
+	std::vector<std::string> intSetUniformNames;
+	_visualiserShader->getSetIntUniformNames(intSetUniformNames);
+
+	for (int i = 0; i < intSetUniformNames.size(); i++) {
+		std::string info = _visualiserShader->getIntUniformSetterStruct(intSetUniformNames[i])->setterName + " -> " + intSetUniformNames[i];
+		ImGui::Text(info.c_str()); ImGui::SameLine();
+		if (ImGui::Button("Erase")) {
+			_visualiserShader->unsetSetterUniformPair(intSetUniformNames[i]);
+		}
+	}
+
+	ImGui::Separator();
+
+	//show possible new pairing information
+	std::vector<std::string> intUnsetUniformNames; //any unset uniform
+	_visualiserShader->getUnsetIntUniformNames(intUnsetUniformNames);
+
+	//(updater functions stored in visualiser manager) (MAYBE MOVE TO VISUALISER SHADER MANAGER WOULD MAKE MORE SENSE)
+	std::vector<std::string> intPossibleUniformSetterFunctionNames; //can be paired with any function
+	VisualiserManager::getIntUpdaterFunctionNames(intPossibleUniformSetterFunctionNames);
+
+	if (intSetUniformNames.size() + intUnsetUniformNames.size() > 0) {
+
+		//choose from uniforms to set--
+		std::string uniformComboStr = UI::ImGuiComboStringMaker(intUnsetUniformNames);
+
+		const char* uniformItems = uniformComboStr.c_str();
+		static int currentUniform = 0;
+		ImGui::PushID(0);
+		ImGui::Combo("Int setters", &currentUniform, uniformItems, intUnsetUniformNames.size());
+		ImGui::PopID();
+		//--
+
+		ImGui::Text("To be set to:");
+
+		//choose from uniforms setters for uniform--
+		std::string uniformSetterComboStr = UI::ImGuiComboStringMaker(intPossibleUniformSetterFunctionNames);
+
+		const char* uniformSetterItems = uniformSetterComboStr.c_str();
+		static int currentUniformSetter = 0;
+		ImGui::PushID(1);
+		ImGui::Combo("Int setters", &currentUniformSetter, uniformSetterItems, intPossibleUniformSetterFunctionNames.size());
+		ImGui::PopID();
+		//--
+
+		//button to confirm
+		if (ImGui::Button("Confirm")) {
+			_visualiserShader->initSetterUniformPair(intUnsetUniformNames.at(currentUniform), VisualiserManager::getIntSetterFunction(intPossibleUniformSetterFunctionNames.at(currentUniformSetter)));
+		}
+	}
+	else {
+		ImGui::Text("No integer uniforms in shader");
+	}
+
+
+	//NOW NEED TO MAKE SAME SYSTEM FOR FLOAT
+	//THEN FIX SPRITE BATCHING
+	//THEN ADD ALL UNIFORM SETTER FUNCTIONS AS OPTIONS WHERE APPLICABLE (NOTE ONSET etc)
+	//THEN THINK OF HOW TO LAY OUT CONFIG
+	//THEN THINK OF HOW TO SAVE/LOAD CONFIG
+	//THEN USE https://github.com/nothings/stb IMAGE LOADER INSTEAD OF THE CRAP YOURE USING NOW
+	//THEN CREATE MUSIC LOADING AND QUEUEING UI
+	//(so not much then)
 }
 
 

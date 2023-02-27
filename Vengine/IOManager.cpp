@@ -71,6 +71,29 @@ bool IOManager::readFileToBuffer(const std::string& filepath, std::vector<unsign
 	return true;
 } //for binary mainly
 
+bool IOManager::copyFile(const std::string& sourceFile, const std::string& destinationFile)
+{
+	if (fileExists(destinationFile)) {
+		Vengine::warning("Cannot copy file '" + sourceFile + "' as destination file already exists");
+		return false;
+	}
+	try {
+		std::filesystem::copy_file(sourceFile, destinationFile);
+		return true;
+	}
+	catch (const std::exception& e) {
+		Vengine::warning(e.what());
+		Vengine::warning("Failed to copy file");
+	}
+	return false;
+}
+
+bool Vengine::IOManager::fileExists(const std::string& filename)
+{
+	return std::filesystem::exists(filename);
+}
+
+
 bool IOManager::readTextFileToBuffer(const std::string& filepath, std::vector<std::string>& buffer) {
 
 	std::ifstream file(filepath);
@@ -124,7 +147,9 @@ void IOManager::getFilesInDir(const std::string& dirPath, std::vector<std::strin
 {
 	files.clear();
 	for (const auto& entry : std::filesystem::directory_iterator(dirPath)){
+		std::cout << entry.path().stem().string() << std::endl;
 		if (extension == "" || entry.path().extension().string() == extension) {
+			std::cout << entry.path().stem().string() + (showExtension ? entry.path().extension().string() : "") << std::endl;
 			files.push_back(entry.path().stem().string() + (showExtension ? entry.path().extension().string() : ""));
 		}
 	}
@@ -155,7 +180,7 @@ bool IOManager::directoryExists(std::string path) {
 }
 
 
-void IOManager::copyDirectory(const std::string& source, const std::string& destination) {
+bool IOManager::copyDirectory(const std::string& source, const std::string& destination) {
 	const std::filesystem::path sourcePath(source);
 	const std::filesystem::path destinationPath(destination);
 
@@ -167,12 +192,40 @@ void IOManager::copyDirectory(const std::string& source, const std::string& dest
 		const auto& path = entry.path();
 		const auto& newPath = destinationPath / path.filename();
 		if (std::filesystem::is_directory(path)) {
-			copyDirectory(path.string(), newPath.string());
+			if (!copyDirectory(path.string(), newPath.string())) {
+				return false;
+			}
 		}
 		else {
-			std::filesystem::copy_file(path, newPath, std::filesystem::copy_options::overwrite_existing);
+			try {
+				std::filesystem::copy_file(path, newPath, std::filesystem::copy_options::overwrite_existing);
+			}
+			catch (const std::exception& e) {
+				Vengine::warning(e.what());
+				Vengine::warning("Failed to copy file " + path.string() + " when copying directory");
+				return false;
+			}
 		}
 	}
+	return true;
+}
+
+bool IOManager::isInParentDirectory(const std::string& parentDirectory, const std::string& path)
+{
+	std::filesystem::path parentPath(parentDirectory);
+	std::filesystem::path filePath(path);
+
+	// check if filePath is an absolute path
+	if (!filePath.is_absolute()) {
+		filePath = std::filesystem::absolute(filePath);
+	}
+
+	// get the canonical paths of both parent and filePath
+	parentPath = std::filesystem::canonical(parentPath);
+	filePath = std::filesystem::canonical(filePath);
+
+	// check if filePath is in parent directory
+	return filePath.string().find(parentPath.string()) == 0;
 }
 
 std::string Vengine::IOManager::getProjectDirectory()

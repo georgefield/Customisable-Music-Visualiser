@@ -9,6 +9,7 @@
 
 #include "FourierTransformManager.h"
 #include "VisualiserShaderManager.h"
+#include "VisualiserManager.h"
 
 const int screenWidth = 1024;
 const int screenHeight = 768;
@@ -51,6 +52,8 @@ void MainGame::initSystems() {
 	initShaders();
 
 	_spriteBatch.init();
+
+	VisualiserManager::init();
 
 	//load song & queue it
 	_audio.loadWav(musicFilepath);
@@ -96,7 +99,6 @@ void MainGame::initData(){
 void MainGame::initShaders() {
 
 	//shaders listed below are loaded on start up
-	Vengine::ResourceManager::getShaderProgram("Shaders/Preset/eq");
 }
 
 
@@ -232,15 +234,18 @@ void MainGame::drawVis() {
 	//batch if not showing ui
 	SpriteManager::drawAll(!_UI.getShowUi());
 
+	
 	///draw eq to screen
-	Vengine::ResourceManager::getShaderProgram("Shaders/Preset/eq")->use();
+	/*
+	VisualiserShaderManager::getShader("Shaders/Preset/eq.vert", "Shaders/Preset/eq.frag")->getProgram()->use();
 
-	GLint nLocation = Vengine::ResourceManager::getShaderProgram("Shaders/Preset/eq")->getUniformLocation("n");
+	GLint nLocation = Vengine::ResourceManager::getShaderProgram("Shaders/Preset/eq.vert", "Shaders/Preset/eq.frag")->getUniformLocation("n");
 	glUniform1i(nLocation, N);
 
 	_eq.draw(); //draws to screen
 
-	Vengine::ResourceManager::getShaderProgram("Shaders/Preset/eq")->unuse(); 
+	Vengine::ResourceManager::getShaderProgram("Shaders/Preset/eq.vert", "Shaders/Preset/eq.frag")->unuse();
+	*/
 	VisualiserShaderManager::updateDynamicSSBOs();
 	
 }

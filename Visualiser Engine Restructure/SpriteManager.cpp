@@ -82,11 +82,11 @@ void SpriteManager::drawNoBatching()
 	//draw all user added sprites
 	for (auto& it : _depthSortedSprites) {
 
-		auto shaderProgram = it->getShaderProgram();
+		auto shaderProgram = it->getVisualiserShader()->getProgram();
 
 		shaderProgram->use();
-
-		UniformSetting::setUniforms(shaderProgram);
+		it->getVisualiserShader()->updateUniformValues();
+		
 		it->draw();
 
 		shaderProgram->unuse();
@@ -99,7 +99,7 @@ void SpriteManager::drawWithBatching() //useful for fast rendering when not edit
 
 	for (auto& it : _userAddedSprites) {
 
-		_spriteBatch.draw(it.second);
+		_spriteBatch.draw(it.second, it.second->getVisualiserShader()->getProgram());
 	}
 	_spriteBatch.end();
 

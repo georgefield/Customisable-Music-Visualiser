@@ -1,57 +1,5 @@
 ﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(517,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (Visualiser.vcxproj).  This can lead to incorrect clean and rebuild behavior.
-  FourierTransform.cpp
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(21,30): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(51,16): warning C4018: '>': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(43,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(50,26): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(11,3): warning C4091: 'static ': ignored on left of 'FourierTransform::FunctionType' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(51,24): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(52,24): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(73,23): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(76,26): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(81,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(107,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(215,1): warning C4305: '=': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.cpp(37,14): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.cpp(88,14): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-  FourierTransformManager.cpp
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(21,30): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(51,16): warning C4018: '>': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(43,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(50,26): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(11,3): warning C4091: 'static ': ignored on left of 'FourierTransform::FunctionType' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(51,24): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(52,24): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(73,23): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(76,26): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(81,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(107,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(215,1): warning C4305: '=': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(18,14): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(19,15): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
-          with
-          [
-              T=float
-          ]
-  MFCCs.cpp
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(21,30): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(51,16): warning C4018: '>': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(43,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(50,26): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(11,3): warning C4091: 'static ': ignored on left of 'FourierTransform::FunctionType' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(51,24): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(52,24): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(73,23): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(76,26): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(81,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(107,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(215,1): warning C4305: '=': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MFCCs.h(25,23): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MFCCs.h(26,23): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+  CustomisableSprite.cpp
 C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(18,14): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
           with
           [
@@ -102,62 +50,10 @@ C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure
           [
               T=float
           ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MFCCs.cpp(18,20): warning C4018: '<': signed/unsigned mismatch
-  MainGame.cpp
-C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(18,14): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(19,15): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
-          with
-          [
-              T=float
-          ]
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(21,30): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(51,16): warning C4018: '>': signed/unsigned mismatch
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(43,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(50,26): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(117,38): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(118,39): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(123,28): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(124,29): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(172,38): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(173,39): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(178,28): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(179,29): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Threshold.h(32,50): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(11,3): warning C4091: 'static ': ignored on left of 'FourierTransform::FunctionType' when no variable is declared
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(51,24): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
@@ -166,7 +62,8 @@ C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(76,26): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(81,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(107,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(215,1): warning C4305: '=': truncation from 'double' to 'float'
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(109,28): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(229,1): warning C4305: '=': truncation from 'double' to 'float'
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Limiter.h(21,16): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(22,3): warning C4091: 'static ': ignored on left of 'NoteOnset::DataExtractionAlg' when no variable is declared
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(27,3): warning C4091: 'static ': ignored on left of 'NoteOnset::PeakPickingAlg' when no variable is declared
@@ -188,596 +85,32 @@ C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(37,21): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(44,40): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(204,3): warning C4091: 'static ': ignored on left of 'SelfSimilarityMatrix::LinkedTo' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MainGame.cpp(72,20): warning C4018: '<': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MainGame.cpp(127,59): warning C4244: 'argument': conversion from 'Sint32' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MainGame.cpp(127,44): warning C4244: 'argument': conversion from 'Sint32' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MainGame.cpp(200,20): warning C4018: '<': signed/unsigned mismatch
-  NoteOnset.cpp
-C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(18,14): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\CustomisableSprite.cpp(28,1): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\CustomisableSprite.cpp(113,11): warning C4244: 'initializing': conversion from 'T' to 'int', possible loss of data
           with
           [
               T=float
           ]
-C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(19,15): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\CustomisableSprite.cpp(114,11): warning C4244: 'initializing': conversion from 'T' to 'int', possible loss of data
           with
           [
               T=float
           ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(117,38): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\CustomisableSprite.cpp(128,12): warning C4244: 'initializing': conversion from 'T' to 'int', possible loss of data
           with
           [
               T=float
           ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(118,39): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\CustomisableSprite.cpp(129,12): warning C4244: 'initializing': conversion from 'T' to 'int', possible loss of data
           with
           [
               T=float
           ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(123,28): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(124,29): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(172,38): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(173,39): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(178,28): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(179,29): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(21,30): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(51,16): warning C4018: '>': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(43,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(50,26): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Threshold.h(32,50): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(11,3): warning C4091: 'static ': ignored on left of 'FourierTransform::FunctionType' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(51,24): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(52,24): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(73,23): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(76,26): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(81,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(107,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(215,1): warning C4305: '=': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Limiter.h(21,16): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(22,3): warning C4091: 'static ': ignored on left of 'NoteOnset::DataExtractionAlg' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(27,3): warning C4091: 'static ': ignored on left of 'NoteOnset::PeakPickingAlg' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(41,1): warning C4305: 'argument': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.cpp(66,20): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.cpp(82,20): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-  SelfSimilarityMatrix.cpp
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(21,30): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(51,16): warning C4018: '>': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(43,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(50,26): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(11,3): warning C4091: 'static ': ignored on left of 'FourierTransform::FunctionType' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(51,24): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(52,24): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(73,23): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(76,26): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(81,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(107,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(215,1): warning C4305: '=': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MFCCs.h(25,23): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MFCCs.h(26,23): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(18,14): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(19,15): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(117,38): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(118,39): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(123,28): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(124,29): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(172,38): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(173,39): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(178,28): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(179,29): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(37,21): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(44,40): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(204,3): warning C4091: 'static ': ignored on left of 'SelfSimilarityMatrix::LinkedTo' when no variable is declared
-  SignalProcessing.cpp
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(21,30): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(51,16): warning C4018: '>': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(43,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(50,26): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(18,14): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(19,15): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(117,38): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(118,39): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(123,28): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(124,29): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(172,38): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(173,39): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(178,28): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(179,29): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Threshold.h(32,50): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(11,3): warning C4091: 'static ': ignored on left of 'FourierTransform::FunctionType' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(51,24): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(52,24): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(73,23): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(76,26): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(81,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(107,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(215,1): warning C4305: '=': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Limiter.h(21,16): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(22,3): warning C4091: 'static ': ignored on left of 'NoteOnset::DataExtractionAlg' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(27,3): warning C4091: 'static ': ignored on left of 'NoteOnset::PeakPickingAlg' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(41,1): warning C4305: 'argument': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(25,23): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(34,23): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(126,28): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(131,46): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(135,24): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(136,24): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(208,30): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(209,30): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(265,35): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(347,34): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(350,38): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(360,18): warning C4018: '<=': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MFCCs.h(25,23): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MFCCs.h(26,23): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(37,21): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(44,40): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(204,3): warning C4091: 'static ': ignored on left of 'SelfSimilarityMatrix::LinkedTo' when no variable is declared
-  SpriteManager.cpp
-C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(18,14): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(19,15): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(21,30): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(51,16): warning C4018: '>': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(43,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(50,26): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(117,38): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(118,39): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(123,28): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(124,29): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(172,38): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(173,39): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(178,28): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(179,29): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Threshold.h(32,50): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(11,3): warning C4091: 'static ': ignored on left of 'FourierTransform::FunctionType' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(51,24): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(52,24): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(73,23): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(76,26): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(81,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(107,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(215,1): warning C4305: '=': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Limiter.h(21,16): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(22,3): warning C4091: 'static ': ignored on left of 'NoteOnset::DataExtractionAlg' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(27,3): warning C4091: 'static ': ignored on left of 'NoteOnset::PeakPickingAlg' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(41,1): warning C4305: 'argument': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(25,23): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(34,23): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(126,28): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(131,46): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(135,24): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(136,24): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(208,30): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(209,30): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(265,35): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(347,34): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(350,38): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(360,18): warning C4018: '<=': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MFCCs.h(25,23): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MFCCs.h(26,23): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(37,21): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(44,40): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(204,3): warning C4091: 'static ': ignored on left of 'SelfSimilarityMatrix::LinkedTo' when no variable is declared
-  TempoDetection.cpp
-C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(18,14): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(19,15): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(117,38): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(118,39): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(123,28): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(124,29): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(172,38): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(173,39): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(178,28): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(179,29): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(21,30): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(51,16): warning C4018: '>': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(43,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(50,26): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Threshold.h(32,50): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(11,3): warning C4091: 'static ': ignored on left of 'FourierTransform::FunctionType' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(51,24): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(52,24): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(73,23): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(76,26): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(81,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(107,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(215,1): warning C4305: '=': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Limiter.h(21,16): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(22,3): warning C4091: 'static ': ignored on left of 'NoteOnset::DataExtractionAlg' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(27,3): warning C4091: 'static ': ignored on left of 'NoteOnset::PeakPickingAlg' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(41,1): warning C4305: 'argument': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(25,23): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(34,23): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(126,28): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(131,46): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(135,24): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(136,24): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(208,30): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(209,30): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(265,35): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(347,34): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(350,38): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(360,18): warning C4018: '<=': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(61,1): warning C4305: 'initializing': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(103,31): warning C4305: 'argument': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(155,43): warning C4305: 'initializing': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(173,23): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(198,22): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(211,29): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(211,12): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(250,30): warning C4305: 'initializing': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(251,31): warning C4305: 'initializing': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(253,16): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(255,15): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(257,14): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(259,30): warning C4305: 'initializing': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(266,30): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(267,32): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\TempoDetection.cpp(306,34): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
-  UI.cpp
-C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(18,14): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(19,15): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(21,30): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(51,16): warning C4018: '>': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(43,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(50,26): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(117,38): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(118,39): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(123,28): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(124,29): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(172,38): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(173,39): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(178,28): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(179,29): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Threshold.h(32,50): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(11,3): warning C4091: 'static ': ignored on left of 'FourierTransform::FunctionType' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(51,24): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(52,24): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(73,23): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(76,26): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(81,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(107,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(215,1): warning C4305: '=': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Limiter.h(21,16): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(22,3): warning C4091: 'static ': ignored on left of 'NoteOnset::DataExtractionAlg' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(27,3): warning C4091: 'static ': ignored on left of 'NoteOnset::PeakPickingAlg' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(41,1): warning C4305: 'argument': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(25,23): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(34,23): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(126,28): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(131,46): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(135,24): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(136,24): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(208,30): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(209,30): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(265,35): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(347,34): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(350,38): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(360,18): warning C4018: '<=': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MFCCs.h(25,23): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MFCCs.h(26,23): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(37,21): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(44,40): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(204,3): warning C4091: 'static ': ignored on left of 'SelfSimilarityMatrix::LinkedTo' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(43,63): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(68,61): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(68,57): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(139,77): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(139,59): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(140,77): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(140,34): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(215,14): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(216,14): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(235,20): warning C4018: '<': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(364,52): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-  UniformSetting.cpp
-C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(18,14): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(19,15): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(21,30): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(51,16): warning C4018: '>': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(43,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(50,26): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(117,38): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(118,39): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(123,28): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(124,29): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(172,38): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(173,39): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(178,28): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(179,29): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Threshold.h(32,50): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(11,3): warning C4091: 'static ': ignored on left of 'FourierTransform::FunctionType' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(51,24): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(52,24): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(73,23): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(76,26): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(81,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(107,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(215,1): warning C4305: '=': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Limiter.h(21,16): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(22,3): warning C4091: 'static ': ignored on left of 'NoteOnset::DataExtractionAlg' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(27,3): warning C4091: 'static ': ignored on left of 'NoteOnset::PeakPickingAlg' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(41,1): warning C4305: 'argument': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(25,23): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(34,23): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(126,28): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(131,46): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(135,24): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(136,24): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(208,30): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(209,30): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(265,35): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(347,34): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(350,38): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(360,18): warning C4018: '<=': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MFCCs.h(25,23): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MFCCs.h(26,23): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(37,21): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(44,40): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(204,3): warning C4091: 'static ': ignored on left of 'SelfSimilarityMatrix::LinkedTo' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UniformSetting.cpp(15,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\CustomisableSprite.cpp(210,80): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\CustomisableSprite.cpp(214,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\CustomisableSprite.cpp(244,78): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\CustomisableSprite.cpp(246,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\CustomisableSprite.cpp(260,20): warning C4018: '<': signed/unsigned mismatch
   main.cpp
 C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(18,14): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
           with
@@ -841,7 +174,8 @@ C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(76,26): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(81,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(107,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(215,1): warning C4305: '=': truncation from 'double' to 'float'
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(109,28): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(229,1): warning C4305: '=': truncation from 'double' to 'float'
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Limiter.h(21,16): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(22,3): warning C4091: 'static ': ignored on left of 'NoteOnset::DataExtractionAlg' when no variable is declared
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(27,3): warning C4091: 'static ': ignored on left of 'NoteOnset::PeakPickingAlg' when no variable is declared
@@ -863,7 +197,27 @@ C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(37,21): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(44,40): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(204,3): warning C4091: 'static ': ignored on left of 'SelfSimilarityMatrix::LinkedTo' when no variable is declared
+  VisualiserShader.cpp
+C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(18,14): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
+          with
+          [
+              T=float
+          ]
+C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(19,15): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
+          with
+          [
+              T=float
+          ]
+  VisualiserShaderManager.cpp
+C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(18,14): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
+          with
+          [
+              T=float
+          ]
+C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(19,15): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
+          with
+          [
+              T=float
+          ]
   Generating Code...
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(35): warning C4715: 'Kernels::apply': not all control paths return a value
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(35): warning C4715: 'Kernels::apply': not all control paths return a value
   Visualiser Engine Restructure.vcxproj -> C:\Users\George\Documents\3rd year project\Project\Debug\Visualiser Engine Restructure.exe

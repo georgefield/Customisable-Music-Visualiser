@@ -31,7 +31,8 @@ namespace Vengine {
 			Vengine::warning(messageInCaseOfError);
 		}
 		while (code != GL_NO_ERROR) {
-			std::cout << code << std::endl;
+			std::cout << code << ": ";
+			std::cout << glewGetErrorString(code) << std::endl;
 			code = glGetError();
 		}
 	}

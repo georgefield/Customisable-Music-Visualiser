@@ -13,6 +13,8 @@ namespace Vengine {
 		static GLtexture loadPNG(const std::string& filepath);
 
 		static bool readFileToBuffer(const std::string& filepath, std::vector<unsigned char>& buffer);
+		static bool copyFile(const std::string& sourceFile, const std::string& destinationFile);
+		static bool fileExists(const std::string& filename);
 
 		static bool readTextFileToBuffer(const std::string& filepath, std::vector<std::string>& buffer);
 		static bool outputTextFile(const std::string& filepath, std::vector<std::string>& fileContents);
@@ -22,7 +24,8 @@ namespace Vengine {
 
 		static bool createFolder(const std::string& folderPath, bool isHidden);
 		static bool directoryExists(std::string path);
-		static void copyDirectory(const std::string& source, const std::string& destination);
+		static bool copyDirectory(const std::string& source, const std::string& destination);
+		static bool isInParentDirectory(const std::string& parentDirectory, const std::string& path);
 
 		static std::string getProjectDirectory();
 

@@ -143,6 +143,7 @@
     <ClCompile Include="MainGame.cpp" />
     <ClCompile Include="Master.cpp" />
     <ClCompile Include="MyFuncs.cpp" />
+    <ClCompile Include="PFDapi.cpp" />
     <ClCompile Include="SignalProcessing.cpp" />
     <ClCompile Include="SelfSimilarityMatrix.cpp" />
     <ClCompile Include="SpriteManager.cpp" />
@@ -171,6 +172,7 @@
     <ClInclude Include="MainGame.h" />
     <ClInclude Include="Master.h" />
     <ClInclude Include="MyFuncs.h" />
+    <ClInclude Include="PFDapi.h" />
     <ClInclude Include="RMS.hpp" />
     <ClInclude Include="RollingAverage.h" />
     <ClInclude Include="SignalProcessing.h" />
@@ -180,6 +182,7 @@
     <ClInclude Include="Threshold.h" />
     <ClInclude Include="Tools.h" />
     <ClInclude Include="UI.h" />
+    <ClInclude Include="UniformSetter.h" />
     <ClInclude Include="UniformSetting.h" />
     <ClInclude Include="VectorHistory.h" />
     <ClInclude Include="Visualiser.h" />

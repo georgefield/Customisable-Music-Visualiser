@@ -1,30 +1,43 @@
 #include "VisualiserShaderManager.h"
+#include "VisualiserManager.h"
 #include <Vengine/IOManager.h>
 
 
-std::unordered_map<int, VisualiserShader> VisualiserShaderManager::_shaderCache;
+std::unordered_map<std::string, VisualiserShader> VisualiserShaderManager::_shaderCache;
 std::string VisualiserShaderManager::_currentVisualiserPath = "";
 std::set<int> VisualiserShaderManager::_currentBindings;
 
+//ssbo
 std::unordered_map<int, SSBOinfo> VisualiserShaderManager::_SSBOinfoMap;
 std::unordered_map<int, std::function<float* ()>> VisualiserShaderManager::_updaterFunctionMap;
 
+//default fragment shader
+static const std::string DEFAULT_FRAGMENT_SHADER_PATH = "Resources/shaders/simple.frag";
 
-void VisualiserShaderManager::add(std::string shaderPath, int& id)
-{
-	if (_currentVisualiserPath == "") {
-		Vengine::warning("No visualiser loaded, cannot add shader");
-		return;
+VisualiserShader* VisualiserShaderManager::getShader(std::string fragPath) {
+	if (_shaderCache.find(fragPath) != _shaderCache.end()) {
+		std::cout << "Shader " + fragPath + " already loaded" << std::endl;
+		return &_shaderCache[fragPath];
 	}
 
-	//id generation
-	id = _shaderCache.size();
-	while (_shaderCache.find(id) != _shaderCache.end()) {
-		id++;
+	//if shader from external add to internal shaders folder
+	std::string newFragPath = fragPath;
+	if (!Vengine::IOManager::isInParentDirectory(VisualiserManager::shadersFolder(), fragPath)) {
+		newFragPath = VisualiserManager::shadersFolder() + fragPath.substr(fragPath.find_last_of('/')); //copy to shaders folder of visualiser
+		Vengine::IOManager::copyFile(fragPath, newFragPath);
 	}
+	_shaderCache[newFragPath].init(newFragPath, _currentVisualiserPath);
+	std::cout << "Shader " + fragPath + " loaded for first time" << std::endl;
 
-	_shaderCache[id].init(shaderPath, _currentVisualiserPath);
+	return &_shaderCache[newFragPath];
 }
+
+std::string VisualiserShaderManager::getDefaultFragmentShaderPath()
+{
+	return DEFAULT_FRAGMENT_SHADER_PATH;
+}
+
+//*** SSBOs ***
 
 void VisualiserShaderManager::updateDynamicSSBOs()
 {
@@ -34,9 +47,11 @@ void VisualiserShaderManager::updateDynamicSSBOs()
 	}
 }
 
-void VisualiserShaderManager::updateAugmentedShaders()
+void VisualiserShaderManager::updateShaderUniforms()
 {
-	//todo
+	for (auto& it : _shaderCache) {
+		it.second.updateUniformValues();
+	}
 }
 
 bool VisualiserShaderManager::initStaticSSBO(int bindingId, float* staticData, int dataLength)
@@ -92,13 +107,12 @@ void VisualiserShaderManager::eraseSSBO(int bindingId)
 		std::cout << "Deleted updater function" << bindingId<< std::endl;
 	}
 
-	if (!SSBOexists(bindingId)) {
+	if (!SSBOalreadyBound(bindingId)) {
 		Vengine::warning("Cannot delete SSBO with id " + std::to_string(bindingId) + " as it does not exist");
 		return;
 	}
 
 	_SSBOinfoMap.erase(bindingId);
-	updateAugmentedShaders();
 }
 
 void VisualiserShaderManager::changeUpdaterFunctionForDynamicSSBO(int bindingId, std::function<float* ()> newUpdater)
@@ -111,7 +125,7 @@ void VisualiserShaderManager::changeUpdaterFunctionForDynamicSSBO(int bindingId,
 	_updaterFunctionMap[bindingId] = newUpdater;
 }
 
-bool VisualiserShaderManager::SSBOexists(int bindingId)
+bool VisualiserShaderManager::SSBOalreadyBound(int bindingId)
 {
 	return (_SSBOinfoMap.find(bindingId) != _SSBOinfoMap.end());
 }
@@ -139,3 +153,5 @@ int VisualiserShaderManager::getNextAvailiableBinding()
 
 	return smallestUnusedBinding;
 }
+
+//***

@@ -38,6 +38,8 @@ void GLSLProgram::compileShaders(const std::string& vertShaderFilepath, const st
 
 	// Get a program object. (needed for add attrib)
 	_programID = glCreateProgram();
+
+	testForGlErrors("Error compiling shaders");
 }
 
 
@@ -76,9 +78,11 @@ void GLSLProgram::linkShaders() {
 	// Always detach shaders after a successful link.
 	glDetachShader(_programID, _vertexShaderID);
 	glDetachShader(_programID, _fragShaderID);
+
+	testForGlErrors("Error linking shaders");
 }
 
-void GLSLProgram::updateUniformData() {
+void GLSLProgram::updateShaderUniformInfo() {
 
 	GLint i;
 	GLint count;
@@ -99,12 +103,16 @@ void GLSLProgram::updateUniformData() {
 		_uniformNames.push_back(name);
 		_shaderUniforms[name] = type;
 	}
+
+	testForGlErrors("Error getting uniform info");
 }
 
 
 void GLSLProgram::addAttrib(const std::string& attribName) {
 
 	glBindAttribLocation(_programID, _numAttribs++, attribName.c_str());
+
+	testForGlErrors("Error adding vertex attrib");
 }
 
 
@@ -113,6 +121,9 @@ GLuint GLSLProgram::getUniformLocation(const std::string& uniformName) {
 	GLuint location = glGetUniformLocation(_programID, uniformName.c_str());
 	if (location == GL_INVALID_INDEX) {
 		fatalError("uniform " + uniformName + " not found in shader " + _shaderName);
+	}
+	else if (location == GL_INVALID_OPERATION) {
+		fatalError("Program id is not a program object or program has not been successfully linked");
 	}
 	return location;
 }

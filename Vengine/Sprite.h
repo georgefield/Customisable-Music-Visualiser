@@ -24,8 +24,6 @@ namespace Vengine {
 
 		void draw();
 
-		void attachShader(GLSLProgram* shaderProgram);
-
 		void updateBuffer();
 
 		//getters
@@ -42,12 +40,6 @@ namespace Vengine {
 			return _model->numVertices;
 		}
 
-		//getters
-		GLSLProgram* getShaderProgram() { 
-
-			return _shaderProgram; 
-		};
-
 	private: 
 		Model* _model;
 
@@ -58,8 +50,6 @@ namespace Vengine {
 		GLuint _vboID; //vertex buffer object id
 
 		GLtexture _texture;
-
-		GLSLProgram* _shaderProgram;
 
 		//model interaction helper functions
 		//setters

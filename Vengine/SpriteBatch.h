@@ -31,6 +31,11 @@ namespace Vengine {
 		std::vector<TextureBatch> textureBatches;
 	};
 
+	struct SpriteAndProgram {
+		Sprite* sprite;
+		GLSLProgram* program;
+	};
+
 
 	class SpriteBatch
 	{
@@ -41,7 +46,7 @@ namespace Vengine {
 		void init();
 
 		void begin();
-		void draw(Sprite* sprite);
+		void draw(Sprite* sprite, GLSLProgram* program);
 		void end();
 		void renderBatch(void (*uniformSetterFunction)(GLSLProgram*));
 	private:
@@ -50,10 +55,10 @@ namespace Vengine {
 
 
 		//comparison function for stable sort in "SortGlyphs()"
-		static bool compareFrontToBack(Sprite* a, Sprite* b);
-		static bool compareBackToFront(Sprite* a, Sprite* b);
-		static bool compareTexture(Sprite* a, Sprite* b);
-		static bool compareShader(Sprite* a, Sprite* b);
+		static bool compareFrontToBack(SpriteAndProgram a, SpriteAndProgram b);
+		static bool compareBackToFront(SpriteAndProgram a, SpriteAndProgram b);
+		static bool compareTexture(SpriteAndProgram a, SpriteAndProgram b);
+		static bool compareShader(SpriteAndProgram a, SpriteAndProgram b);
 		//sort function
 		void sortSprites();
 
@@ -61,7 +66,7 @@ namespace Vengine {
 		GLuint _vao;
 		int _numVerticesToDraw;
 
-		std::vector<Sprite*> _spritePtrs;
+		std::vector<SpriteAndProgram> _spritePtrs;
 
 		std::vector<ProgramBatch> _programBatches; //first array is shaders, second array is textures
 	};

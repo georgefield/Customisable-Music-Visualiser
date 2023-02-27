@@ -1,5 +1,4 @@
 #pragma once
-#include "VisualiserShaderManager.h"
 #include "SpriteManager.h"
 #include "ConfigManager.h"
 #include <string>
@@ -12,8 +11,8 @@ public:
 	Visualiser():
 		_initialised(false){}
 
-	void initNew(const std::string& path);
-	void initExisting(const std::string& path);
+	bool initNew(const std::string& path);
+	bool initExisting(const std::string& path);
 
 	void save();
 
@@ -31,6 +30,6 @@ private:
 	bool _initialised;
 
 	void updateConfig();
-	void createConfig();
+	bool createConfig();
 };
 

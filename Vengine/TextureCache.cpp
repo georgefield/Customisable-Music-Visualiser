@@ -24,3 +24,8 @@ GLtexture TextureCache::getTexture(std::string textureFilepath) {
 
 	return mit->second; //if it is loaded use map
 }
+
+void Vengine::TextureCache::unloadAll()
+{
+	_textureMap.clear();
+}

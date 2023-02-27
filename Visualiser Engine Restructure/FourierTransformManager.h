@@ -27,6 +27,11 @@ public:
 	static std::vector<int> idArr();
 
 private:
+	//called on create
+	static void addUniformSetterFunctionOptionsToList(int id);
+	//called on erase
+	static void deleteUniformSetterFunctionOptionsToList(int id);
+
 	static std::unordered_map<int, int> _SSBObindings;
 	static std::unordered_map<int, FourierTransform*> _fourierTransforms;
 	static Master* _master;

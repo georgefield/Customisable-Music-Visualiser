@@ -1,5 +1,6 @@
 #include "FourierTransformManager.h"
 #include "VisualiserShaderManager.h"
+#include "VisualiserManager.h"
 
 #include <functional>
 
@@ -23,6 +24,8 @@ void FourierTransformManager::createFourierTransform(int& id, int historySize, f
 
 	_fourierTransforms[id] = new FourierTransform(historySize, cutOffLow, cutOffHigh, cutoffSmoothFrac);
 	_fourierTransforms[id]->init(_master);
+
+	addUniformSetterFunctionOptionsToList(id);
 }
 
 bool FourierTransformManager::fourierTransformExists(int id)
@@ -43,6 +46,8 @@ void FourierTransformManager::eraseFourierTransform(int id)
 		VisualiserShaderManager::eraseSSBO(_SSBObindings[id]);
 		_SSBObindings.erase(id);
 	}
+
+	deleteUniformSetterFunctionOptionsToList(id);
 }
 
 FourierTransform* FourierTransformManager::getFourierTransform(int id)
@@ -65,7 +70,7 @@ bool FourierTransformManager::bindOutputToSSBO(int id, int bindingId)
 	}
 
 	//if something else bound to ssbo
-	if (VisualiserShaderManager::SSBOexists(bindingId)) {
+	if (VisualiserShaderManager::SSBOalreadyBound(bindingId)) {
 		Vengine::warning("SSBO " + std::to_string(bindingId) + " already bound to something else. Replacing...");
 
 		//remove from ssbo bindings
@@ -104,4 +109,18 @@ std::vector<int> FourierTransformManager::idArr()
 		ret.push_back(it.first);
 	}
 	return ret;
+}
+
+void FourierTransformManager::addUniformSetterFunctionOptionsToList(int id)
+{
+	std::string namePrefix = "FT-" + std::to_string(id);
+
+	VisualiserManager::addPossibleUniformSetter(namePrefix + " num harmonics", _fourierTransforms[id]->getNumHarmonics());
+}
+
+void FourierTransformManager::deleteUniformSetterFunctionOptionsToList(int id)
+{
+	std::string namePrefix = "FT-" + std::to_string(id);
+
+	VisualiserManager::deletePossibleUniformSetter(namePrefix + " num harmonics");
 }

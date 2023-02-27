@@ -5,7 +5,9 @@
 #include "Tools.h"
 #include <algorithm>
 
-#include <portable-file-dialogs.h>
+#include "PFDapi.h"
+
+std::vector<std::string> UI::_errorQueue;
 
 UI::UI():
 	_errorMessageTimerId(-1)
@@ -79,13 +81,14 @@ void UI::toolbar() {
 	ImGui::BeginMenuBar();
 
 	if (ImGui::BeginMenu("File")) {
+		ImGui::MenuItem("New", NULL, &_new);
 		ImGui::MenuItem("Save", NULL, &_save);
 		ImGui::MenuItem("Save as", NULL, &_saveAs);
 		ImGui::MenuItem("Load", NULL, &_load);
 		ImGui::EndMenu();
 	}
 
-	if (_save || _saveAs || _load) {
+	if (_save || _saveAs || _load || _new) {
 		processFileMenuSelection();
 	}
 
@@ -146,7 +149,7 @@ void UI::sidebar() {
 	std::vector<CustomisableSprite*> spritesByDepthOrder = SpriteManager::getDepthSortedSprites();
 
 	ImGui::Text("Sprites");
-	ImGui::BeginChild("Sprites", ImVec2(ImGui::GetContentRegionAvail().x, min(_window->getScreenHeight() * 0.8f, 500.0f)), true);
+	ImGui::BeginChild("Sprites", ImVec2(ImGui::GetContentRegionAvail().x, std::min(_window->getScreenHeight() * 0.8f, 500.0f)), true);
 
 	bool sortRequired = false;
 	for (int i = spritesByDepthOrder.size() - 1; i >= 0; i--) {
@@ -319,6 +322,18 @@ void UI::processFileMenuSelection()
 		_saveAs = false;
 	}
 
+	if (_new) {
+		static char nameBuf[25];
+		bool confirmedName = false;
+		if (textInputPrompt("Name of visualiser", nameBuf, 25, confirmedName)) {
+			if (confirmedName && !VisualiserManager::createNewVisualiser(nameBuf)) {
+				_errorQueue.push_back("Failed to create new visualiser " + std::string(nameBuf));
+			}
+			nameBuf[0] = NULL; //reset
+			_new = false;
+		}
+	}
+
 	if (_save) {
 		if (!VisualiserManager::save()) {
 			_errorQueue.push_back("Failed to save");
@@ -342,7 +357,9 @@ void UI::processFileMenuSelection()
 	if (_load) {
 
 		std::string visualiserPath = "";
-		if (folderChooser(Vengine::IOManager::getProjectDirectory() + "/Visualisers", visualiserPath, false)) {
+		if (PFDapi::folderChooser("Chooser folder containing the .cfg of the visualiser to load",
+			Vengine::IOManager::getProjectDirectory() + "/Visualisers", visualiserPath, false)) 
+		{
 			//will always work as cannot go outside of start path
 			visualiserPath = visualiserPath.substr(Vengine::IOManager::getProjectDirectory().size() + 1); //+1 to remove '/' at start
 
@@ -384,30 +401,14 @@ bool UI::textInputPrompt(const std::string& message, char* buf, int bufSize, boo
 	return !promptNotForceClosed || confirmedName; //return true when user either closes window or confirms name of copy
 }
 
-bool UI::folderChooser(std::string startPath, std::string& out, bool loadFromOutsideStartPath)
+std::string UI::ImGuiComboStringMaker(std::vector<std::string>& options)
 {
-	// Check that a backend is available
-	if (!pfd::settings::available())
-	{
-		_errorQueue.push_back("Portable File Dialogs are not available on this platform");
-		return false;
+	std::string retVal = "";
+	for (int i = 0; i < options.size(); i++) {
+		retVal += options.at(i).c_str();
+		retVal += char(NULL); //null character between options
 	}
 
-	std::replace(startPath.begin(), startPath.end(), '/', '\\');
-
-	// Directory selection
-	std::string folderPath = pfd::select_folder("Select visualiser directory", startPath, pfd::opt::force_path).result();
-
-	if (!loadFromOutsideStartPath && folderPath.substr(0, startPath.size()) != startPath) {
-		_errorQueue.push_back("Cannot load from outside " + startPath);
-		return false;
-	}
-
-	//standard is '/' instead of '\' throughout code so rereplace
-	std::replace(folderPath.begin(), folderPath.end(), '\\', '/');
-	out = folderPath;
-
-	return true;
+	return retVal;
 }
-
 

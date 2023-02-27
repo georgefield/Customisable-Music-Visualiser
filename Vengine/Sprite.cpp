@@ -24,8 +24,6 @@ Sprite::~Sprite()
 
 void Sprite::init(Model* model, glm::vec2 pos, glm::vec2 dim, float depth, std::string textureFilepath, GLuint glDrawType) {
 
-	_shaderProgram = ResourceManager::getShaderProgram("Shaders/Preset/simple"); //default to simple texture shading
-
 	_model = model;
 	_model->init();
 	_model->setBoundingBox(pos, dim);
@@ -91,23 +89,15 @@ void Sprite::draw() {
 }
 
 
-void Sprite::attachShader(Vengine::GLSLProgram* shaderProgram)
-{
-	_shaderProgram = shaderProgram;
-}
-
-
 void Sprite::updateBuffer() {
 
 	glBindBuffer(GL_ARRAY_BUFFER, _vboID); //bind _vboID to gl array buffer (can only have one array buffer active at one time)
 	
 	glBufferSubData(GL_ARRAY_BUFFER, 0, _model->numVertices * sizeof(Vertex), _model->vertices);
-	if (glGetError() != GL_NO_ERROR) {
-		GLenum errCode = glGetError();
-		Vengine::warning("Error updating data about quad", true);
-	}
 	
 	glBindBuffer(GL_ARRAY_BUFFER, 0); //unbind _vboID
+
+	testForGlErrors("Error buffering data about model");
 }
 
 

@@ -35,9 +35,9 @@ void SpriteBatch::end() {
 	createRenderBatches();
 }
 
-void SpriteBatch::draw(Sprite* sprite) { //adds glyph to vector of glyphs
+void SpriteBatch::draw(Sprite* sprite, GLSLProgram* program) { //adds glyph to vector of glyphs
 
-	_spritePtrs.push_back(sprite);
+	_spritePtrs.push_back({ sprite, program });
 	_numVerticesToDraw += sprite->getNumVertices();
 }
 
@@ -93,33 +93,33 @@ void SpriteBatch::createRenderBatches() {
 
 
 	_programBatches.emplace_back(); //new program batch
-	_programBatches.back().program = _spritePtrs[cs]->getShaderProgram(); //set glsl program
+	_programBatches.back().program = _spritePtrs[cs].program; //set glsl program
 
-	_programBatches.back().textureBatches.emplace_back(_spritePtrs[cs]->getTexture()->id, batchOffset); //new texture batch
+	_programBatches.back().textureBatches.emplace_back(_spritePtrs[cs].sprite->getTexture()->id, batchOffset); //new texture batch
 
-	addVerticesToContiguousArray(contiguousVertexArray, _spritePtrs[cs]->getVertices(), _spritePtrs[cs]->getNumVertices(), contiguousVertexArrayOffset);
-	_programBatches.back().textureBatches.back().numVertices += _spritePtrs[cs]->getNumVertices();
+	addVerticesToContiguousArray(contiguousVertexArray, _spritePtrs[cs].sprite->getVertices(), _spritePtrs[cs].sprite->getNumVertices(), contiguousVertexArrayOffset);
+	_programBatches.back().textureBatches.back().numVertices += _spritePtrs[cs].sprite->getNumVertices();
 
 	cs++;
 
 	while (cs < _spritePtrs.size()) {
-		if (_spritePtrs[cs]->getShaderProgram()->getID() != _spritePtrs[cs - 1]->getShaderProgram()->getID()) { //new program batch
+		if (_spritePtrs[cs].program->getID() != _spritePtrs[cs - 1].program->getID()) { //new program batch
 
 			batchOffset += _programBatches.back().textureBatches.back().numVertices;
 
 			_programBatches.emplace_back();
-			_programBatches.back().program = _spritePtrs[cs]->getShaderProgram();
-			_programBatches.back().textureBatches.emplace_back(_spritePtrs[cs]->getTexture()->id, batchOffset); //new texture batch
+			_programBatches.back().program = _spritePtrs[cs].program;
+			_programBatches.back().textureBatches.emplace_back(_spritePtrs[cs].sprite->getTexture()->id, batchOffset); //new texture batch
 		}
-		else if (_spritePtrs[cs]->getTexture()->id != _spritePtrs[cs - 1]->getTexture()->id) {
+		else if (_spritePtrs[cs].sprite->getTexture()->id != _spritePtrs[cs - 1].sprite->getTexture()->id) {
 
 			batchOffset += _programBatches.back().textureBatches.back().numVertices;
 
-			_programBatches.back().textureBatches.emplace_back(_spritePtrs[cs]->getTexture()->id, batchOffset);
+			_programBatches.back().textureBatches.emplace_back(_spritePtrs[cs].sprite->getTexture()->id, batchOffset);
 		}
 
-		addVerticesToContiguousArray(contiguousVertexArray, _spritePtrs[cs]->getVertices(), _spritePtrs[cs]->getNumVertices(), contiguousVertexArrayOffset);
-		_programBatches.back().textureBatches.back().numVertices += _spritePtrs[cs]->getNumVertices();
+		addVerticesToContiguousArray(contiguousVertexArray, _spritePtrs[cs].sprite->getVertices(), _spritePtrs[cs].sprite->getNumVertices(), contiguousVertexArrayOffset);
+		_programBatches.back().textureBatches.back().numVertices += _spritePtrs[cs].sprite->getNumVertices();
 
 		cs++;
 	}
@@ -165,17 +165,17 @@ void SpriteBatch::createVertexArray() { //vao is a way to tell opengl that all q
 
 
 //sorting stuff
-bool SpriteBatch::compareFrontToBack(Sprite* a, Sprite* b) {
-	return (a->getDepth() < b->getDepth());
+bool SpriteBatch::compareFrontToBack(SpriteAndProgram a, SpriteAndProgram b) {
+	return (a.sprite->getDepth() < b.sprite->getDepth());
 }
-bool SpriteBatch::compareBackToFront(Sprite* a, Sprite* b) {
-	return (a->getDepth() > b->getDepth());
+bool SpriteBatch::compareBackToFront(SpriteAndProgram a, SpriteAndProgram b) {
+	return (a.sprite->getDepth() > b.sprite->getDepth());
 }
-bool SpriteBatch::compareTexture(Sprite* a, Sprite* b) {
-	return (a->getTexture()->id < b->getTexture()->id); //sorts based on texture id (groups textures together) lower texture ids first (add first drawn first)
+bool SpriteBatch::compareTexture(SpriteAndProgram a, SpriteAndProgram b) {
+	return (a.sprite->getTexture()->id < b.sprite->getTexture()->id); //sorts based on texture id (groups textures together) lower texture ids first (add first drawn first)
 }
-bool SpriteBatch::compareShader(Sprite* a, Sprite* b) {
-	return (a->getShaderProgram()->getID() < b->getShaderProgram()->getID()); //sorts based on texture id (groups textures together) lower texture ids first (add first drawn first)
+bool SpriteBatch::compareShader(SpriteAndProgram a, SpriteAndProgram b) {
+	return (a.program->getID() < b.program->getID()); //sorts based on texture id (groups textures together) lower texture ids first (add first drawn first)
 }
 
 

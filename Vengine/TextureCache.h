@@ -12,6 +12,7 @@ namespace Vengine {
 		~TextureCache();
 
 		GLtexture getTexture(std::string textureFilepath);
+		void unloadAll();
 
 	private:
 		std::map<std::string, GLtexture> _textureMap;

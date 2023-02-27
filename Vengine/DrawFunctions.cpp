@@ -50,6 +50,8 @@ void DrawFunctions::createDrawBuffers(GLuint* bufferIDs, GLuint* textureIDs, int
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		fatalError("frame buffers failed to initiate");
 	}
+
+	Vengine::testForGlErrors("Failed to create draw buffers");
 }
 
 void DrawFunctions::setDrawTarget(GLuint bufferID, int sizeX, int sizeY) {
@@ -64,6 +66,8 @@ void DrawFunctions::uploadTextureToShader(GLSLProgram program, GLuint& textureID
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	GLint frameBufferTextureLocationEQ = program.getUniformLocation(texVariableName);
 	glUniform1i(frameBufferTextureLocationEQ, num);
+
+	Vengine::testForGlErrors("Failed to upload texture to shader");
 }
 
 void DrawFunctions::createSSBO(GLuint& ssboID, GLint binding, void* data, int bytesOfData, GLenum usage) {
@@ -72,6 +76,8 @@ void DrawFunctions::createSSBO(GLuint& ssboID, GLint binding, void* data, int by
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding, ssboID); //make it go in right buffer
 	glBufferData(GL_SHADER_STORAGE_BUFFER, bytesOfData, data, usage); //upload normalised data to ssbo
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
+
+	Vengine::testForGlErrors("Failed to create SSBO");
 }
 
 void DrawFunctions::updateSSBO(GLuint& ssboID, GLint binding, void* data, int bytesOfData) {
@@ -85,5 +91,5 @@ void DrawFunctions::updateSSBOpart(GLuint& ssboID, GLint binding, void* data, in
 	glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, bytesOfData, data); //upload normalised data to ssbo
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
 
-	Vengine::testForGlErrors("failed to update ssbo buffer");
+	Vengine::testForGlErrors("Failed to update SSBO buffer");
 }

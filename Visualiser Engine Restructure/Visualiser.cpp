@@ -1,22 +1,29 @@
 #include "Visualiser.h"
+#include "VisualiserShaderManager.h"
 
-void Visualiser::initNew(const std::string& path)
+bool Visualiser::initNew(const std::string& path)
 {
 	_path = path;
-	createConfig();
 
-	//create necessary directories in project save
-	Vengine::IOManager::createFolder(_path + "/textures", false);
-	Vengine::IOManager::createFolder(_path + "/shaders", false);
-	Vengine::IOManager::createFolder(_path + "/.shaders", true); //this is a hidden folder where .frags from shaders are augmented and paired with .vert for compilation
+	//create visualiser directory
+	if (!Vengine::IOManager::createFolder(_path, false)) {
+		return false;
+	}
 
+	//create necessary directories in visualiser save
+	if (!createConfig() ||
+		!Vengine::IOManager::createFolder(_path + "/textures", false) ||
+		!Vengine::IOManager::createFolder(_path + "/shaders", false))
+	{
+		return false;
+	}
 	//set shader path
 	VisualiserShaderManager::setCurrentVisualiser(_path);
 
 	_initialised = true;
 }
 
-void Visualiser::initExisting(const std::string& path)
+bool Visualiser::initExisting(const std::string& path)
 {
 	_path = path;
 
@@ -24,7 +31,7 @@ void Visualiser::initExisting(const std::string& path)
 	std::vector<std::string> configBuffer;
 	if (!Vengine::IOManager::readTextFileToBuffer(_path + "/config.cfg", configBuffer)) {
 		Vengine::warning("Could not init visualiser from folder " + _path);
-		return;
+		return false;
 	}
 	ConfigManager::textToConfig(configBuffer, _config);
 
@@ -32,6 +39,7 @@ void Visualiser::initExisting(const std::string& path)
 	VisualiserShaderManager::setCurrentVisualiser(_path);
 
 	_initialised = true;
+	return true;
 }
 
 void Visualiser::save()
@@ -46,10 +54,10 @@ void Visualiser::updateConfig()
 	createConfig();
 }
 
-void Visualiser::createConfig()
+bool Visualiser::createConfig()
 {
 	//create/output _config struct to config file
 	std::vector<std::string> configAsText;
 	ConfigManager::configToText(_config, configAsText);
-	Vengine::IOManager::outputTextFile(_path + "/config.cfg", configAsText);
+	return Vengine::IOManager::outputTextFile(_path + "/config.cfg", configAsText);
 }

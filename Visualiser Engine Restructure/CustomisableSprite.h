@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <glm/glm.hpp>
-
+#include "VisualiserShader.h"
 #include <Vengine/Vengine.h>
 
 enum SpriteState {
@@ -27,7 +27,7 @@ public:
 	void setSpriteState(SpriteState state) { _spriteState = state; }
 
 	//getters
-	Vengine::GLSLProgram* getShaderProgram() const { return _shaderProgram; };
+	VisualiserShader* getVisualiserShader() const { return _visualiserShader; };
 
 	SpriteState getSpriteState() const { return _spriteState; }
 
@@ -38,8 +38,13 @@ public:
 	float* getDepthPtr() { return &_depth; }
 
 private:
+	VisualiserShader* _visualiserShader;
 
 	void drawUi();
+	//called in draw ui
+	void textureChooser();
+	void shaderChooser();
+	void uniformSetterUi();
 
 	void updateOptionsRect();
 
@@ -60,7 +65,6 @@ private:
 	float _minDistFromBLofGUItoBottomBorder;
 	float _minDistFromBRofGUItoRightBorder;
 
-	std::vector<std::string> _shaderFolders;
 	std::vector<std::string> _textureFileNames;
 	std::vector<std::string> _shaderFileNames;
 	//--

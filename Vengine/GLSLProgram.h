@@ -15,7 +15,7 @@ namespace Vengine {
 		void compileShaders(const std::string& vertShaderFilepath, const std::string& fragShaderFilepath);
 		void linkShaders();
 		void addAttrib(const std::string& attribName);
-		void updateUniformData();
+		void updateShaderUniformInfo();
 
 		GLuint getUniformLocation(const std::string& uniformName);
 
