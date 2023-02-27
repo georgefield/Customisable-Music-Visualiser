@@ -35,13 +35,13 @@ void SpriteBatch::end() {
 	createRenderBatches();
 }
 
-void SpriteBatch::draw(Sprite* sprite, GLSLProgram* program) { //adds glyph to vector of glyphs
+void SpriteBatch::draw(Sprite* sprite, GLSLProgram* program, std::function<void()> uniformUpdater) { //adds glyph to vector of glyphs
 
-	_spritePtrs.push_back({ sprite, program });
+	_spritePtrs.push_back({ sprite, program, uniformUpdater });
 	_numVerticesToDraw += sprite->getNumVertices();
 }
 
-void SpriteBatch::renderBatch(void (*uniformSetterFunction)(GLSLProgram*)) {
+void SpriteBatch::renderBatch() {
 
 	if (_vao == 0) {
 		Vengine::fatalError("VAO not initialised so cannot render batch");
@@ -52,9 +52,7 @@ void SpriteBatch::renderBatch(void (*uniformSetterFunction)(GLSLProgram*)) {
 	for (int i = 0; i < _programBatches.size(); i++) {
 		//use shader program for batch
 		_programBatches[i].program->use();
-
-		//set uniforms of shader
-		uniformSetterFunction(_programBatches[i].program);
+		_programBatches[i].uniformUpdater();
 
 		for (int j = 0; j < _programBatches[i].textureBatches.size(); j++) {
 
@@ -94,6 +92,7 @@ void SpriteBatch::createRenderBatches() {
 
 	_programBatches.emplace_back(); //new program batch
 	_programBatches.back().program = _spritePtrs[cs].program; //set glsl program
+	_programBatches.back().uniformUpdater = _spritePtrs[cs].uniformUpdater; //set uniform updater
 
 	_programBatches.back().textureBatches.emplace_back(_spritePtrs[cs].sprite->getTexture()->id, batchOffset); //new texture batch
 
@@ -109,6 +108,8 @@ void SpriteBatch::createRenderBatches() {
 
 			_programBatches.emplace_back();
 			_programBatches.back().program = _spritePtrs[cs].program;
+			_programBatches.back().uniformUpdater = _spritePtrs[cs].uniformUpdater; //set uniform updater
+
 			_programBatches.back().textureBatches.emplace_back(_spritePtrs[cs].sprite->getTexture()->id, batchOffset); //new texture batch
 		}
 		else if (_spritePtrs[cs].sprite->getTexture()->id != _spritePtrs[cs - 1].sprite->getTexture()->id) {

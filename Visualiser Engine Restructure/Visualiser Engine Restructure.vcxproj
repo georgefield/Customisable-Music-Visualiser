@@ -135,21 +135,19 @@
   <ItemGroup>
     <ClCompile Include="CustomisableSprite.cpp" />
     <ClCompile Include="FourierTransform.cpp" />
-    <ClCompile Include="FFTW.cpp" />
+    <ClCompile Include="FFTWapi.cpp" />
     <ClCompile Include="FourierTransformManager.cpp" />
     <ClCompile Include="MFCCs.cpp" />
     <ClCompile Include="NoteOnset.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="MainGame.cpp" />
+    <ClCompile Include="MainProgram.cpp" />
     <ClCompile Include="Master.cpp" />
-    <ClCompile Include="MyFuncs.cpp" />
     <ClCompile Include="PFDapi.cpp" />
-    <ClCompile Include="SignalProcessing.cpp" />
+    <ClCompile Include="SignalProcessingManager.cpp" />
     <ClCompile Include="SelfSimilarityMatrix.cpp" />
     <ClCompile Include="SpriteManager.cpp" />
     <ClCompile Include="TempoDetection.cpp" />
     <ClCompile Include="UI.cpp" />
-    <ClCompile Include="UniformSetting.cpp" />
     <ClCompile Include="Visualiser.cpp" />
     <ClCompile Include="VisualiserShader.cpp" />
     <ClCompile Include="VisualiserManager.cpp" />
@@ -161,7 +159,7 @@
     <ClInclude Include="DixonAlgorithmStructures.h" />
     <ClInclude Include="Energy.hpp" />
     <ClInclude Include="FourierTransform.h" />
-    <ClInclude Include="FFTW.h" />
+    <ClInclude Include="FFTWapi.h" />
     <ClInclude Include="FourierTransformHistory.h" />
     <ClInclude Include="FourierTransformManager.h" />
     <ClInclude Include="MFCCs.h" />
@@ -169,13 +167,12 @@
     <ClInclude Include="History.h" />
     <ClInclude Include="Kernels.h" />
     <ClInclude Include="Limiter.h" />
-    <ClInclude Include="MainGame.h" />
+    <ClInclude Include="MainProgram.h" />
     <ClInclude Include="Master.h" />
-    <ClInclude Include="MyFuncs.h" />
     <ClInclude Include="PFDapi.h" />
     <ClInclude Include="RMS.hpp" />
     <ClInclude Include="RollingAverage.h" />
-    <ClInclude Include="SignalProcessing.h" />
+    <ClInclude Include="SignalProcessingManager.h" />
     <ClInclude Include="SelfSimilarityMatrix.h" />
     <ClInclude Include="SpriteManager.h" />
     <ClInclude Include="SSBOsetter.h" />
@@ -184,7 +181,6 @@
     <ClInclude Include="Tools.h" />
     <ClInclude Include="UI.h" />
     <ClInclude Include="UniformSetter.h" />
-    <ClInclude Include="UniformSetting.h" />
     <ClInclude Include="VectorHistory.h" />
     <ClInclude Include="Visualiser.h" />
     <ClInclude Include="VisualiserShader.h" />

@@ -1,4 +1,4 @@
-#include "MainGame.h"
+#include "MainProgram.h"
 
 #include <SDL/SDL.h>
 
@@ -7,7 +7,7 @@
 
 int main(int argc, char** argv) {
 
-	MainGame mainGame;
+	MainProgram mainGame;
 	mainGame.run();
 
 	return 0;

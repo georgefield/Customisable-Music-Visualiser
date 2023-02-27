@@ -1,4 +1,4 @@
-#include "SignalProcessing.h"
+#include "SignalProcessingManager.h"
 #include <Vengine/DrawFunctions.h>
 
 void SignalProcessing::updateSSBOwithHistory(History<float>* history, GLuint id, GLint binding) {

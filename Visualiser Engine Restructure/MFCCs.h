@@ -3,7 +3,7 @@
 
 #include "Master.h"
 #include "FourierTransform.h"
-#include "FFTW.h"
+#include "FFTWapi.h"
 
 struct Band {
 	Band(Master* Master, float LowerHz, float UpperHz, float smoothFrac) :

@@ -1,16 +1,18 @@
 #pragma once
 #include <vector>
 #include <map>
-#include "FFTW.h"
 #include <GL/glew.h>
+#include <Vengine/Audio.h>
+
+#include "FFTWapi.h"
 #include "History.h"
 #include "FourierTransformHistory.h"
 #include "Kernels.h"
-#include "FFTW.h"
 
 /// <summary>
 /// class that contains all basic calculation information used in many signal processing algorithms
 /// also contains helper functions that are used a lot with audio maths
+/// also does the base fft transform
 /// </summary>
 
 struct Master {
@@ -40,5 +42,4 @@ struct Master {
 private:
 	int _sampleFftLastCalculated;
 	FFTWfft _fftwAPI;
-
 };

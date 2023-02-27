@@ -1,6 +1,4 @@
 #include "SpriteManager.h"
-#include "MyFuncs.h"
-#include "UniformSetting.h"
 
 #include <algorithm>
 
@@ -99,11 +97,11 @@ void SpriteManager::drawWithBatching() //useful for fast rendering when not edit
 
 	for (auto& it : _userAddedSprites) {
 
-		_spriteBatch.draw(it.second, it.second->getVisualiserShader()->getProgram());
+		_spriteBatch.draw(it.second, it.second->getVisualiserShader()->getProgram(), std::bind(&VisualiserShader::updateUniformValues, it.second->getVisualiserShader()));
 	}
 	_spriteBatch.end();
 
-	_spriteBatch.renderBatch(UniformSetting::setUniforms);
+	_spriteBatch.renderBatch();
 }
 
 void SpriteManager::processInput(Vengine::InputManager* inputManager)

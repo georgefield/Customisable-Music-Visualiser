@@ -1,2 +1,5 @@
-﻿  DrawFunctions.cpp
+﻿  SpriteBatch.cpp
+C:\Users\George\Documents\3rd year project\Project\Vengine\SpriteBatch.cpp(52,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\George\Documents\3rd year project\Project\Vengine\SpriteBatch.cpp(57,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\George\Documents\3rd year project\Project\Vengine\SpriteBatch.cpp(104,12): warning C4018: '<': signed/unsigned mismatch
   Vengine.vcxproj -> C:\Users\George\Documents\3rd year project\Project\Debug\Vengine.lib

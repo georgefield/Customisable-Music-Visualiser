@@ -1,11 +1,9 @@
 #include "Master.h"
 #include <Vengine/MyErrors.h>
 #include <cmath>
-
-#include "MyFuncs.h"
+#include <functional>
 
 #include "VisualiserShaderManager.h"
-#include <functional>
 
 Master::Master() :
 	_audioData(nullptr),
@@ -25,8 +23,9 @@ void Master::init(float* audioData, int sampleRate)
 	_sampleRate = sampleRate;
 
 	//add possible uniform setters
-	std::function<int()> memberFuncToPass = std::bind(&Master::SETTER_FUNCcurrentSample, this);
-	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Current Sample", memberFuncToPass);
+	std::function<int()> currentSampleSetterFunc = std::bind(&Master::SETTER_FUNCcurrentSample, this);
+	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Current Sample", currentSampleSetterFunc);
+
 	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Sample Rate", _sampleRate);
 }
 
@@ -34,6 +33,7 @@ void Master::beginCalculations(int currentSample) {
 
 	_currentSample = currentSample;
 }
+
 
 float slidingWindowFunction(float frac){ //reduces noise
 	return -0.5f * cosf(2.0f * 3.1415926f * frac) + 0.5f; //hanning function, increases min detectable frequency by 2, [worst case 24hz]
@@ -50,6 +50,7 @@ void Master::calculateFourierTransform() {
 	_fftHistory.addWorkingArrayToHistory();
 	//updates _fftHistory ^^^
 }
+
 
 void Master::endCalculations() {
 

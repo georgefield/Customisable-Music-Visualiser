@@ -13,23 +13,11 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\Signal Processing">
-      <UniqueIdentifier>{81c9e6ae-9017-4488-970b-2a815d22131a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Signal Processing">
-      <UniqueIdentifier>{53bf489d-29e8-4d99-bc20-7ffe23c47f8a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Data Structures">
       <UniqueIdentifier>{c9e38de4-4cd4-49e3-ade3-635be07328f8}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Tools">
       <UniqueIdentifier>{10de74fd-7791-49a9-99cb-ee632dd8657b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Shader Managing">
-      <UniqueIdentifier>{1ef56cff-a0d3-4cd8-92ce-55c130ffff63}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Shader Managing">
-      <UniqueIdentifier>{9cee2f9c-7fae-4c33-a730-587704a25571}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Visualiser Managing">
       <UniqueIdentifier>{0b24ddfe-3ce0-4a34-b2b2-692e010f5e0d}</UniqueIdentifier>
@@ -37,58 +25,55 @@
     <Filter Include="Header Files\Visualiser Managing">
       <UniqueIdentifier>{55bee5f9-b572-472e-be7c-326afaa820e9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Static Manager Classes">
+    <Filter Include="Header Files\Signal Processing Algorithms">
+      <UniqueIdentifier>{53bf489d-29e8-4d99-bc20-7ffe23c47f8a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\APIs for dependencies">
+      <UniqueIdentifier>{0e4eaf77-4bb6-413c-92d7-ff2595439497}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Sprite Managing">
+      <UniqueIdentifier>{8866842f-b067-4dd1-b7ad-69244ce35cab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Signal Processing Managers">
+      <UniqueIdentifier>{3a780cd8-f715-4246-af70-a64a75d0ca2b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Sprite Managing">
+      <UniqueIdentifier>{fa0d62cc-cd76-4871-acc3-2a24b3e6c7a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\APIs for dependencies">
+      <UniqueIdentifier>{11051f38-db45-48a7-9fb1-595061e6c748}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Signal Processing Managers">
       <UniqueIdentifier>{5d31fc93-f7f3-460d-a3b9-abc70841b159}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Static Manager Classes">
-      <UniqueIdentifier>{8866842f-b067-4dd1-b7ad-69244ce35cab}</UniqueIdentifier>
+    <Filter Include="Source Files\Signal Processing Algorithms">
+      <UniqueIdentifier>{81c9e6ae-9017-4488-970b-2a815d22131a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FFTW.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MyFuncs.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CustomisableSprite.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SpriteManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="UI.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Master.cpp">
-      <Filter>Source Files\Signal Processing</Filter>
+      <Filter>Source Files\Signal Processing Algorithms</Filter>
     </ClCompile>
     <ClCompile Include="NoteOnset.cpp">
-      <Filter>Source Files\Signal Processing</Filter>
-    </ClCompile>
-    <ClCompile Include="SignalProcessing.cpp">
-      <Filter>Source Files\Signal Processing</Filter>
+      <Filter>Source Files\Signal Processing Algorithms</Filter>
     </ClCompile>
     <ClCompile Include="FourierTransform.cpp">
-      <Filter>Source Files\Signal Processing</Filter>
+      <Filter>Source Files\Signal Processing Algorithms</Filter>
     </ClCompile>
     <ClCompile Include="TempoDetection.cpp">
-      <Filter>Source Files\Signal Processing</Filter>
+      <Filter>Source Files\Signal Processing Algorithms</Filter>
     </ClCompile>
     <ClCompile Include="MFCCs.cpp">
-      <Filter>Source Files\Signal Processing</Filter>
+      <Filter>Source Files\Signal Processing Algorithms</Filter>
     </ClCompile>
     <ClCompile Include="SelfSimilarityMatrix.cpp">
-      <Filter>Source Files\Signal Processing</Filter>
-    </ClCompile>
-    <ClCompile Include="UniformSetting.cpp">
-      <Filter>Source Files\Shader Managing</Filter>
-    </ClCompile>
-    <ClCompile Include="VisualiserShader.cpp">
-      <Filter>Source Files\Shader Managing</Filter>
+      <Filter>Source Files\Signal Processing Algorithms</Filter>
     </ClCompile>
     <ClCompile Include="Visualiser.cpp">
       <Filter>Source Files\Visualiser Managing</Filter>
@@ -99,58 +84,58 @@
     <ClCompile Include="VisualiserShaderManager.cpp">
       <Filter>Source Files\Visualiser Managing</Filter>
     </ClCompile>
-    <ClCompile Include="MainGame.cpp">
+    <ClCompile Include="MainProgram.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FourierTransformManager.cpp">
-      <Filter>Source Files\Static Manager Classes</Filter>
+      <Filter>Source Files\Signal Processing Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="SignalProcessingManager.cpp">
+      <Filter>Source Files\Signal Processing Managers</Filter>
+    </ClCompile>
+    <ClCompile Include="VisualiserShader.cpp">
+      <Filter>Source Files\Visualiser Managing</Filter>
+    </ClCompile>
+    <ClCompile Include="SpriteManager.cpp">
+      <Filter>Source Files\Sprite Managing</Filter>
+    </ClCompile>
+    <ClCompile Include="CustomisableSprite.cpp">
+      <Filter>Source Files\Sprite Managing</Filter>
+    </ClCompile>
+    <ClCompile Include="FFTWapi.cpp">
+      <Filter>Source Files\APIs for dependencies</Filter>
     </ClCompile>
     <ClCompile Include="PFDapi.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\APIs for dependencies</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="MainGame.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="FFTW.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MyFuncs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SpriteManager.h">
+    <ClInclude Include="MainProgram.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="UI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Master.h">
-      <Filter>Header Files\Signal Processing</Filter>
+      <Filter>Header Files\Signal Processing Algorithms</Filter>
     </ClInclude>
     <ClInclude Include="NoteOnset.h">
-      <Filter>Header Files\Signal Processing</Filter>
-    </ClInclude>
-    <ClInclude Include="CustomisableSprite.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SignalProcessing.h">
-      <Filter>Header Files\Signal Processing</Filter>
+      <Filter>Header Files\Signal Processing Algorithms</Filter>
     </ClInclude>
     <ClInclude Include="TempoDetection.h">
-      <Filter>Header Files\Signal Processing</Filter>
+      <Filter>Header Files\Signal Processing Algorithms</Filter>
     </ClInclude>
     <ClInclude Include="FourierTransform.h">
-      <Filter>Header Files\Signal Processing</Filter>
+      <Filter>Header Files\Signal Processing Algorithms</Filter>
     </ClInclude>
     <ClInclude Include="DixonAlgorithmStructures.h">
-      <Filter>Header Files\Signal Processing</Filter>
+      <Filter>Header Files\Signal Processing Algorithms</Filter>
     </ClInclude>
     <ClInclude Include="Energy.hpp">
-      <Filter>Header Files\Signal Processing</Filter>
+      <Filter>Header Files\Signal Processing Algorithms</Filter>
     </ClInclude>
     <ClInclude Include="RMS.hpp">
-      <Filter>Header Files\Signal Processing</Filter>
+      <Filter>Header Files\Signal Processing Algorithms</Filter>
     </ClInclude>
     <ClInclude Include="Threshold.h">
       <Filter>Header Files\Data Structures</Filter>
@@ -171,10 +156,10 @@
       <Filter>Header Files\Tools</Filter>
     </ClInclude>
     <ClInclude Include="MFCCs.h">
-      <Filter>Header Files\Signal Processing</Filter>
+      <Filter>Header Files\Signal Processing Algorithms</Filter>
     </ClInclude>
     <ClInclude Include="SelfSimilarityMatrix.h">
-      <Filter>Header Files\Signal Processing</Filter>
+      <Filter>Header Files\Signal Processing Algorithms</Filter>
     </ClInclude>
     <ClInclude Include="VectorHistory.h">
       <Filter>Header Files\Data Structures</Filter>
@@ -182,13 +167,16 @@
     <ClInclude Include="FourierTransformHistory.h">
       <Filter>Header Files\Data Structures</Filter>
     </ClInclude>
-    <ClInclude Include="VisualiserShader.h">
-      <Filter>Header Files\Shader Managing</Filter>
-    </ClInclude>
-    <ClInclude Include="UniformSetting.h">
-      <Filter>Header Files\Shader Managing</Filter>
-    </ClInclude>
     <ClInclude Include="Visualiser.h">
+      <Filter>Header Files\Visualiser Managing</Filter>
+    </ClInclude>
+    <ClInclude Include="UniformSetter.h">
+      <Filter>Header Files\Data Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="SSBOsetter.h">
+      <Filter>Header Files\Data Structures</Filter>
+    </ClInclude>
+    <ClInclude Include="VisualiserShader.h">
       <Filter>Header Files\Visualiser Managing</Filter>
     </ClInclude>
     <ClInclude Include="VisualiserManager.h">
@@ -198,19 +186,25 @@
       <Filter>Header Files\Visualiser Managing</Filter>
     </ClInclude>
     <ClInclude Include="ConfigManager.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Visualiser Managing</Filter>
     </ClInclude>
-    <ClInclude Include="FourierTransformManager.h">
-      <Filter>Header Files\Static Manager Classes</Filter>
+    <ClInclude Include="FFTWapi.h">
+      <Filter>Header Files\APIs for dependencies</Filter>
     </ClInclude>
     <ClInclude Include="PFDapi.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\APIs for dependencies</Filter>
     </ClInclude>
-    <ClInclude Include="UniformSetter.h">
-      <Filter>Header Files\Data Structures</Filter>
+    <ClInclude Include="SpriteManager.h">
+      <Filter>Header Files\Sprite Managing</Filter>
     </ClInclude>
-    <ClInclude Include="SSBOsetter.h">
-      <Filter>Header Files\Data Structures</Filter>
+    <ClInclude Include="CustomisableSprite.h">
+      <Filter>Header Files\Sprite Managing</Filter>
+    </ClInclude>
+    <ClInclude Include="SignalProcessingManager.h">
+      <Filter>Header Files\Signal Processing Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="FourierTransformManager.h">
+      <Filter>Header Files\Signal Processing Managers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

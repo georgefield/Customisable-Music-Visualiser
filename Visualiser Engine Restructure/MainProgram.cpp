@@ -13,8 +13,8 @@ const int screenHeight = 768;
 
 const int N = 4096; //number of frequencies in the fourier transform (= half the number of samples included by nyquist)
 
-MainGame::MainGame() :
-	_gameState(GameState::PLAY),
+MainProgram::MainProgram() :
+	_gameState(ProgramState::RUNNING),
 	_audio(),
 	_UI(),
 	_viewport(screenWidth, screenHeight)
@@ -26,29 +26,17 @@ MainGame::MainGame() :
 const std::string musicFilepath = "Music/Gorillaz - On Melancholy Hill.wav";
 
 
-void MainGame::run() {
+void MainProgram::run() {
 	initSystems();
-	initData();
-
-	_eq.init(new Vengine::Quad(),glm::vec2(-1), glm::vec2(2));
-
 	gameLoop();
 }
 
-void MainGame::initSystems() {
+void MainProgram::initSystems() {
 
 	//use Vengine to create window
 	_window.create("visualiser", screenWidth, screenHeight, SDL_WINDOW_OPENGL);
 
 	SpriteManager::init(&_viewport, &_window);
-
-	UniformSetting::init(&_signalProc);
-
-	///---shader stuff
-
-	initShaders();
-
-	_spriteBatch.init();
 
 	VisualiserManager::init();
 
@@ -60,21 +48,6 @@ void MainGame::initSystems() {
 	_signalProc.init(_audio.getNormalisedWavData(), _audio.getSampleRate());
 	FourierTransformManager::setMaster(_signalProc.getMaster());
 
-	//create SSBO for waveform data (input entire file)
-	Vengine::DrawFunctions::createSSBO(_ssboWavDataID, 0, _audio.getNormalisedWavData(), _audio.getWavLength(), GL_STATIC_COPY);
-
-	//debug for when doing ft on cpu
-	_harmonicData.resize((N / 2) + 1);
-
-	//create harmonic amplitude array (fill with -1 for now, will be updated to current FFT every frame)
-	_negArr = new float[_harmonicData.size()];
-	//memset(_negArr, 0.5f, _harmonicData.size() * sizeof(float));
-	for (int i = 0; i < _harmonicData.size(); i++) {
-		_negArr[i] = 0.0f;
-	}
-	Vengine::DrawFunctions::createSSBO(_ssboHarmonicDataID, 1, _negArr, _harmonicData.size() * sizeof(float), GL_DYNAMIC_DRAW);
-
-
 	_frameBufferIDs = new GLuint[_numFrameBuffers];
 	_frameBufferTextureIDs = new GLuint[_numFrameBuffers];
 	//create 2 draw buffers
@@ -82,24 +55,20 @@ void MainGame::initSystems() {
 
 	_UI.init(&_window, &_inputManager, &_signalProc);
 
+	//time since load start
+	Vengine::MyTiming::startTimer(_timeSinceLoadTimerId);
+	std::function<float()> SETTER_FUNCtimeSinceLoad = std::bind(&MainProgram::getTimeSinceLoad, this);
+	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Time since program start", SETTER_FUNCtimeSinceLoad);
+	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("p9", 0.9f);
+
+
 	//enable alpha belnding
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //blend entirely based on alpha
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 }
 
-void MainGame::initData(){
-
-	//nothing for now
-}
-
-void MainGame::initShaders() {
-
-	//shaders listed below are loaded on start up
-}
-
-
-void MainGame::processInput() {
+void MainProgram::processInput() {
 
 	SDL_Event evnt;
 	while (SDL_PollEvent(&evnt)) {
@@ -108,7 +77,7 @@ void MainGame::processInput() {
 
 		switch (evnt.type) { //look up SDL_Event documentation to see other options for events (mouse movement, keyboard, etc..)
 		case SDL_QUIT:
-			_gameState = GameState::EXIT;
+			_gameState = ProgramState::EXIT;
 			break;
 		case SDL_KEYDOWN:
 			_inputManager.pressKey(evnt.key.keysym.sym);
@@ -132,7 +101,7 @@ void MainGame::processInput() {
 	}
 }
 
-void MainGame::gameLoop() {
+void MainProgram::gameLoop() {
 
 	Vengine::MyTiming::setNumSamplesForFPS(100);
 	Vengine::MyTiming::setFPSlimit(2500);
@@ -141,9 +110,9 @@ void MainGame::gameLoop() {
 	//_signalProc._selfSimilarityMatrix.linkToDebug();
 
 	//main while loop
-	while (_gameState != GameState::EXIT) {
+	while (_gameState != ProgramState::EXIT) {
 
-		if (_gameState == GameState::PLAY) {
+		if (_gameState == ProgramState::RUNNING) {
 			_inputManager.update();
 			//clears background and tells imgui next frame
 			_window.nextFrame();
@@ -170,7 +139,7 @@ void MainGame::gameLoop() {
 	}
 }
 
-void MainGame::endFrame() {
+void MainProgram::endFrame() {
 	//tell ImGui to render Ui (must do every frame)
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -183,7 +152,7 @@ void MainGame::endFrame() {
 }
 
 
-void MainGame::drawVis() {
+void MainProgram::drawVis() {
 
 	static int correlationWindowSize = 1;
 	if (_inputManager.isKeyPressed(SDLK_1)) {
@@ -247,7 +216,7 @@ void MainGame::drawVis() {
 	
 }
 
-void MainGame::drawUi(){
+void MainProgram::drawUi(){
 
 	_UI.errorMessages();
 	_UI.toolbar();

@@ -2,6 +2,7 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <vector>
+#include <functional>
 
 #include "GLSLProgram.h"
 #include "Vertex.h"
@@ -28,12 +29,14 @@ namespace Vengine {
 
 	struct ProgramBatch {
 		GLSLProgram* program;
+		std::function<void()> uniformUpdater;
 		std::vector<TextureBatch> textureBatches;
 	};
 
 	struct SpriteAndProgram {
 		Sprite* sprite;
 		GLSLProgram* program;
+		std::function<void()> uniformUpdater;
 	};
 
 
@@ -46,9 +49,9 @@ namespace Vengine {
 		void init();
 
 		void begin();
-		void draw(Sprite* sprite, GLSLProgram* program);
+		void draw(Sprite* sprite, GLSLProgram* program, std::function<void()> uniformUpdater);
 		void end();
-		void renderBatch(void (*uniformSetterFunction)(GLSLProgram*));
+		void renderBatch();
 	private:
 		void createRenderBatches();
 		void createVertexArray();

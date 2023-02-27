@@ -73,11 +73,13 @@ void VisualiserShader::eraseSetterUniformPair(std::string uniformName)
 	}
 
 	if (getUniformType(uniformName) == GL_FLOAT) {
+		std::cout << "Erasing from float map" << std::endl;
 		_setFloatUniformMap.erase(uniformName);
 		return;
 	}
 
 	if (getUniformType(uniformName) == GL_INT) {
+		std::cout << "Erasing from int map" << std::endl;
 		_setIntUniformMap.erase(uniformName);
 		return;
 	}
@@ -97,6 +99,9 @@ void VisualiserShader::updateUniformValues()
 		if (uniformIsSet(it) && getUniformType(it) == GL_FLOAT) {
 			//handle floats
 			auto setFloatUniformLoc = _setFloatUniformMap.find(it);
+			if (setFloatUniformLoc == _setFloatUniformMap.end()) {
+				Vengine::fatalError("Something bad has happened where isSet & getType functions are wrong");
+			}
 			if (!(*setFloatUniformLoc).second.isValid()) {
 				Vengine::fatalError("Invalid float setter");
 			}
@@ -108,6 +113,9 @@ void VisualiserShader::updateUniformValues()
 		else if (uniformIsSet(it) && getUniformType(it) == GL_INT) {
 			//handle ints
 			auto setIntUniformLoc = _setIntUniformMap.find(it);
+			if (setIntUniformLoc == _setIntUniformMap.end()) {
+				Vengine::fatalError("Something bad has happened where isSet & getType functions are wrong");
+			}
 			if (!(*setIntUniformLoc).second.isValid()) {
 				Vengine::fatalError("Invalid int setter");
 			}
@@ -173,26 +181,26 @@ std::string VisualiserShader::getUniformSetterName(std::string uniformName)
 		return _setIntUniformMap[uniformName].setterName;
 	}
 	if (getUniformType(uniformName) == GL_FLOAT) {
-		return _setIntUniformMap[uniformName].setterName;
+		return _setFloatUniformMap[uniformName].setterName;
 	}
 	return std::string();
 }
 
 UniformSetter<float>* VisualiserShader::getFloatUniformSetterStruct(std::string uniformName)
 {
-	if (uniformExists(uniformName, GL_FLOAT)) {
+	if (uniformIsSet(uniformName) && uniformExists(uniformName, GL_FLOAT)) {
 		return &_setFloatUniformMap[uniformName];
 	}
-	Vengine::warning("No float uniform with name " + uniformName + " in shader " + getName());
+	Vengine::warning("No float uniform with name " + uniformName + " set in shader " + getName());
 	return nullptr;
 }
 
 UniformSetter<int>* VisualiserShader::getIntUniformSetterStruct(std::string uniformName)
 {
-	if (uniformExists(uniformName, GL_INT)) {
+	if (uniformIsSet(uniformName) && uniformExists(uniformName, GL_INT)) {
 		return &_setIntUniformMap[uniformName];
 	}
-	Vengine::warning("No int uniform with name " + uniformName + " in shader " + getName());
+	Vengine::warning("No int uniform with name " + uniformName + " set in shader " + getName());
 	return nullptr;
 }
 

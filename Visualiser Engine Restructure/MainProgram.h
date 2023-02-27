@@ -9,16 +9,16 @@
 #include "SignalProcessingManager.h"
 #include "UI.h"
 
-enum class GameState {
-	PLAY,
+enum class ProgramState {
+	RUNNING,
 	MENU,
 	EXIT
 };
 
-class MainGame
+class MainProgram
 {
 public:
-	MainGame();
+	MainProgram();
 
 	void run();
 private:
@@ -26,13 +26,12 @@ private:
 	Vengine::Viewport _viewport;
 
 	int _sampleRate;
-	GameState _gameState;
+	ProgramState _gameState;
 	UI _UI;
 
 	Vengine::InputManager _inputManager;
 
 	void initSystems();
-	void initData();
 	void processInput();
 	void gameLoop();
 	void drawVis();
@@ -42,25 +41,19 @@ private:
 
 	void initShaders();
 
-	Vengine::Sprite _eq;
-
-	Vengine::SpriteBatch _spriteBatch;
-
 	GLuint* _frameBufferIDs;
 	GLuint* _frameBufferTextureIDs;
 	const int _numFrameBuffers = 3;
 
-
-	GLuint _ssboWavDataID;
-	GLuint _ssboHarmonicDataID;
-	GLuint _ssboAllocFFTmemID;
-
 	std::vector<float> _harmonicData;
-
-	float* _negArr;
 
 	SignalProcessing _signalProc;
 
 	Vengine::Audio _audio;
+
+	int _timeSinceLoadTimerId;
+
+	//setter functions
+	float getTimeSinceLoad() { return Vengine::MyTiming::readTimer(_timeSinceLoadTimerId); }
 };
 

@@ -1,7 +1,6 @@
 #include "CustomisableSprite.h"
 #include <Vengine/MyImgui.h>
 
-#include "MyFuncs.h"
 #include "Tools.h"
 #include "VisualiserManager.h"
 #include "VisualiserShaderManager.h"
