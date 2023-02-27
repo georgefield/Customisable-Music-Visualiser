@@ -16,6 +16,7 @@ layout(std430, binding = 1) buffer harmonicValueBuffer
 };
 
 uniform int numHarmonics;
+uniform float wagwarn;
 
 void main(){
 	
@@ -28,7 +29,7 @@ void main(){
 	if (fragmentUV.y < abs(harmonicValues[index])){
 		float brightness = fragmentUV.y / abs(harmonicValues[index]);
 		if (harmonicValues[index] >= 0){
-			colour = vec4(1) * brightness;
+			colour = vec4(1, 1.0f - wagwarn, 1, 1) * brightness;
 		}
 		else{
 			colour = vec4(1,0,0,1) * brightness;
