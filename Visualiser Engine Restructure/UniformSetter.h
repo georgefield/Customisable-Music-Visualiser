@@ -4,8 +4,10 @@
 template <class T>
 struct UniformSetter {
 
+	UniformSetter() : isInitialised(false){}
+
 	void initialiseAsDynamic(std::string functionName, std::function<T()> UpdaterFunction) {
-		isSet = true;
+		isInitialised = true;
 		functionIsAttached = true;
 		isConstant = false;
 		updaterFunction = UpdaterFunction;
@@ -14,22 +16,19 @@ struct UniformSetter {
 	}
 
 	void initialiseAsConstant(std::string constantName, T constantValue) {
-		isSet = true;
+		isInitialised = true;
 		functionIsAttached = false;
 		isConstant = true;
 		setterName = constantName;
 		functionValue = constantValue;
 	}
 
-	void initialiseAsNotSet() {
-		isSet = false;
-		functionIsAttached = false;
-		isConstant = true;
-		setterName = "None";
-		functionValue = T(NULL);
-	}
-
 	bool isValid() {
+
+		if (!isInitialised) {
+			Vengine::warning("INVALID SETTER: not initialised");
+			return false;
+		}
 
 		if (!isConstant && !functionIsAttached) {
 			Vengine::warning("INVALID SETTER: not constant or dynamic value");
@@ -41,8 +40,8 @@ struct UniformSetter {
 
 	void callUpdater() {
 		//function value does not need to be updated if constant
-		if (!isSet) {
-			Vengine::warning("Tried to call updater on unset uniformSetter");
+		if (!isInitialised) {
+			Vengine::warning("Tried to call updater on uninitiliased uniformSetter");
 			return;
 		}
 
@@ -61,7 +60,7 @@ struct UniformSetter {
 
 	bool functionIsAttached;
 	bool isConstant;
-	bool isSet;
+	bool isInitialised;
 	std::string setterName;
 	std::function<T()> updaterFunction;
 	T functionValue;

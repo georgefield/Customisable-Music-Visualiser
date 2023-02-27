@@ -1,5 +1,5 @@
 ﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(517,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (Visualiser.vcxproj).  This can lead to incorrect clean and rebuild behavior.
-  CustomisableSprite.cpp
+  UI.cpp
 C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(18,14): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
           with
           [
@@ -10,6 +10,10 @@ C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(19,15): wa
           [
               T=float
           ]
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(21,30): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(51,16): warning C4018: '>': signed/unsigned mismatch
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(43,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(50,26): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(117,38): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
           with
           [
@@ -50,10 +54,6 @@ C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure
           [
               T=float
           ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(21,30): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(51,16): warning C4018: '>': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(43,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(50,26): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Threshold.h(32,50): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(11,3): warning C4091: 'static ': ignored on left of 'FourierTransform::FunctionType' when no variable is declared
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(51,24): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
@@ -63,7 +63,7 @@ C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(81,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(107,33): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(109,28): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(229,1): warning C4305: '=': truncation from 'double' to 'float'
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FourierTransform.h(233,1): warning C4305: '=': truncation from 'double' to 'float'
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Limiter.h(21,16): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(22,3): warning C4091: 'static ': ignored on left of 'NoteOnset::DataExtractionAlg' when no variable is declared
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(27,3): warning C4091: 'static ': ignored on left of 'NoteOnset::PeakPickingAlg' when no variable is declared
@@ -85,31 +85,16 @@ C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(37,21): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(44,40): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(204,3): warning C4091: 'static ': ignored on left of 'SelfSimilarityMatrix::LinkedTo' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\CustomisableSprite.cpp(28,1): warning C4305: 'initializing': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\CustomisableSprite.cpp(113,11): warning C4244: 'initializing': conversion from 'T' to 'int', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\CustomisableSprite.cpp(114,11): warning C4244: 'initializing': conversion from 'T' to 'int', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\CustomisableSprite.cpp(128,12): warning C4244: 'initializing': conversion from 'T' to 'int', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\CustomisableSprite.cpp(129,12): warning C4244: 'initializing': conversion from 'T' to 'int', possible loss of data
-          with
-          [
-              T=float
-          ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\CustomisableSprite.cpp(210,80): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\CustomisableSprite.cpp(214,21): warning C4018: '<': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\CustomisableSprite.cpp(244,78): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\CustomisableSprite.cpp(246,20): warning C4018: '<': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\CustomisableSprite.cpp(265,20): warning C4018: '<': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\CustomisableSprite.cpp(273,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(46,63): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(67,61): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(67,57): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(150,77): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(150,59): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(151,77): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(151,34): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(226,14): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(227,14): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(312,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(444,53): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(470,20): warning C4018: '<': signed/unsigned mismatch
   Visualiser Engine Restructure.vcxproj -> C:\Users\George\Documents\3rd year project\Project\Debug\Visualiser Engine Restructure.exe

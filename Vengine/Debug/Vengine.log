@@ -1,5 +1,2 @@
-﻿  GLSLProgram.cpp
-C:\Users\George\Documents\3rd year project\Project\Vengine\GLSLProgram.cpp(87,8): warning C4101: 'i': unreferenced local variable
-C:\Users\George\Documents\3rd year project\Project\Vengine\GLSLProgram.cpp(137,20): warning C4018: '<': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Vengine\GLSLProgram.cpp(143,20): warning C4018: '<': signed/unsigned mismatch
+﻿  DrawFunctions.cpp
   Vengine.vcxproj -> C:\Users\George\Documents\3rd year project\Project\Debug\Vengine.lib

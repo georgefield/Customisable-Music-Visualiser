@@ -4,7 +4,6 @@
 
 #include <functional>
 
-std::unordered_map<int, int> FourierTransformManager::_SSBObindings;
 std::unordered_map<int, FourierTransform*> FourierTransformManager::_fourierTransforms;
 Master* FourierTransformManager::_master = nullptr;
 
@@ -26,6 +25,7 @@ void FourierTransformManager::createFourierTransform(int& id, int historySize, f
 	_fourierTransforms[id]->init(_master);
 
 	addUniformSetterFunctionOptionsToList(id);
+	addSSBOsetterFunctionOptionsToList(id);
 }
 
 bool FourierTransformManager::fourierTransformExists(int id)
@@ -42,12 +42,10 @@ void FourierTransformManager::eraseFourierTransform(int id)
 	delete _fourierTransforms[id];
 	_fourierTransforms.erase(id);
 
-	if (_SSBObindings.find(id) != _SSBObindings.end()) { //remove attached ssbo
-		VisualiserShaderManager::eraseSSBO(_SSBObindings[id]);
-		_SSBObindings.erase(id);
-	}
+	//if ssbo set with unset itself when it gets a bad function call as _fourierTransforms[id] destroyed
 
-	deleteUniformSetterFunctionOptionsToList(id);
+	deleteUniformSetterFunctionOptionsFromList(id);
+	deleteSSBOsetterFunctionOptionsFromList(id);
 }
 
 FourierTransform* FourierTransformManager::getFourierTransform(int id)
@@ -57,49 +55,6 @@ FourierTransform* FourierTransformManager::getFourierTransform(int id)
 	}
 
 	return _fourierTransforms[id];
-}
-
-bool FourierTransformManager::bindOutputToSSBO(int id, int bindingId)
-{
-	//if already bound to ssbo
-	if (_SSBObindings.find(id) != _SSBObindings.end()) {
-		Vengine::warning("Unbinding fourier transform from old SSBO " + std::to_string(_SSBObindings[id]));
-
-		//delete ssbo in visualiser shader manager
-		VisualiserShaderManager::eraseSSBO(_SSBObindings[id]);
-	}
-
-	//if something else bound to ssbo
-	if (VisualiserShaderManager::SSBOalreadyBound(bindingId)) {
-		Vengine::warning("SSBO " + std::to_string(bindingId) + " already bound to something else. Replacing...");
-
-		//remove from ssbo bindings
-		for (auto& it : _SSBObindings) {
-			if (it.second == bindingId) {
-				_SSBObindings.erase(it.first);
-				break;
-			}
-		}
-		//delete ssbo in visualiser shader manager
-		VisualiserShaderManager::eraseSSBO(bindingId);
-	}
-
-
-
-	std::function<float* ()> memberFuncToPass = std::bind(&FourierTransform::getOutput, _fourierTransforms[id]);
-	_SSBObindings[id] = bindingId;
-
-	return VisualiserShaderManager::initDynamicSSBO(bindingId, memberFuncToPass, _fourierTransforms[id]->getNumHarmonics());
-}
-
-std::string FourierTransformManager::SSBObindingStatus(int id)
-{
-	if (_SSBObindings.find(id) != _SSBObindings.end()) {
-		return "Current binding = " + std::to_string(_SSBObindings[id]);
-	}
-	else {
-		return "Not bound to SSBO";
-	}
 }
 
 std::vector<int> FourierTransformManager::idArr()
@@ -115,12 +70,27 @@ void FourierTransformManager::addUniformSetterFunctionOptionsToList(int id)
 {
 	std::string namePrefix = "FT-" + std::to_string(id);
 
-	VisualiserManager::addPossibleUniformSetter(namePrefix + " num harmonics", _fourierTransforms[id]->getNumHarmonics());
+	VisualiserShaderManager::Uniforms::addPossibleUniformSetter(namePrefix + " num harmonics", _fourierTransforms[id]->getNumHarmonics());
 }
 
-void FourierTransformManager::deleteUniformSetterFunctionOptionsToList(int id)
+void FourierTransformManager::addSSBOsetterFunctionOptionsToList(int id)
+{
+	std::string functionName = "FT-" + std::to_string(id) + " harmonic values";
+	std::function<float*()> memberFuncToPass = std::bind(&FourierTransform::getOutput, _fourierTransforms[id]);
+
+	VisualiserShaderManager::SSBOs::addPossibleSSBOSetter(functionName, memberFuncToPass, _fourierTransforms[id]->getNumHarmonics());
+}
+
+void FourierTransformManager::deleteUniformSetterFunctionOptionsFromList(int id)
 {
 	std::string namePrefix = "FT-" + std::to_string(id);
 
-	VisualiserManager::deletePossibleUniformSetter(namePrefix + " num harmonics");
+	VisualiserShaderManager::Uniforms::deletePossibleUniformSetter(namePrefix + " num harmonics");
+}
+
+void FourierTransformManager::deleteSSBOsetterFunctionOptionsFromList(int id)
+{
+	std::string functionName = "FT-" + std::to_string(id) + " harmonic values";
+
+	VisualiserShaderManager::SSBOs::deleteSSBOsetter(functionName);
 }

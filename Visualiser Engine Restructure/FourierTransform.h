@@ -171,6 +171,10 @@ public:
 		return _cutOffHigh;
 	}
 
+	float getCutoffSmoothFraction() {
+		return _cutoffSmoothFrac;
+	}
+
 	int getNumHarmonics() {
 		return _current->numHarmonics();
 	}

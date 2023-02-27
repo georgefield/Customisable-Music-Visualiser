@@ -2,17 +2,26 @@
 #include "VisualiserManager.h"
 #include <Vengine/IOManager.h>
 
-
+//visualiser shader managing--
 std::unordered_map<std::string, VisualiserShader> VisualiserShaderManager::_shaderCache;
 std::string VisualiserShaderManager::_currentVisualiserPath = "";
-std::set<int> VisualiserShaderManager::_currentBindings;
+//--
 
-//ssbo
-std::unordered_map<int, SSBOinfo> VisualiserShaderManager::_SSBOinfoMap;
-std::unordered_map<int, std::function<float* ()>> VisualiserShaderManager::_updaterFunctionMap;
+//ssbo--
+std::unordered_map<int, SSBOsetter> VisualiserShaderManager::_setSSBOinfoMap;
+std::unordered_map<std::string, SSBOsetter> VisualiserShaderManager::_SSBOsetterMap;
+//--
+
+//uniform setter functions--
+std::unordered_map<std::string, UniformSetter<float>> VisualiserShaderManager::_floatFunctions;
+std::unordered_map<std::string, UniformSetter<int>> VisualiserShaderManager::_intFunctions;
+//--
 
 //default fragment shader
 static const std::string DEFAULT_FRAGMENT_SHADER_PATH = "Resources/shaders/simple.frag";
+
+
+//*** Visualiser shader managing ***
 
 VisualiserShader* VisualiserShaderManager::getShader(std::string fragPath) {
 	if (_shaderCache.find(fragPath) != _shaderCache.end()) {
@@ -37,97 +46,151 @@ std::string VisualiserShaderManager::getDefaultFragmentShaderPath()
 	return DEFAULT_FRAGMENT_SHADER_PATH;
 }
 
+//***
+
+
 //*** SSBOs ***
 
-void VisualiserShaderManager::updateDynamicSSBOs()
+void VisualiserShaderManager::SSBOs::updateDynamicSSBOs()
 {
-	for (auto& it : _updaterFunctionMap) {
-		SSBOinfo info = _SSBOinfoMap[it.first];
-		Vengine::DrawFunctions::updateSSBO(info.id, it.first, it.second(), info.dataLength * sizeof(float));
+	for (auto& it : _setSSBOinfoMap) {
+		if (!it.second.isValid()) {
+			Vengine::fatalError("Invalid SSBO" + it.second.name);
+		}
+		if (it.second.functionIsAttached) {
+			it.second.callUpdater();
+			Vengine::DrawFunctions::updateSSBO(it.second.id, it.first, it.second.data, it.second.dataLength * sizeof(float));
+		}
 	}
 }
 
-void VisualiserShaderManager::updateShaderUniforms()
+void VisualiserShaderManager::SSBOs::addPossibleSSBOSetter(std::string functionName, std::function<float* ()> function, int dataLength)
 {
-	for (auto& it : _shaderCache) {
-		it.second.updateUniformValues();
+	if (_SSBOsetterMap.find(functionName) != _SSBOsetterMap.end()) {
+		Vengine::warning("SSBO setter function of  name '" + functionName + "' already exists");
+		return;
 	}
+
+	_SSBOsetterMap[functionName].initialiseAsDynamic(functionName, function, dataLength);
 }
 
-bool VisualiserShaderManager::initStaticSSBO(int bindingId, float* staticData, int dataLength)
+void VisualiserShaderManager::SSBOs::addPossibleSSBOSetter(std::string functionName, float* staticData, int dataLength)
 {
-	if (!SSBOinitPossible()) {
-		return false;
+	if (_SSBOsetterMap.find(functionName) != _SSBOsetterMap.end()) {
+		Vengine::warning("SSBO setter function of  name '" + functionName + "' already exists");
+		return;
 	}
 
-	if (_SSBOinfoMap.find(bindingId) != _SSBOinfoMap.end()) {
-		Vengine::warning("Binding id " + std::to_string(bindingId) + " is not availiable, earliest avialiable = " + std::to_string(getNextAvailiableBinding()));
-		return false;
-	}
-
-	SSBOinfo s;
-	s.data = staticData;
-	s.dataLength = dataLength;
-
-	Vengine::DrawFunctions::createSSBO(s.id, bindingId, s.data, s.dataLength * sizeof(float), GL_STATIC_COPY);
-	_SSBOinfoMap[bindingId] = s;
-
-	return true;
+	_SSBOsetterMap[functionName].initialiseAsConstant(functionName, staticData, dataLength);
 }
 
-bool VisualiserShaderManager::initDynamicSSBO(int bindingId, std::function<float* ()> updaterFunction, int dataLength)
+void VisualiserShaderManager::SSBOs::deleteSSBOsetter(std::string functionName)
 {
-	if (!SSBOinitPossible()) {
-		return false;
+	if (_SSBOsetterMap.find(functionName) != _SSBOsetterMap.end()) {
+		Vengine::warning("No SSBO setter with name '" + functionName + "' to delete");
 	}
 
-	if (_SSBOinfoMap.find(bindingId) != _SSBOinfoMap.end()) {
-		Vengine::warning("Binding id " + std::to_string(bindingId) + " is not availiable, earliest avialiable = " + std::to_string(getNextAvailiableBinding()));
-		return false;
+	//unset any ssbo using that setter function
+	for (auto& it : _setSSBOinfoMap) {
+		if (it.second.name == functionName) {
+			unsetSSBO(it.first);
+		}
 	}
-
-	SSBOinfo s;
-	s.data = updaterFunction(); //set data to be value returned from data getter
-	s.dataLength = dataLength;
-
-	Vengine::DrawFunctions::createSSBO(s.id, bindingId, s.data, s.dataLength * sizeof(float), GL_DYNAMIC_DRAW);
-	_SSBOinfoMap[bindingId] = s;
-	_updaterFunctionMap[bindingId] = updaterFunction;
+	//then erase setter function
+	_SSBOsetterMap.erase(functionName);
 	
+}
+
+
+bool VisualiserShaderManager::SSBOs::setSSBO(int bindingId, std::string functionName)
+{
+	if (!SSBOinitPossible()) {
+		return false;
+	}
+
+	if (SSBOisSet(bindingId)) {
+		Vengine::warning("SSBO with binding " + std::to_string(bindingId) + " already bound");
+		return false;
+	}
+
+	if (_SSBOsetterMap.find(functionName) == _SSBOsetterMap.end()) {
+		Vengine::warning("No setter function of name " + functionName + ". Cannot init SSBO");
+		return false;
+	}
+
+	SSBOsetter setterTmp = _SSBOsetterMap[functionName];
+
+	if (!setterTmp.isValid()) {
+		Vengine::fatalError("Invalid setter " + setterTmp.name);
+	}
+
+	GLenum usage = GL_STATIC_COPY;
+	if (setterTmp.functionIsAttached) {
+		setterTmp.callUpdater();
+		usage = GL_DYNAMIC_COPY;
+	}
+
+	_setSSBOinfoMap[bindingId] = setterTmp;
+	Vengine::DrawFunctions::createSSBO(_setSSBOinfoMap[bindingId].id, bindingId, _setSSBOinfoMap[bindingId].data, _setSSBOinfoMap[bindingId].dataLength * sizeof(float), usage);
+
 	return true;
 }
 
-void VisualiserShaderManager::eraseSSBO(int bindingId)
+void VisualiserShaderManager::SSBOs::unsetSSBO(int bindingId)
 {
-	if (_updaterFunctionMap.find(bindingId) == _updaterFunctionMap.end()) {
-		Vengine::warning("No updater function found for dynamic SSBO " + std::to_string(bindingId) + ", assumed SSBO is static");
-	}
-	else {
-		_updaterFunctionMap.erase(bindingId);
-		std::cout << "Deleted updater function" << bindingId<< std::endl;
-	}
-
-	if (!SSBOalreadyBound(bindingId)) {
+	if (!SSBOisSet(bindingId)) {
 		Vengine::warning("Cannot delete SSBO with id " + std::to_string(bindingId) + " as it does not exist");
 		return;
 	}
 
-	_SSBOinfoMap.erase(bindingId);
+	_setSSBOinfoMap.erase(bindingId);
 }
 
-void VisualiserShaderManager::changeUpdaterFunctionForDynamicSSBO(int bindingId, std::function<float* ()> newUpdater)
+bool VisualiserShaderManager::SSBOs::SSBOisSet(int bindingId)
 {
-	if (_updaterFunctionMap.find(bindingId) == _updaterFunctionMap.end()) {
-		Vengine::warning("No current updater function found for dynamic SSBO " + std::to_string(bindingId));
-		return;
+	return (_setSSBOinfoMap.find(bindingId) != _setSSBOinfoMap.end());
+}
+
+const int MAX_BINDINGS = 8;
+void VisualiserShaderManager::SSBOs::getAvailiableBindings(std::vector<int>& availiableBindings)
+{
+	for (int i = 0; i < MAX_BINDINGS; i++) {
+		if (_setSSBOinfoMap.find(i) == _setSSBOinfoMap.end()) {
+			availiableBindings.push_back(i);
+		}
 	}
-
-	_updaterFunctionMap[bindingId] = newUpdater;
 }
 
-bool VisualiserShaderManager::SSBOalreadyBound(int bindingId)
+void VisualiserShaderManager::SSBOs::getSetBindings(std::vector<int>& setBindings) {
+
+	for (auto& it : _setSSBOinfoMap) {
+		setBindings.push_back(it.first);
+	}
+}
+
+void VisualiserShaderManager::SSBOs::getSSBOsetterNames(std::vector<std::string>& names)
 {
-	return (_SSBOinfoMap.find(bindingId) != _SSBOinfoMap.end());
+	for (auto& it : _SSBOsetterMap) {
+		names.push_back(it.first);
+	}
+}
+
+SSBOsetter VisualiserShaderManager::SSBOs::getSSBOsetter(std::string name)
+{
+	if (_SSBOsetterMap.find(name) == _SSBOsetterMap.end()) {
+		Vengine::warning("Could not find ssbo setter named '" + name + "'");
+		return SSBOsetter();
+	}
+	return _SSBOsetterMap[name];
+}
+
+std::string VisualiserShaderManager::SSBOs::getSSBOsetterName(int bindingID)
+{
+	if (!SSBOisSet(bindingID)) {
+		Vengine::warning("SSBO binding " + std::to_string(bindingID) + " not set so cannot return setter name");
+		return "";
+	}
+	return _setSSBOinfoMap[bindingID].name;
 }
 
 bool VisualiserShaderManager::SSBOinitPossible()
@@ -136,22 +199,109 @@ bool VisualiserShaderManager::SSBOinitPossible()
 	return true;
 }
 
-int VisualiserShaderManager::getNextAvailiableBinding()
+
+//***
+
+
+//*** Uniform setter functions *** 
+
+void VisualiserShaderManager::Uniforms::addPossibleUniformSetter(std::string functionName, std::function<float()> function)
 {
-	//get smallest binding not being used
-	int smallestUnusedBinding = 0; //initialize the smallest missing positive integer to 0
-
-	for (int binding : _currentBindings) {
-		if (binding == smallestUnusedBinding) {
-			smallestUnusedBinding++; //increment smallestUnusedBinding if it's already in the set
-		}
-		else if (binding > smallestUnusedBinding) {
-			return smallestUnusedBinding; //return when gap found
-		}
+	if (_floatFunctions.find(functionName) != _floatFunctions.end()) {
+		Vengine::warning("Function with name '" + functionName + "' already in uniform updater list. Uniform updater list not changed.");
+		return;
 	}
-	//if all the elements in the set are consecutive, smallest is set to next integer after
 
-	return smallestUnusedBinding;
+	_floatFunctions[functionName].initialiseAsDynamic(functionName, function);
+}
+
+void VisualiserShaderManager::Uniforms::addPossibleUniformSetter(std::string functionName, std::function<int()> function)
+{
+	if (_intFunctions.find(functionName) != _intFunctions.end()) {
+		Vengine::warning("Function with name '" + functionName + "' already in uniform updater list. Uniform updater list not changed.");
+		return;
+	}
+
+	_intFunctions[functionName].initialiseAsDynamic(functionName, function);
+}
+
+void VisualiserShaderManager::Uniforms::addPossibleUniformSetter(std::string constantName, float constant)
+{
+	if (_floatFunctions.find(constantName) != _floatFunctions.end()) {
+		Vengine::warning("Function with name '" + constantName + "' already in uniform updater list. Uniform updater list not changed.");
+		return;
+	}
+
+	_floatFunctions[constantName].initialiseAsConstant(constantName, constant);
+
+}
+
+void VisualiserShaderManager::Uniforms::addPossibleUniformSetter(std::string constantName, int constant)
+{
+	if (_intFunctions.find(constantName) != _intFunctions.end()) {
+		Vengine::warning("Function with name '" + constantName + "' already in uniform updater list. Uniform updater list not changed.");
+		return;
+	}
+
+	_intFunctions[constantName].initialiseAsConstant(constantName, constant);
+
+}
+
+void VisualiserShaderManager::Uniforms::deletePossibleUniformSetter(std::string name)
+{
+	if (_floatFunctions.find(name) != _floatFunctions.end()) {
+		_floatFunctions.erase(name);
+		return;
+	}
+
+	if (_intFunctions.find(name) != _intFunctions.end()) {
+		_intFunctions.erase(name);
+		return;
+	}
+
+	Vengine::warning("Function '" + name + "' not in the uniform updater function map");
+	return;
+}
+
+void VisualiserShaderManager::Uniforms::getUniformSetterNames(std::vector<std::string>& names)
+{
+	getIntUniformSetterNames(names);
+	getFloatUniformSetterNames(names);
+}
+
+void VisualiserShaderManager::Uniforms::getFloatUniformSetterNames(std::vector<std::string>& names)
+{
+	for (auto& it : _floatFunctions) {
+		names.push_back(it.first);
+	}
+}
+
+void VisualiserShaderManager::Uniforms::getIntUniformSetterNames(std::vector<std::string>& names)
+{
+	for (auto& it : _intFunctions) {
+		names.push_back(it.first);
+	}
+}
+
+UniformSetter<float> VisualiserShaderManager::Uniforms::getFloatUniformSetter(std::string functionName)
+{
+	if (_floatFunctions.find(functionName) == _floatFunctions.end()) {
+		Vengine::warning("No setter function with name " + functionName);
+		return UniformSetter<float>();
+	}
+
+	return _floatFunctions[functionName];
+}
+
+UniformSetter<int> VisualiserShaderManager::Uniforms::getIntUniformSetter(std::string functionName)
+{
+	if (_intFunctions.find(functionName) == _intFunctions.end()) {
+		Vengine::warning("No setter function with name " + functionName);
+		return UniformSetter<int>();
+	}
+
+	return _intFunctions[functionName];
 }
 
 //***
+

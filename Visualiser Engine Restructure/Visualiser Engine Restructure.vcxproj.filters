@@ -209,5 +209,8 @@
     <ClInclude Include="UniformSetter.h">
       <Filter>Header Files\Data Structures</Filter>
     </ClInclude>
+    <ClInclude Include="SSBOsetter.h">
+      <Filter>Header Files\Data Structures</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

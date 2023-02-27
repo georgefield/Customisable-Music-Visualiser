@@ -178,6 +178,7 @@
     <ClInclude Include="SignalProcessing.h" />
     <ClInclude Include="SelfSimilarityMatrix.h" />
     <ClInclude Include="SpriteManager.h" />
+    <ClInclude Include="SSBOsetter.h" />
     <ClInclude Include="TempoDetection.h" />
     <ClInclude Include="Threshold.h" />
     <ClInclude Include="Tools.h" />

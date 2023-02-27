@@ -23,6 +23,8 @@ namespace Vengine {
 		void unuse();
 
 		//getters
+		bool isBeingUsed() const { return _isBeingUsed; }
+
 		std::vector<std::string>* getUniformNames() { return &(_uniformNames); }
 		GLuint getID() const { return _programID; }
 		GLenum getUniformType(std::string name);
@@ -39,6 +41,8 @@ namespace Vengine {
 
 		GLuint _programID;
 		GLuint _vertexShaderID, _fragShaderID;
+
+		bool _isBeingUsed;
 	};
 
 }

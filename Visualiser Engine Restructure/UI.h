@@ -37,17 +37,26 @@ private:
 	//ImGui variables--
 	int _toolbarSizePx, _sidebarSizePx;
 
+	//file menu vars
 	bool _new;
 	bool _save;
 	bool _saveAs;
 	bool _load;
 
+	//view menu vars
 	bool _fullscreen;
+
+	//ssbo menu vars
+	bool _showSSBOmanager;
+	bool _showFourierTransformUi;
+	bool _showNoteOnsetUi;
+	bool _showTempoDetectionUi;
 	//--
 
 	int _errorMessageTimerId;
 
 	//ui functions
+	void ssboManagerUi();
 	void fourierTransformsUi();
 	void noteOnsetUi();
 	void tempoDetectionUi();

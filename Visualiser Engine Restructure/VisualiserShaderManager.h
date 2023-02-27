@@ -8,51 +8,78 @@
 
 #include "VisualiserShader.h"
 
-struct SSBOinfo {
-	GLuint id;
-	float* data;
-	int dataLength;
-};
+#include "SSBOsetter.h"
 
 
 class VisualiserShaderManager
 {
 public:
 
+	//visualiser shader managing--
 	static void setCurrentVisualiser(std::string currentVisualiserPath) { _currentVisualiserPath = currentVisualiserPath; }
-	static void updateDynamicSSBOs();
-	static void updateShaderUniforms();
-
-	//ssbo managing--
-	static bool initStaticSSBO(int bindingId, float* staticData, int dataLength);
-	static bool initDynamicSSBO(int bindingId, std::function<float*()> updaterFunction, int dataLength);
-
-	static void eraseSSBO(int bindingId);
-	static void changeUpdaterFunctionForDynamicSSBO(int bindingId, std::function<float* ()> newUpdater);
-
-	static bool SSBOalreadyBound(int bindingId);
-	//--
 
 	static VisualiserShader* getShader(std::string fragPath);
 	static std::string getDefaultFragmentShaderPath();
+	//--
+
+	//ssbo managing--
+	struct SSBOs {
+		static void updateDynamicSSBOs();
+
+		static void addPossibleSSBOSetter(std::string functionName, std::function<float*()> function, int dataLength);
+		static void addPossibleSSBOSetter(std::string functionName, float* staticData, int dataLength);
+		static void deleteSSBOsetter(std::string functionName);
+
+		static bool setSSBO(int bindingId, std::string functionName);
+		static void unsetSSBO(int bindingId);
+		static bool SSBOisSet(int bindingId);
+
+		static void getAvailiableBindings(std::vector<int>& availiableBindings);
+		static void getSetBindings(std::vector<int>& setBindings);
+
+		static void getSSBOsetterNames(std::vector < std::string>& names);
+		static SSBOsetter getSSBOsetter(std::string name);
+		static std::string getSSBOsetterName(int bindingID);
+	};
+	//--
+
+	//uniform setter function managing--
+	struct Uniforms {
+		static void addPossibleUniformSetter(std::string functionName, std::function<float()> function);
+		static void addPossibleUniformSetter(std::string functionName, std::function<int()> function); //overload for int dynamic functions
+		static void addPossibleUniformSetter(std::string constantName, float constant); //<
+		static void addPossibleUniformSetter(std::string constantName, int constant); //  < overloads for constant value initialisation 
+
+		static void deletePossibleUniformSetter(std::string functionName);
+		static void getUniformSetterNames(std::vector<std::string>& names);
+		static void getFloatUniformSetterNames(std::vector<std::string>& names);
+		static void getIntUniformSetterNames(std::vector<std::string>& names);
+
+		static UniformSetter<float> getFloatUniformSetter(std::string functionName);
+		static UniformSetter<int> getIntUniformSetter(std::string functionName);
+	};
+	//--
 private:
 
 	static std::string _currentVisualiserPath;
 	
+	//contains all loaded visualiser shaders
 	//key accessing shader is the fragPath
 	static std::unordered_map<std::string, VisualiserShader> _shaderCache;
 
 	//ssbo managing--
 	//key for accessing ssbo is ssbo binding
-	static std::unordered_map<int, SSBOinfo> _SSBOinfoMap;
-	static std::unordered_map<int, std::function<float*()>> _updaterFunctionMap;
-
-	static std::set<int> _currentBindings;
+	static std::unordered_map<int, SSBOsetter> _setSSBOinfoMap;
+	static std::unordered_map<std::string, SSBOsetter> _SSBOsetterMap;
 
 	static bool SSBOinitPossible(); //error checker
-	static int getNextAvailiableBinding(); //lowest unused ssbo binding
 	//--
 
-
+	//uniform setter function managing--
+	//possible functions to be linked to uniforms
+	//key is function name
+	static std::unordered_map<std::string, UniformSetter<float>> _floatFunctions;
+	static std::unordered_map<std::string, UniformSetter<int>> _intFunctions;
+	//--
 };
 

@@ -7,7 +7,7 @@
 
 using namespace Vengine;
 
-GLSLProgram::GLSLProgram() : _programID(0), _vertexShaderID(0), _fragShaderID(0), _numAttribs(0)
+GLSLProgram::GLSLProgram() : _programID(0), _vertexShaderID(0), _fragShaderID(0), _numAttribs(0), _isBeingUsed(false)
 {
 }
 
@@ -137,13 +137,17 @@ void GLSLProgram::use() {
 	for (int i = 0; i < _numAttribs; i++) {
 		glEnableVertexAttribArray(i);
 	}
+	_isBeingUsed = true;
 }
 void GLSLProgram::unuse() {
+
 	glUseProgram(0);
 	for (int i = 0; i < _numAttribs; i++) {
 		glDisableVertexAttribArray(i);
 	}
+	_isBeingUsed = false;
 }
+
 
 GLenum Vengine::GLSLProgram::getUniformType(std::string name)
 {

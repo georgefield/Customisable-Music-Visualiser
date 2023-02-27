@@ -28,6 +28,7 @@ void FourierTransform::applyFunctions(FunctionType* args, int numArgs)
 	}
 }
 
+
 void FourierTransform::applyFreqConvolving(float* in, float* out)
 {
 	if (_windowSize == 1) {
@@ -43,8 +44,6 @@ void FourierTransform::applyFreqConvolving(float* in, float* out)
 		}
 	}
 }
-
-
 
 void FourierTransform::applySmoothing(float* in, float* out) {
 	if (_m->_previousSample == -1) {
@@ -75,7 +74,6 @@ void FourierTransform::applySmoothing(float* in, float* out) {
 	//set out
 	memcpy(out, _smoothedFt, sizeof(float) * _numHarmonics);
 }
-
 
 void FourierTransform::applyTimeConvolving(FourierTransformHistory* in, float* out) {
 

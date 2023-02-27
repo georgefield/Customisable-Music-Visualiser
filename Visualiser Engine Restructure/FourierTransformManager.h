@@ -19,20 +19,17 @@ public:
 
 	static FourierTransform* getFourierTransform(int id);
 
-	static bool bindOutputToSSBO(int id, int bindingId);
-
-	static std::string SSBObindingStatus(int id);
-
 	static int numTransforms() { return _fourierTransforms.size(); }
 	static std::vector<int> idArr();
 
 private:
 	//called on create
 	static void addUniformSetterFunctionOptionsToList(int id);
+	static void addSSBOsetterFunctionOptionsToList(int id);
 	//called on erase
-	static void deleteUniformSetterFunctionOptionsToList(int id);
+	static void deleteUniformSetterFunctionOptionsFromList(int id);
+	static void deleteSSBOsetterFunctionOptionsFromList(int id);
 
-	static std::unordered_map<int, int> _SSBObindings;
 	static std::unordered_map<int, FourierTransform*> _fourierTransforms;
 	static Master* _master;
 };

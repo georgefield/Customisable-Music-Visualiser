@@ -246,7 +246,7 @@ void MainGame::drawVis() {
 
 	Vengine::ResourceManager::getShaderProgram("Shaders/Preset/eq.vert", "Shaders/Preset/eq.frag")->unuse();
 	*/
-	VisualiserShaderManager::updateDynamicSSBOs();
+	VisualiserShaderManager::SSBOs::updateDynamicSSBOs();
 	
 }
 

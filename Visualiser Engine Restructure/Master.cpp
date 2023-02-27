@@ -4,6 +4,9 @@
 
 #include "MyFuncs.h"
 
+#include "VisualiserShaderManager.h"
+#include <functional>
+
 Master::Master() :
 	_audioData(nullptr),
 
@@ -20,6 +23,11 @@ void Master::init(float* audioData, int sampleRate)
 
 	_audioData = audioData;
 	_sampleRate = sampleRate;
+
+	//add possible uniform setters
+	std::function<int()> memberFuncToPass = std::bind(&Master::SETTER_FUNCcurrentSample, this);
+	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Current Sample", memberFuncToPass);
+	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Sample Rate", _sampleRate);
 }
 
 void Master::beginCalculations(int currentSample) {
@@ -67,4 +75,9 @@ float Master::sumOfConvolutionOfHistory(History<float>* history, int entries, Ke
 		conv += history->get(i) * Kernels::apply(kernel, i, entries); //integral of the multiplication = dot product   (in discrete space)
 	}
 	return conv;
+}
+
+int Master::SETTER_FUNCcurrentSample()
+{
+	return _currentSample;
 }

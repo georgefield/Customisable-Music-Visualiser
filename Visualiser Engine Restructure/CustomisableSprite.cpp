@@ -255,122 +255,76 @@ void CustomisableSprite::uniformSetterUi()
 {
 	//*** CURRENT PAIRING INFO ***
 
-	std::vector<std::string> intSetUniformNames;
-	_visualiserShader->getSetIntUniformNames(intSetUniformNames);
+	std::vector<std::string> setUniformNames;
+	_visualiserShader->getSetUniformNames(setUniformNames);
 
-	std::vector<std::string> floatSetUniformNames;
-	_visualiserShader->getSetFloatUniformNames(floatSetUniformNames);
-
-	//display integer pairings
-	for (int i = 0; i < intSetUniformNames.size(); i++) {
-		std::string info = _visualiserShader->getIntUniformSetterStruct(intSetUniformNames[i])->setterName + " -> " + intSetUniformNames[i];
+	//display pairings
+	for (auto& it : setUniformNames) {
+		std::string info = _visualiserShader->getUniformSetterName(it) + " -> " + it;
 		ImGui::Text(info.c_str()); ImGui::SameLine();
 		if (ImGui::Button("Erase")) {
-			_visualiserShader->unsetSetterUniformPair(intSetUniformNames[i]);
-		}
-	}
-	//display float pairings
-	for (int i = 0; i < floatSetUniformNames.size(); i++) {
-		std::string info = _visualiserShader->getFloatUniformSetterStruct(floatSetUniformNames[i])->setterName + " -> " + floatSetUniformNames[i];
-		ImGui::Text(info.c_str()); ImGui::SameLine();
-		if (ImGui::Button("Erase")) {
-			_visualiserShader->unsetSetterUniformPair(floatSetUniformNames[i]);
+			_visualiserShader->eraseSetterUniformPair(it);
 		}
 	}
 
 	ImGui::Separator();
-
 	
 	//*** UI FOR CREATING NEW PAIRING ***
 
-	//	*** INTS ***
-
 	//show possible new pairing information
-	std::vector<std::string> intUnsetUniformNames; //any unset uniform
-	_visualiserShader->getUnsetIntUniformNames(intUnsetUniformNames);
+	std::vector<std::string> unsetUniformNames; //any unset uniform
+	_visualiserShader->getUnsetUniformNames(unsetUniformNames);
 
-	//(updater functions stored in visualiser manager) (MAYBE MOVE TO VISUALISER SHADER MANAGER WOULD MAKE MORE SENSE)
-	std::vector<std::string> intPossibleUniformSetterFunctionNames; //can be paired with any function
-	VisualiserManager::getIntUpdaterFunctionNames(intPossibleUniformSetterFunctionNames);
-
-	if (intSetUniformNames.size() + intUnsetUniformNames.size() > 0) {
+	if (unsetUniformNames.size() + setUniformNames.size() > 0) {
 
 		//choose from uniforms to set--
-		std::string uniformComboStr = UI::ImGuiComboStringMaker(intUnsetUniformNames);
+		std::string uniformComboStr = UI::ImGuiComboStringMaker(unsetUniformNames);
 
 		const char* uniformItems = uniformComboStr.c_str();
 		static int currentUniform = 0;
 		ImGui::PushID(0);
-		ImGui::Combo("Int setters", &currentUniform, uniformItems, intUnsetUniformNames.size());
+		ImGui::Combo("Uniforms", &currentUniform, uniformItems, unsetUniformNames.size());
 		ImGui::PopID();
 		//--
 
 		ImGui::Text("To be set to:");
 
-		//choose from uniforms setters for uniform--
-		std::string uniformSetterComboStr = UI::ImGuiComboStringMaker(intPossibleUniformSetterFunctionNames);
+		//choose from valid possible uniform setters--
+		std::vector<std::string> possibleUniformSetterFunctionNames; //can be paired with any function
+
+		if (unsetUniformNames.size() != 0 && _visualiserShader->getUniformType(unsetUniformNames.at(currentUniform)) == GL_INT) {
+			VisualiserShaderManager::Uniforms::getIntUniformSetterNames(possibleUniformSetterFunctionNames);
+		}
+		else if (unsetUniformNames.size() != 0 && _visualiserShader->getUniformType(unsetUniformNames.at(currentUniform)) == GL_FLOAT) {
+			VisualiserShaderManager::Uniforms::getFloatUniformSetterNames(possibleUniformSetterFunctionNames);
+		}
+				
+		std::string uniformSetterComboStr = UI::ImGuiComboStringMaker(possibleUniformSetterFunctionNames);
 
 		const char* uniformSetterItems = uniformSetterComboStr.c_str();
 		static int currentUniformSetter = 0;
 		ImGui::PushID(1);
-		ImGui::Combo("Int setters", &currentUniformSetter, uniformSetterItems, intPossibleUniformSetterFunctionNames.size());
+		ImGui::Combo("Setters", &currentUniformSetter, uniformSetterItems, possibleUniformSetterFunctionNames.size());
 		ImGui::PopID();
 		//--
 
 		//button to confirm
-		if (ImGui::Button("Confirm") && intPossibleUniformSetterFunctionNames.size() > 0 && intUnsetUniformNames.size() > 0) {
-			_visualiserShader->initSetterUniformPair(intUnsetUniformNames.at(currentUniform), VisualiserManager::getIntSetterFunction(intPossibleUniformSetterFunctionNames.at(currentUniformSetter)));
+		if (ImGui::Button("Confirm")) {
+			if (possibleUniformSetterFunctionNames.size() == 0 || unsetUniformNames.size() == 0) {
+				//do nothing
+			}
+			else if (_visualiserShader->getUniformType(unsetUniformNames.at(currentUniform)) == GL_INT) {
+				_visualiserShader->initSetterUniformPair(unsetUniformNames.at(currentUniform), VisualiserShaderManager::Uniforms::getIntUniformSetter(possibleUniformSetterFunctionNames.at(currentUniformSetter)));
+			}
+			else if (_visualiserShader->getUniformType(unsetUniformNames.at(currentUniform)) == GL_FLOAT) {
+				_visualiserShader->initSetterUniformPair(unsetUniformNames.at(currentUniform), VisualiserShaderManager::Uniforms::getFloatUniformSetter(possibleUniformSetterFunctionNames.at(currentUniformSetter)));
+			}
 		}
 	}
 	else {
-		ImGui::Text("No integer uniforms in shader");
+		ImGui::Text("No uniforms in shader");
 	}
 
-
-	//	*** FLOATS ***
-
-	//show possible new pairing information
-	std::vector<std::string> floatUnsetUniformNames; //any unset uniform
-	_visualiserShader->getUnsetFloatUniformNames(floatUnsetUniformNames);
-
-	//(updater functions stored in visualiser manager) (MAYBE MOVE TO VISUALISER SHADER MANAGER WOULD MAKE MORE SENSE)
-	std::vector<std::string> floatPossibleUniformSetterFunctionNames; //can be paired with any function
-	VisualiserManager::getFloatUpdaterFunctionNames(floatPossibleUniformSetterFunctionNames);
-
-	if (floatSetUniformNames.size() + floatUnsetUniformNames.size() > 0) {
-
-		//choose from uniforms to set--
-		std::string uniformComboStr = UI::ImGuiComboStringMaker(floatUnsetUniformNames);
-
-		const char* uniformItems = uniformComboStr.c_str();
-		static int currentUniform = 0;
-		ImGui::PushID(2);
-		ImGui::Combo("Int setters", &currentUniform, uniformItems, floatUnsetUniformNames.size());
-		ImGui::PopID();
-		//--
-
-		ImGui::Text("To be set to:");
-
-		//choose from uniforms setters for uniform--
-		std::string uniformSetterComboStr = UI::ImGuiComboStringMaker(floatPossibleUniformSetterFunctionNames);
-
-		const char* uniformSetterItems = uniformSetterComboStr.c_str();
-		static int currentUniformSetter = 0;
-		ImGui::PushID(3);
-		ImGui::Combo("Int setters", &currentUniformSetter, uniformSetterItems, floatPossibleUniformSetterFunctionNames.size());
-		ImGui::PopID();
-		//--
-
-		//button to confirm
-		if (ImGui::Button("Confirm") && floatPossibleUniformSetterFunctionNames.size() > 0 && floatUnsetUniformNames.size() > 0) {
-			_visualiserShader->initSetterUniformPair(floatUnsetUniformNames.at(currentUniform), VisualiserManager::getIntSetterFunction(floatPossibleUniformSetterFunctionNames.at(currentUniformSetter)));
-		}
-	}
-	else {
-		ImGui::Text("No float uniforms in shader");
-	}
-
-	//THEN FIX SPRITE BATCHING
 	//THEN ADD ALL UNIFORM SETTER FUNCTIONS AS OPTIONS WHERE APPLICABLE (NOTE ONSET etc)
 	//THEN THINK OF HOW TO LAY OUT CONFIG
 	//THEN THINK OF HOW TO SAVE/LOAD CONFIG

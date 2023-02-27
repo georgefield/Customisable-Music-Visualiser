@@ -1,6 +1,7 @@
 #include "UI.h"
 #include <Vengine/MyImgui.h>
 #include "VisualiserManager.h"
+#include "VisualiserShaderManager.h"
 #include "FourierTransformManager.h"
 #include "Tools.h"
 #include <algorithm>
@@ -9,7 +10,7 @@
 
 std::vector<std::string> UI::_errorQueue;
 
-UI::UI():
+UI::UI() :
 	_errorMessageTimerId(-1)
 {}
 
@@ -34,7 +35,7 @@ void UI::errorMessages() {
 	if (_errorMessageTimerId == -1) {
 		Vengine::MyTiming::startTimer(_errorMessageTimerId);
 	}
-	else if (Vengine::MyTiming::readTimer(_errorMessageTimerId) > ERROR_MESSAGE_DISPLAY_TIME){
+	else if (Vengine::MyTiming::readTimer(_errorMessageTimerId) > ERROR_MESSAGE_DISPLAY_TIME) {
 		Vengine::MyTiming::stopTimer(_errorMessageTimerId);
 		_errorMessageTimerId = -1;
 		_errorQueue.erase(_errorQueue.begin());
@@ -55,10 +56,6 @@ void UI::errorMessages() {
 	ImGui::End();
 }
 
-
-static bool SHOW_TEMPO_DETECTION_WINDOW = false;
-static bool SHOW_NOTE_ONSET_WINDOW = false;
-static bool SHOW_FOURIER_TRANSFORMS_WINDOW = false;
 
 void UI::toolbar() {
 
@@ -97,9 +94,20 @@ void UI::toolbar() {
 			_showUi = false;
 		}
 
-		ImGui::MenuItem("Fullscreen", NULL, &_fullscreen);
+		ImGui::MenuItem("Fullscreen", NULL, &_fullscreen); //todo
 		ImGui::EndMenu();
 	}
+
+
+	if (ImGui::BeginMenu("SSBO manager")) {
+		ImGui::MenuItem("Show SSBO manager", NULL, &_showSSBOmanager);
+		ImGui::EndMenu();
+	}
+
+	if (_showSSBOmanager) {
+		ssboManagerUi();
+	}
+
 
 	ImGui::EndMenuBar();
 
@@ -118,17 +126,17 @@ void UI::toolbar() {
 
 	//signal processing check boxes
 	ImGui::SameLine();
-	ImGui::Checkbox("Fourier Transforms", &SHOW_FOURIER_TRANSFORMS_WINDOW);
+	ImGui::Checkbox("Fourier Transforms", &_showFourierTransformUi);
 
 	ImGui::SameLine();
-	ImGui::Checkbox("Note Onset", &SHOW_NOTE_ONSET_WINDOW);
+	ImGui::Checkbox("Note Onset", &_showNoteOnsetUi);
 
 	ImGui::SameLine();
-	ImGui::Checkbox("Tempo Detection", &SHOW_TEMPO_DETECTION_WINDOW);
+	ImGui::Checkbox("Tempo Detection", &_showTempoDetectionUi);
 
 	ImGui::End();
 
-	if (SHOW_FOURIER_TRANSFORMS_WINDOW) {
+	if (_showFourierTransformUi) {
 		fourierTransformsUi();
 	}
 }
@@ -180,7 +188,7 @@ void UI::sidebar() {
 			spritesByDepthOrder[i]->setSpriteState(DELETE_SELF);
 		}
 
-		ImGui::PopID(); 
+		ImGui::PopID();
 	}
 
 	ImGui::Separator();
@@ -222,12 +230,78 @@ Vengine::Viewport UI::getViewport()
 	return tmp;
 }
 
-const int MAX_FOURIER_TRANSFORMS = 4;
-const int FOURIER_TRANSFORM_FIRST_SSBO_BINDING = 1;
+void UI::ssboManagerUi()
+{
+	//*** SHOW CURRENT BINDINGS ***
+
+	ImGui::Begin("SSBO manager", &_showSSBOmanager, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::Text("Set SSBOs:");
+	std::vector<int> setBindings;
+	VisualiserShaderManager::SSBOs::getSetBindings(setBindings);
+
+	for (auto& it : setBindings) {
+		std::string infoStr = VisualiserShaderManager::SSBOs::getSSBOsetterName(it) + " -> SSBO binding " + std::to_string(it);
+		ImGui::Text(infoStr.c_str());
+		ImGui::SameLine();
+		if (ImGui::Button("Unbind")) {
+			VisualiserShaderManager::SSBOs::unsetSSBO(it);
+		}
+	}
+
+	//*** UI FOR CREATING NEW BINDING ***
+
+	//show possible new pairing information
+	//choose from setters--
+	std::vector<std::string> possibleSSBOsetterNames;
+	VisualiserShaderManager::SSBOs::getSSBOsetterNames(possibleSSBOsetterNames);
+
+	std::string settersComboStr = UI::ImGuiComboStringMaker(possibleSSBOsetterNames);
+
+	const char* setterItems = settersComboStr.c_str();
+	static int currentSetter = 0;
+	ImGui::PushID(0);
+	ImGui::Combo("Setters", &currentSetter, setterItems, possibleSSBOsetterNames.size());
+	ImGui::PopID();
+	//--
+
+	ImGui::Text("Set to binding: ");
+
+	//choose from availiable bindings--
+	std::vector<int> availiableBindings;
+	VisualiserShaderManager::SSBOs::getAvailiableBindings(availiableBindings);
+
+	std::vector<std::string> strAvailiableBindings;
+	for (auto& it : availiableBindings) {
+		strAvailiableBindings.push_back(std::to_string(it));
+	}
+
+	std::string bindingsComboStr = UI::ImGuiComboStringMaker(strAvailiableBindings);
+
+	const char* bindingItems = bindingsComboStr.c_str();
+	static int currentBindingItemIndex = 0;
+	ImGui::PushID(1);
+	ImGui::Combo("Bindings", &currentBindingItemIndex, bindingItems, strAvailiableBindings.size());
+	ImGui::PopID();
+	//--
+
+	//button to confirm
+	if (ImGui::Button("Confirm")) {
+		if (possibleSSBOsetterNames.size() == 0 || availiableBindings.size() == 0) {
+			//do nothing
+		}
+		else {
+			VisualiserShaderManager::SSBOs::setSSBO(availiableBindings[currentBindingItemIndex], possibleSSBOsetterNames.at(currentSetter));
+			VisualiserShaderManager::SSBOs::getSSBOsetterName(currentBindingItemIndex);
+		}
+	}
+
+	ImGui::End();
+}
+
 void UI::fourierTransformsUi()
 {
 	ImGui::ShowDemoWindow();
-	ImGui::Begin("Fourier Tranforms", &SHOW_FOURIER_TRANSFORMS_WINDOW, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::Begin("Fourier Tranforms", &_showFourierTransformUi, ImGuiWindowFlags_AlwaysAutoResize);
 
 	//get id array
 	std::vector<int> fourierTransformIds = FourierTransformManager::idArr();
@@ -241,39 +315,29 @@ void UI::fourierTransformsUi()
 		if (FourierTransformManager::fourierTransformExists(id)) {
 			ImGui::PushID(i);
 
-			//name of ft
+			//name of ft--
 			ImGui::Text(("Fourier transform " + std::to_string(id)).c_str());
-
-			//plot low res graph of ft
+			//--
+			
+			//plot low res graph of ft--
 			ImGui::PlotLines("##", FourierTransformManager::getFourierTransform(id)->getLowResOutput(), FourierTransformManager::getFourierTransform(id)->getLowResOutputSize());
-
-			//show cutoff information
+			//--
+			
+			//show cutoff information--
 			float cutoffLow = FourierTransformManager::getFourierTransform(id)->getCutoffLow();
 			ImGui::Text(("Cutoff low: " + std::to_string(cutoffLow)).c_str());
 			ImGui::SameLine();
 			float cutoffHigh = FourierTransformManager::getFourierTransform(id)->getCutoffHigh();
 			ImGui::Text(("Cutoff high: " + std::to_string(cutoffHigh)).c_str());
+			float cutoffSmooth = FourierTransformManager::getFourierTransform(id)->getCutoffSmoothFraction();
+			ImGui::Text(("Cutoff smooth fraction: " + std::to_string(cutoffSmooth)).c_str());
+			//--
 
-			//attaching to ssbo ui
-			if (ImGui::Button("Attach to SSBO")) {
-				ImGui::OpenPopup("binding menu");
-			}
-			if (ImGui::BeginPopup("binding menu")) {
-				for (int j = FOURIER_TRANSFORM_FIRST_SSBO_BINDING; j < FOURIER_TRANSFORM_FIRST_SSBO_BINDING + MAX_FOURIER_TRANSFORMS; j++) {
-					ImGui::PushID(j);
-					
-					if (ImGui::Selectable(std::to_string(j).c_str())) {
-						if (!FourierTransformManager::bindOutputToSSBO(id, j)) {
-							_errorQueue.push_back("Could not bind to SSBO " + std::to_string(j));
-						}
-					}
+			ImGui::Separator();
 
-					ImGui::PopID();
-				}
-				ImGui::EndPopup();
-			}
-			ImGui::SameLine();
-			ImGui::Text((FourierTransformManager::SSBObindingStatus(id)).c_str());
+			//more options for ft--
+
+			//--
 
 			//remove ft
 			if (ImGui::Button("Erase")) {
@@ -291,20 +355,19 @@ void UI::fourierTransformsUi()
 	//imgui vars
 	static float nextCutoffLow = 0.0f;
 	static float nextCutoffHigh = _signalProcPtr->getMaster()->_sampleRate / 2.0f;
+	static float nextCutoffSmoothFactor = 0.0f;
+	ImGui::Text("Ctrl+Click to edit manually");
+	ImGui::SliderFloat("Cutoff Hz low", &nextCutoffLow, 0.0f, _signalProcPtr->getMaster()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+	ImGui::SliderFloat("Cutoff Hz high", &nextCutoffHigh, 0.0f, _signalProcPtr->getMaster()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+	ImGui::SliderFloat("Cutoff smooth fraction", &nextCutoffSmoothFactor, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 
-	if (FourierTransformManager::numTransforms() < MAX_FOURIER_TRANSFORMS){
-		ImGui::Text("Ctrl+Click to edit manually");
-		ImGui::SliderFloat("Cutoff Hz low", &nextCutoffLow, 0.0f, _signalProcPtr->getMaster()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
-		ImGui::SliderFloat("Cutoff Hz high", &nextCutoffHigh, 0.0f, _signalProcPtr->getMaster()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
-
-		if (ImGui::Button("Create new")) {
-			if (nextCutoffHigh < nextCutoffLow) {
-				_errorQueue.push_back("Cutoff low cannot be above cutoff high");
-			}
-			else {
-				int id;
-				FourierTransformManager::createFourierTransform(id, 1, nextCutoffLow, nextCutoffHigh);
-			}
+	if (ImGui::Button("Create new")) {
+		if (nextCutoffHigh < nextCutoffLow) {
+			_errorQueue.push_back("Cutoff low cannot be above cutoff high");
+		}
+		else {
+			int id;
+			FourierTransformManager::createFourierTransform(id, 1, nextCutoffLow, nextCutoffHigh, nextCutoffSmoothFactor);
 		}
 	}
 
@@ -358,7 +421,7 @@ void UI::processFileMenuSelection()
 
 		std::string visualiserPath = "";
 		if (PFDapi::folderChooser("Chooser folder containing the .cfg of the visualiser to load",
-			Vengine::IOManager::getProjectDirectory() + "/Visualisers", visualiserPath, false)) 
+			Vengine::IOManager::getProjectDirectory() + "/Visualisers", visualiserPath, false))
 		{
 			//will always work as cannot go outside of start path
 			visualiserPath = visualiserPath.substr(Vengine::IOManager::getProjectDirectory().size() + 1); //+1 to remove '/' at start
@@ -378,7 +441,7 @@ bool UI::textInputPrompt(const std::string& message, char* buf, int bufSize, boo
 	bool confirmedName = false;
 
 	//create window
-	ImGui::SetNextWindowPos(ImVec2(100,_toolbarSizePx + 30));
+	ImGui::SetNextWindowPos(ImVec2(100, _toolbarSizePx + 30));
 
 	ImGui::Begin(message.c_str(), &promptNotForceClosed,
 		ImGuiWindowFlags_NoMove |
