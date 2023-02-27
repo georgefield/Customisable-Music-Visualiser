@@ -1,11 +1,8 @@
-#include "MainGame.h"
+#include "MainProgram.h"
 
 #include <iostream>
 #include <string>
 #include <Windows.h>
-
-#include "MyFuncs.h"
-#include "UniformSetting.h"
 
 #include "FourierTransformManager.h"
 #include "VisualiserShaderManager.h"

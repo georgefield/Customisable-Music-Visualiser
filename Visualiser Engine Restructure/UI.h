@@ -1,11 +1,10 @@
 #pragma once
 #include <Vengine/Vengine.h>
-#include "SpriteManager.h"
 #include <glm/glm.hpp>
 #include <unordered_map>
 
-#include "SignalProcessing.h"
-
+#include "SpriteManager.h"
+#include "SignalProcessingManager.h"
 
 class UI
 {

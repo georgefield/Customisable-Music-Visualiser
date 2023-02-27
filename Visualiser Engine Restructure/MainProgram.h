@@ -6,7 +6,7 @@
 #include <Vengine/MyImgui.h>
 
 #include "SpriteManager.h"
-#include "SignalProcessing.h"
+#include "SignalProcessingManager.h"
 #include "UI.h"
 
 enum class GameState {

@@ -1,4 +1,4 @@
-#include "FFTW.h"
+#include "FFTWapi.h"
 #include <Vengine/MyErrors.h>
 
 //*** FFTWfft ***
