@@ -1,16 +1,11 @@
 #include "FourierTransformManager.h"
 #include "VisualiserShaderManager.h"
 #include "VisualiserManager.h"
+#include "SignalProcessingManager.h"
 
 #include <functional>
 
 std::unordered_map<int, FourierTransform*> FourierTransformManager::_fourierTransforms;
-Master* FourierTransformManager::_master = nullptr;
-
-void FourierTransformManager::setMaster(Master* master)
-{
-	_master = master;
-}
 
 
 void FourierTransformManager::createFourierTransform(int& id, int historySize, float cutOffLow, float cutOffHigh, float cutoffSmoothFrac)
@@ -22,7 +17,7 @@ void FourierTransformManager::createFourierTransform(int& id, int historySize, f
 	}
 
 	_fourierTransforms[id] = new FourierTransform(historySize, cutOffLow, cutOffHigh, cutoffSmoothFrac);
-	_fourierTransforms[id]->init(_master);
+	_fourierTransforms[id]->init(SignalProcessing::getMasterPtr());
 
 	addUniformSetterFunctionOptionsToList(id);
 	addSSBOsetterFunctionOptionsToList(id);
@@ -46,6 +41,21 @@ void FourierTransformManager::eraseFourierTransform(int id)
 
 	deleteUniformSetterFunctionOptionsFromList(id);
 	deleteSSBOsetterFunctionOptionsFromList(id);
+}
+
+void FourierTransformManager::calculateFourierTransforms()
+{
+	//calculate the fourier transforms in fourier transform manager
+	for (auto& it : _fourierTransforms){
+		if (it.second->getMasterPtr() != SignalProcessing::getMasterPtr()) {
+			Vengine::warning("Master pointer change, switch in song assumed, reiniting fourier transform");
+			it.second->reInit(SignalProcessing::getMasterPtr());
+		}
+		it.second->beginCalculation();
+		//test->applyFunction(FourierTransform::SMOOTH);
+		//test->applyFunction(FourierTransform::FREQUENCY_CONVOLVE);
+		it.second->endCalculation();
+	}
 }
 
 FourierTransform* FourierTransformManager::getFourierTransform(int id)

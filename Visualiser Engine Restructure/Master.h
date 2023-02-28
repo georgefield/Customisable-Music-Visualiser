@@ -36,9 +36,6 @@ struct Master {
 	//helper functions
 	float sumOfConvolutionOfHistory(History<float>* history, int entries = 0, Kernel kernel = LINEAR_PYRAMID);
 
-	//setter functions
-	int SETTER_FUNCcurrentSample();
-
 private:
 	int _sampleFftLastCalculated;
 	FFTWfft _fftwAPI;

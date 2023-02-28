@@ -108,6 +108,9 @@
     <ClCompile Include="PFDapi.cpp">
       <Filter>Source Files\APIs for dependencies</Filter>
     </ClCompile>
+    <ClCompile Include="AudioManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainProgram.h">
@@ -205,6 +208,9 @@
     </ClInclude>
     <ClInclude Include="FourierTransformManager.h">
       <Filter>Header Files\Signal Processing Managers</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioManager.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

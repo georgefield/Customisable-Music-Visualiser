@@ -59,6 +59,10 @@ public:
 		PeakPickingAlg peakAlg = PeakPickingAlg::CONVOLVE_THEN_THRESHOLD
 	);
 
+	float getOnset() {
+		return _onsetDetectionHistory.newest();
+	}
+
 	History<float>* getOnsetHistory() {
 		return &_onsetDetectionHistory;
 	}

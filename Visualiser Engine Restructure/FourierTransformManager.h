@@ -17,6 +17,8 @@ public:
 
 	static void eraseFourierTransform(int id);
 
+	static void calculateFourierTransforms();
+
 	static FourierTransform* getFourierTransform(int id);
 
 	static int numTransforms() { return _fourierTransforms.size(); }
@@ -31,5 +33,4 @@ private:
 	static void deleteSSBOsetterFunctionOptionsFromList(int id);
 
 	static std::unordered_map<int, FourierTransform*> _fourierTransforms;
-	static Master* _master;
 };

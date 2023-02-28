@@ -33,9 +33,9 @@ public:
 
 		float sum = 0;
 		for (int i = _m->_currentSample; i < _m->_currentSample + convolveWindowSize; i++) {
-			sum += fabsf(_m->_audioData[i]) * Kernels::apply(kernel, i - _m->_currentSample, convolveWindowSize);
+			sum += _m->_audioData[i] * _m->_audioData[i] * Kernels::apply(kernel, i - _m->_currentSample, convolveWindowSize);
 		}
-		_energy.add(sum / convolveWindowSize);
+		_energy.add(sum);
 	}
 
 private:

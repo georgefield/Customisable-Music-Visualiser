@@ -10,7 +10,7 @@ class UI
 {
 public:
 	UI();
-	void init(Vengine::Window* window, Vengine::InputManager* inputManager, SignalProcessing* signalProcessor);
+	void init(Vengine::Window* window, Vengine::InputManager* inputManager);
 
 	void toolbar();
 	void sidebar();
@@ -30,7 +30,6 @@ private:
 
 	Vengine::Window* _window;
 	Vengine::InputManager* _inputManager;
-	SignalProcessing* _signalProcPtr;
 
 	bool _showUi;
 	//ImGui variables--
@@ -50,6 +49,9 @@ private:
 	bool _showFourierTransformUi;
 	bool _showNoteOnsetUi;
 	bool _showTempoDetectionUi;
+	bool _showSimilarityMeasureUi;
+
+	//calculate
 	//--
 
 	int _errorMessageTimerId;

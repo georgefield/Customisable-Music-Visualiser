@@ -9,7 +9,7 @@ template <class T>
 class History
 {
 public:
-	History(int size) : _start(size - 1), _size(size), _addCalls(0) {
+	History(int size) : _start(size - 1), _size(size), _addCalls(0), _usingContiguousArray(false) {
 		_data = new T[_size];
 		memset(_data, NULL, _size * sizeof(T));
 
@@ -61,6 +61,17 @@ public:
 		return toReturn;
 	}
 
+	float* getAsContiguousArray() {
+		if (!_usingContiguousArray) { //only allocate memory for this on first time
+			_contiguousArray = new float[totalSize()];
+			_usingContiguousArray = true;
+		}
+
+		memcpy(_contiguousArray, firstPartPtr(), firstPartSize() * sizeof(float));
+		memcpy(&_contiguousArray[firstPartSize()], secondPartPtr(), secondPartSize() * sizeof(float));
+
+		return _contiguousArray;
+	}
 
 	T oldest() { return get(std::min(_addCalls - 1, _size - 1)); }
 	T newest() { return get(0); }
@@ -94,6 +105,9 @@ public:
 protected:
 	T* _data;
 	int* _assocSampleData;
+
+	bool _usingContiguousArray;
+	float* _contiguousArray;
 
 	int _start;
 	int _size;

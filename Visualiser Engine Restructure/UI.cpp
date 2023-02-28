@@ -15,12 +15,11 @@ UI::UI() :
 {}
 
 
-void UI::init(Vengine::Window* window, Vengine::InputManager* inputManager, SignalProcessing* signalProcessor) {
+void UI::init(Vengine::Window* window, Vengine::InputManager* inputManager) {
 	_showUi = true;
 
 	_window = window;
 	_inputManager = inputManager;
-	_signalProcPtr = signalProcessor;
 
 	_toolbarSizePx = 100;
 	_sidebarSizePx = 200;
@@ -126,19 +125,42 @@ void UI::toolbar() {
 
 	//signal processing check boxes
 	ImGui::SameLine();
-	ImGui::Checkbox("Fourier Transforms", &_showFourierTransformUi);
-
-	ImGui::SameLine();
-	ImGui::Checkbox("Note Onset", &_showNoteOnsetUi);
-
-	ImGui::SameLine();
-	ImGui::Checkbox("Tempo Detection", &_showTempoDetectionUi);
-
-	ImGui::End();
+	ImGui::Checkbox("Fourier Transforms UI", &_showFourierTransformUi);
 
 	if (_showFourierTransformUi) {
 		fourierTransformsUi();
 	}
+
+	ImGui::SameLine();
+	ImGui::Checkbox("Note Onset UI", &_showNoteOnsetUi);
+
+	ImGui::SameLine();
+	ImGui::Checkbox("Tempo Detection UI", &_showTempoDetectionUi);
+
+	if (_showTempoDetectionUi) {
+		//hacked in for now
+		ImGui::Begin("Tempo debug", (bool*)0, ImGuiWindowFlags_AlwaysAutoResize);
+		ImGui::Text("Predicted tempo: "); ImGui::SameLine();
+		ImGui::Text(std::to_string(SignalProcessing::_tempoDetection->getTempoHistory()->newest()).c_str());
+
+		ImGui::Text("Confidence: "); ImGui::SameLine();
+		ImGui::Text(std::to_string(SignalProcessing::_tempoDetection->getConfidenceInTempoHistory()->newest()).c_str());
+		ImGui::End();
+	}
+
+	ImGui::SameLine();
+	ImGui::Checkbox("Similarity Measure UI", &_showSimilarityMeasureUi);
+
+
+	//background colour picker
+	static float pickedClearColour[3] = { 0.1, 0.1, 0.1 };
+	ImGui::ColorEdit3("Background colour", pickedClearColour, ImGuiColorEditFlags_NoInputs);
+	if (ImGui::IsItemEdited()) {
+		glClearColor(pickedClearColour[0], pickedClearColour[1], pickedClearColour[2], 1.0f);
+	}
+
+
+	ImGui::End();
 }
 
 
@@ -355,11 +377,11 @@ void UI::fourierTransformsUi()
 
 	//imgui vars
 	static float nextCutoffLow = 0.0f;
-	static float nextCutoffHigh = _signalProcPtr->getMaster()->_sampleRate / 2.0f;
+	static float nextCutoffHigh = SignalProcessing::getMasterPtr()->_sampleRate / 2.0f;
 	static float nextCutoffSmoothFactor = 0.0f;
 	ImGui::Text("Ctrl+Click to edit manually");
-	ImGui::SliderFloat("Cutoff Hz low", &nextCutoffLow, 0.0f, _signalProcPtr->getMaster()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
-	ImGui::SliderFloat("Cutoff Hz high", &nextCutoffHigh, 0.0f, _signalProcPtr->getMaster()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+	ImGui::SliderFloat("Cutoff Hz low", &nextCutoffLow, 0.0f, SignalProcessing::getMasterPtr()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+	ImGui::SliderFloat("Cutoff Hz high", &nextCutoffHigh, 0.0f, SignalProcessing::getMasterPtr()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
 	ImGui::SliderFloat("Cutoff smooth fraction", &nextCutoffSmoothFactor, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 
 	if (ImGui::Button("Create new")) {

@@ -133,6 +133,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AudioManager.cpp" />
     <ClCompile Include="CustomisableSprite.cpp" />
     <ClCompile Include="FourierTransform.cpp" />
     <ClCompile Include="FFTWapi.cpp" />
@@ -154,6 +155,7 @@
     <ClCompile Include="VisualiserShaderManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AudioManager.h" />
     <ClInclude Include="ConfigManager.h" />
     <ClInclude Include="CustomisableSprite.h" />
     <ClInclude Include="DixonAlgorithmStructures.h" />

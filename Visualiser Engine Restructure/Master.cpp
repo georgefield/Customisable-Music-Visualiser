@@ -21,16 +21,13 @@ void Master::init(float* audioData, int sampleRate)
 
 	_audioData = audioData;
 	_sampleRate = sampleRate;
-
-	//add possible uniform setters
-	std::function<int()> currentSampleSetterFunc = std::bind(&Master::SETTER_FUNCcurrentSample, this);
-	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Current Sample", currentSampleSetterFunc);
-
-	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Sample Rate", _sampleRate);
 }
 
 void Master::beginCalculations(int currentSample) {
 
+	if (currentSample == _previousSample) {
+		Vengine::warning("No change in sample between begin calculation calls");
+	}
 	_currentSample = currentSample;
 }
 
@@ -76,9 +73,4 @@ float Master::sumOfConvolutionOfHistory(History<float>* history, int entries, Ke
 		conv += history->get(i) * Kernels::apply(kernel, i, entries); //integral of the multiplication = dot product   (in discrete space)
 	}
 	return conv;
-}
-
-int Master::SETTER_FUNCcurrentSample()
-{
-	return _currentSample;
 }

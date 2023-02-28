@@ -15,7 +15,6 @@ const int N = 4096; //number of frequencies in the fourier transform (= half the
 
 MainProgram::MainProgram() :
 	_gameState(ProgramState::RUNNING),
-	_audio(),
 	_UI(),
 	_viewport(screenWidth, screenHeight)
 {
@@ -40,20 +39,12 @@ void MainProgram::initSystems() {
 
 	VisualiserManager::init();
 
-	//load song & queue it
-	_audio.loadWav(musicFilepath);
-	_audio.queueLoadedWav();
-
-	//set up signal processing unit
-	_signalProc.init(_audio.getNormalisedWavData(), _audio.getSampleRate());
-	FourierTransformManager::setMaster(_signalProc.getMaster());
-
 	_frameBufferIDs = new GLuint[_numFrameBuffers];
 	_frameBufferTextureIDs = new GLuint[_numFrameBuffers];
 	//create 2 draw buffers
 	Vengine::DrawFunctions::createDrawBuffers(_frameBufferIDs, _frameBufferTextureIDs, _window.getScreenWidth(), _window.getScreenHeight(), _numFrameBuffers);
 
-	_UI.init(&_window, &_inputManager, &_signalProc);
+	_UI.init(&_window, &_inputManager);
 
 	//time since load start
 	Vengine::MyTiming::startTimer(_timeSinceLoadTimerId);
@@ -65,7 +56,7 @@ void MainProgram::initSystems() {
 	//enable alpha belnding
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //blend entirely based on alpha
-	glClearColor(0.0, 0.0, 0.0, 1.0);
+	glClearColor(0.1, 0.1, 0.1, 1.0); //slightly grey
 }
 
 void MainProgram::processInput() {
@@ -106,8 +97,10 @@ void MainProgram::gameLoop() {
 	Vengine::MyTiming::setNumSamplesForFPS(100);
 	Vengine::MyTiming::setFPSlimit(2500);
 
-	_signalProc._selfSimilarityMatrix.linkToMFCCs(&_signalProc._mfccs);
 	//_signalProc._selfSimilarityMatrix.linkToDebug();
+
+	AudioManager::loadAudio(musicFilepath);
+	SignalProcessing::start();
 
 	//main while loop
 	while (_gameState != ProgramState::EXIT) {
@@ -123,11 +116,11 @@ void MainProgram::gameLoop() {
 				printf("%f fps\n", Vengine::MyTiming::getFPS());
 			}
 			if (_inputManager.isKeyPressed(SDLK_ESCAPE)) {
-				if (_audio.isAudioPlaying()) {
-					_audio.pause();
+				if (AudioManager::isAudioPlaying()) {
+					AudioManager::pause();
 				}
 				else {
-					_audio.play();
+					AudioManager::play();
 				}
 			}
 
@@ -154,64 +147,19 @@ void MainProgram::endFrame() {
 
 void MainProgram::drawVis() {
 
-	static int correlationWindowSize = 1;
-	if (_inputManager.isKeyPressed(SDLK_1)) {
-		correlationWindowSize++;
-		_signalProc._selfSimilarityMatrix.setCorrelationWindowSize(correlationWindowSize);
-		std::cout << "+1\n";
-	}
-
-	_signalProc.beginCalculations(_audio.getCurrentSample());
-
-	//note onset and tempo setup
-	std::vector<int> FTs = FourierTransformManager::idArr();
-	for (int i = 0; i < FTs.size(); i++) {
-		FourierTransform* tmp = FourierTransformManager::getFourierTransform(FTs[i]);
-		tmp->beginCalculation();
-		//test->applyFunction(FourierTransform::SMOOTH);
-		//test->applyFunction(FourierTransform::FREQUENCY_CONVOLVE);
-		tmp->endCalculation();
-	}
-
-
-	//_signalProc._noteOnset.calculateNext();
-	//_signalProc._tempoDetection.calculateNext();
-	_signalProc._mfccs.calculateNext();
-	_signalProc._selfSimilarityMatrix.calculateNext();
-
-	_signalProc.endCalculations();
-
-	//std::cout << _signalProc._selfSimilarityMatrix.getSelfSimilarityMatrixValue(0, 100) << std::endl;
-
-	//Vengine::DrawFunctions::updateSSBO(_ssboHarmonicDataID, 1, test->getHistory()->newest(), test->getHistory()->numHarmonics() * sizeof(float));
-	//_signalProc.updateSSBOwithVector(_signalProc._mfccs.getBandEnergy(), _ssboHarmonicDataID, 1);
-	//_signalProc.updateSSBOwithHistory(_signalProc._tempoDetection.getConfidenceInTempoHistory(), _ssboHarmonicDataID, 1);
-	if (_signalProc._tempoDetection.hasData()) {
-		ImGui::Begin("tempo");
-		ImGui::Text(std::to_string(_signalProc._tempoDetection.getTempoHistory()->newest()).c_str());
-		ImGui::End();
-	}
-
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	_viewport.setDim(_UI.getViewport().getDim());
 	glViewport(0,0,_viewport.width,_viewport.height);
 
+	//signal processing tmp
+	SignalProcessing::calculate(true, true, true, true, true, true, true);
+
+	//
+
 	//batch if not showing ui
 	SpriteManager::drawAll(!_UI.getShowUi());
 
-	
-	///draw eq to screen
-	/*
-	VisualiserShaderManager::getShader("Shaders/Preset/eq.vert", "Shaders/Preset/eq.frag")->getProgram()->use();
-
-	GLint nLocation = Vengine::ResourceManager::getShaderProgram("Shaders/Preset/eq.vert", "Shaders/Preset/eq.frag")->getUniformLocation("n");
-	glUniform1i(nLocation, N);
-
-	_eq.draw(); //draws to screen
-
-	Vengine::ResourceManager::getShaderProgram("Shaders/Preset/eq.vert", "Shaders/Preset/eq.frag")->unuse();
-	*/
 	VisualiserShaderManager::SSBOs::updateDynamicSSBOs();
 	
 }

@@ -39,17 +39,9 @@ private:
 
 	void endFrame();
 
-	void initShaders();
-
 	GLuint* _frameBufferIDs;
 	GLuint* _frameBufferTextureIDs;
 	const int _numFrameBuffers = 3;
-
-	std::vector<float> _harmonicData;
-
-	SignalProcessing _signalProc;
-
-	Vengine::Audio _audio;
 
 	int _timeSinceLoadTimerId;
 
