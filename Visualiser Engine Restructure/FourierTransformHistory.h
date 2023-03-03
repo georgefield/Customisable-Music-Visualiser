@@ -14,6 +14,10 @@ public:
 		_history.init(numHarmonics);
 	}
 
+	void reInit() {
+		_history.reInit();
+	}
+
 	float* workingArray()
 	{
 		return _history.workingArray();

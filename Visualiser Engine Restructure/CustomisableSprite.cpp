@@ -98,9 +98,6 @@ void CustomisableSprite::drawUi() {
 		ImGui::Text("No texture uniform in shader");
 	}
 
-	ImGui::Separator();
-
-	uniformSetterUi();
 
 	ImGui::Separator();
 
@@ -248,88 +245,6 @@ void CustomisableSprite::shaderChooser()
 		}
 	}
 	ImGui::EndChild();
-}
-
-void CustomisableSprite::uniformSetterUi()
-{
-	//*** CURRENT PAIRING INFO ***
-
-	std::vector<std::string> setUniformNames;
-	_visualiserShader->getSetUniformNames(setUniformNames);
-
-	//display pairings
-	for (auto& it : setUniformNames) {
-		std::string info = _visualiserShader->getUniformSetterName(it) + " -> " + it;
-		ImGui::Text(info.c_str()); ImGui::SameLine();
-		if (ImGui::Button("Erase")) {
-			_visualiserShader->eraseSetterUniformPair(it);
-		}
-	}
-
-	ImGui::Separator();
-	
-	//*** UI FOR CREATING NEW PAIRING ***
-
-	//show possible new pairing information
-	std::vector<std::string> unsetUniformNames; //any unset uniform
-	_visualiserShader->getUnsetUniformNames(unsetUniformNames);
-
-	if (unsetUniformNames.size() + setUniformNames.size() > 0) {
-
-		//choose from uniforms to set--
-		std::string uniformComboStr = UI::ImGuiComboStringMaker(unsetUniformNames);
-
-		const char* uniformItems = uniformComboStr.c_str();
-		static int currentUniform = 0;
-		ImGui::PushID(0);
-		ImGui::Combo("Uniforms", &currentUniform, uniformItems, unsetUniformNames.size());
-		ImGui::PopID();
-		//--
-
-		ImGui::Text("To be set to:");
-
-		//choose from valid possible uniform setters--
-		std::vector<std::string> possibleUniformSetterFunctionNames; //can be paired with any function
-
-		if (unsetUniformNames.size() != 0 && _visualiserShader->getUniformType(unsetUniformNames.at(currentUniform)) == GL_INT) {
-			VisualiserShaderManager::Uniforms::getIntUniformSetterNames(possibleUniformSetterFunctionNames);
-		}
-		else if (unsetUniformNames.size() != 0 && _visualiserShader->getUniformType(unsetUniformNames.at(currentUniform)) == GL_FLOAT) {
-			VisualiserShaderManager::Uniforms::getFloatUniformSetterNames(possibleUniformSetterFunctionNames);
-		}
-				
-		std::string uniformSetterComboStr = UI::ImGuiComboStringMaker(possibleUniformSetterFunctionNames);
-
-		const char* uniformSetterItems = uniformSetterComboStr.c_str();
-		static int currentUniformSetter = 0;
-		ImGui::PushID(1);
-		ImGui::Combo("Setters", &currentUniformSetter, uniformSetterItems, possibleUniformSetterFunctionNames.size());
-		ImGui::PopID();
-		//--
-
-		//button to confirm
-		if (ImGui::Button("Confirm")) {
-			if (possibleUniformSetterFunctionNames.size() == 0 || unsetUniformNames.size() == 0) {
-				//do nothing
-			}
-			else if (_visualiserShader->getUniformType(unsetUniformNames.at(currentUniform)) == GL_INT) {
-				_visualiserShader->initSetterUniformPair(unsetUniformNames.at(currentUniform), VisualiserShaderManager::Uniforms::getIntUniformSetter(possibleUniformSetterFunctionNames.at(currentUniformSetter)));
-			}
-			else if (_visualiserShader->getUniformType(unsetUniformNames.at(currentUniform)) == GL_FLOAT) {
-				_visualiserShader->initSetterUniformPair(unsetUniformNames.at(currentUniform), VisualiserShaderManager::Uniforms::getFloatUniformSetter(possibleUniformSetterFunctionNames.at(currentUniformSetter)));
-			}
-		}
-	}
-	else {
-		ImGui::Text("No uniforms in shader");
-	}
-
-	//THEN ADD ALL UNIFORM SETTER FUNCTIONS AS OPTIONS WHERE APPLICABLE (NOTE ONSET etc)
-	//THEN CREATE MUSIC LOADING AND QUEUEING UI
-	//THEN THINK OF HOW TO LAY OUT CONFIG
-	//THEN THINK OF HOW TO SAVE/LOAD CONFIG
-	//THEN USE https://github.com/nothings/stb IMAGE LOADER INSTEAD OF THE CRAP YOURE USING NOW
-	//(so not much then)
 }
 
 

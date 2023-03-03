@@ -1,5 +1,6 @@
 #include "FourierTransform.h"
-
+#include "VisualiserShaderManager.h"
+#include "SignalProcessingManager.h"
 
 FourierTransform::FourierTransform(int historySize, float cutOffLow, float cutOffHigh, float cutoffSmoothFrac) :
 
@@ -16,7 +17,9 @@ FourierTransform::FourierTransform(int historySize, float cutOffLow, float cutOf
 	_numHarmonics(-1),
 
 	_current(nullptr),
-	_next(nullptr)
+	_next(nullptr),
+
+	_energyOfFt(SignalProcessingManager::GENERAL_HISTORY_SIZE)
 {
 	_maxLowResOutputSize = 50;
 }
@@ -27,58 +30,83 @@ FourierTransform::~FourierTransform()
 		delete[] _smoothedFt;
 		delete[] _smoothedFtDot;
 		delete[] _lowResOutputLogScale;
+
+		if (_useSetters) {
+			deleteSetters();
+		}
 	}
 }
 
 
-void FourierTransform::init(Master* master)
+void FourierTransform::init(Master* master, std::string name, bool useSetters)
 {
 	if (_initialised) {
 		Vengine::fatalError("Double initialisation of fourier transform");
 	}
 
 	_initialised = true;
+	_nameOfFT = name;
+	_useSetters = useSetters;
 	_m = master;
+
 
 	initDefaultVars();
 
-	commonInit();
+	setFourierTransformFrequencyInfo();
 
+	//needed for smoothing
+	_smoothedFt = new float[_numHarmonics];
+	memset(_smoothedFt, 0.0f, sizeof(float) * _numHarmonics);
+
+	_smoothedFtDot = new float[_numHarmonics];
+	memset(_smoothedFtDot, 0.0f, sizeof(float) * _numHarmonics);
+
+	//low res spectrum vars
+	_lowResOutputSize = std::min(_maxLowResOutputSize, _numHarmonics);
+	_lowResOutputLogScale = new float[_lowResOutputSize];
+	memset(_lowResOutputLogScale, 0.0f, _lowResOutputSize * sizeof(float));
+
+	//init working historys
 	_working1.init(_numHarmonics);
 	_working2.init(_numHarmonics);
 
 	_current = &(_working1);
 	_next = &(_working2);
+
+	//init energy of ft
+	_energyOfFt.init(_m, _nameOfFT, useSetters);
+
+	if (_useSetters) {
+		initSetters();
+	}
 }
 
-void FourierTransform::reInit(Master* master)
+void FourierTransform::reInit()
 {
 	if (!_initialised) {
 		Vengine::fatalError("Cannot re-init unitialised fourier transform");
 	}
-	_m = master;
 
-	delete[] _smoothedFt;
-	delete[] _smoothedFtDot;
-	delete[] _lowResOutputLogScale;
+	setFourierTransformFrequencyInfo();
 
-	commonInit();
+	//memset all the arrays for calculation
+	memset(_smoothedFt, 0.0f, sizeof(float) * _numHarmonics);
+	memset(_smoothedFtDot, 0.0f, sizeof(float) * _numHarmonics);
+	memset(_lowResOutputLogScale, 0.0f, _lowResOutputSize * sizeof(float));
 
-	//overwrite fourier transform history with new
-	_working1 = FourierTransformHistory(_historySize);
-	_working2 = FourierTransformHistory(_historySize);
-
-	_working1.init(_numHarmonics);
-	_working2.init(_numHarmonics);
+	_working1.reInit();
+	_working2.reInit();
 
 	_current = &(_working1);
 	_next = &(_working2);
+
+	_energyOfFt.reInit();
 }
 
 void FourierTransform::beginCalculation()
 {
 	if (!_initialised) {
-		Vengine::fatalError("calculate called before initialise, banded fourier transform");
+		Vengine::fatalError("calculate called before initialise in fourier transform class");
 	}
 
 	//reset which is current and next at start of calculations
@@ -96,8 +124,10 @@ void FourierTransform::beginCalculation()
 void FourierTransform::endCalculation() {
 	_current->addWorkingArrayToHistory(_m->_currentSample);
 
-	//do not worry about lots of variables, c++ compiler optimises away
-	//calculate low res output
+	//energy calculated from FT
+	_energyOfFt.calculateNext(getOutput(), _current->numHarmonics());
+
+	//calculate low res log scale output
 	memset(_lowResOutputLogScale, 0.0f, _lowResOutputSize * sizeof(float));
 
 	float numParentHarmonics = _m->_fftHistory.numHarmonics();
@@ -218,7 +248,7 @@ void FourierTransform::applyTimeConvolving(FourierTransformHistory* in, float* o
 }
 
 
-void FourierTransform::commonInit()
+void FourierTransform::setFourierTransformFrequencyInfo()
 {
 	//calculate cutoff points
 	float fourierLowFrac = _cutOffLow * 2.0f / float(_m->_sampleRate); //as nyquist max freq
@@ -241,17 +271,6 @@ void FourierTransform::commonInit()
 	//calculate num harmonics
 	_numHarmonics = (_harmonicHigh - _harmonicLow) + 1;
 
-	//needed for smoothing
-	_smoothedFt = new float[_numHarmonics];
-	memset(_smoothedFt, 0.0f, sizeof(float) * _numHarmonics);
-
-	_smoothedFtDot = new float[_numHarmonics];
-	memset(_smoothedFtDot, 0.0f, sizeof(float) * _numHarmonics);
-
-	//low res spectrum vars
-	_lowResOutputSize = std::min(_maxLowResOutputSize, _numHarmonics);
-	_lowResOutputLogScale = new float[_lowResOutputSize];
-	memset(_lowResOutputLogScale, 0.0f, _lowResOutputSize * sizeof(float));
 }
 
 void FourierTransform::initDefaultVars()
@@ -279,4 +298,22 @@ float FourierTransform::smoothCutoff(int i)
 	float distanceFromCutoffFrac = float(std::min(i - _harmonicLow, _harmonicHigh - i)) / float(_numHarmonics);
 
 	return std::min((2.0f * distanceFromCutoffFrac) / _cutoffSmoothFrac, 1.0f); //1.0f => pyramid band, 0.5f => trapezium with top side half of bottom, 0.1f => trapezium top side 9/10 of bottom
+}
+
+void FourierTransform::initSetters()
+{
+	//energy setters init in energy class
+	std::function<int()> numHarmonicsSetterFunction = std::bind(& FourierTransform::getNumHarmonics, this);
+	VisualiserShaderManager::Uniforms::addPossibleUniformSetter(_nameOfFT + " #freq", numHarmonicsSetterFunction);
+
+	std::function<float* ()> harmonicValueSetterFunction = std::bind(&FourierTransform::getOutput, this);
+	VisualiserShaderManager::SSBOs::addPossibleSSBOSetter(_nameOfFT + " freq values", harmonicValueSetterFunction, _numHarmonics);
+}
+
+void FourierTransform::deleteSetters()
+{
+	//energy setters deleted in energy class
+
+	VisualiserShaderManager::Uniforms::deletePossibleUniformSetter(_nameOfFT + " #freq");
+	VisualiserShaderManager::SSBOs::deleteSSBOsetter(_nameOfFT + " freq values");
 }

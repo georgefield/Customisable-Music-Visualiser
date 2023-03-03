@@ -17,10 +17,7 @@ void FourierTransformManager::createFourierTransform(int& id, int historySize, f
 	}
 
 	_fourierTransforms[id] = new FourierTransform(historySize, cutOffLow, cutOffHigh, cutoffSmoothFrac);
-	_fourierTransforms[id]->init(SignalProcessing::getMasterPtr());
-
-	addUniformSetterFunctionOptionsToList(id);
-	addSSBOsetterFunctionOptionsToList(id);
+	_fourierTransforms[id]->init(SignalProcessingManager::getMasterPtr(), "FT-"+std::to_string(id));
 }
 
 bool FourierTransformManager::fourierTransformExists(int id)
@@ -36,21 +33,19 @@ void FourierTransformManager::eraseFourierTransform(int id)
 
 	delete _fourierTransforms[id];
 	_fourierTransforms.erase(id);
+}
 
-	//if ssbo set with unset itself when it gets a bad function call as _fourierTransforms[id] destroyed
-
-	deleteUniformSetterFunctionOptionsFromList(id);
-	deleteSSBOsetterFunctionOptionsFromList(id);
+void FourierTransformManager::reInitAll()
+{
+	for (auto& it : _fourierTransforms) {
+		it.second->reInit();
+	}
 }
 
 void FourierTransformManager::calculateFourierTransforms()
 {
 	//calculate the fourier transforms in fourier transform manager
 	for (auto& it : _fourierTransforms){
-		if (it.second->getMasterPtr() != SignalProcessing::getMasterPtr()) {
-			Vengine::warning("Master pointer change, switch in song assumed, reiniting fourier transform");
-			it.second->reInit(SignalProcessing::getMasterPtr());
-		}
 		it.second->beginCalculation();
 		//test->applyFunction(FourierTransform::SMOOTH);
 		//test->applyFunction(FourierTransform::FREQUENCY_CONVOLVE);
@@ -74,33 +69,4 @@ std::vector<int> FourierTransformManager::idArr()
 		ret.push_back(it.first);
 	}
 	return ret;
-}
-
-void FourierTransformManager::addUniformSetterFunctionOptionsToList(int id)
-{
-	std::string namePrefix = "FT-" + std::to_string(id);
-
-	VisualiserShaderManager::Uniforms::addPossibleUniformSetter(namePrefix + " num harmonics", _fourierTransforms[id]->getNumHarmonics());
-}
-
-void FourierTransformManager::addSSBOsetterFunctionOptionsToList(int id)
-{
-	std::string functionName = "FT-" + std::to_string(id) + " harmonic values";
-	std::function<float*()> memberFuncToPass = std::bind(&FourierTransform::getOutput, _fourierTransforms[id]);
-
-	VisualiserShaderManager::SSBOs::addPossibleSSBOSetter(functionName, memberFuncToPass, _fourierTransforms[id]->getNumHarmonics());
-}
-
-void FourierTransformManager::deleteUniformSetterFunctionOptionsFromList(int id)
-{
-	std::string namePrefix = "FT-" + std::to_string(id);
-
-	VisualiserShaderManager::Uniforms::deletePossibleUniformSetter(namePrefix + " num harmonics");
-}
-
-void FourierTransformManager::deleteSSBOsetterFunctionOptionsFromList(int id)
-{
-	std::string functionName = "FT-" + std::to_string(id) + " harmonic values";
-
-	VisualiserShaderManager::SSBOs::deleteSSBOsetter(functionName);
 }

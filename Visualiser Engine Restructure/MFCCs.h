@@ -67,17 +67,43 @@ private:
 class MFCCs
 {
 public:
-	MFCCs()
+	MFCCs() :
+		_bandEnergies(nullptr),
+		_melSpectrogram(nullptr),
+		_mfccs(nullptr)
 	{
 	}
 
-	void init(Master* m, int numFilters, float lowerHz, float upperHz) {
+	~MFCCs() {
+		deleteSetters();
+
+		delete[] _bandEnergies;
+		delete[] _melSpectrogram;
+	}
+
+	void init(Master* m, int numMelBands, float lowerHz, float upperHz) {
 		_m = m;
 
-		std::cout << numFilters << std::endl;
-		createMelLinearlySpacedFilters(numFilters, lowerHz, upperHz);
+		createMelLinearlySpacedFilters(numMelBands, lowerHz, upperHz);
 
-		_dct.init(numFilters);
+		_dct.init(numMelBands);
+
+		//init arrays
+		_bandEnergies = new float[numMelBands];
+		_melSpectrogram = new float[numMelBands];
+
+		memset(_bandEnergies, 0.0f, numMelBands * sizeof(float));
+		memset(_melSpectrogram, 0.0f, numMelBands * sizeof(float));
+
+		//mfccs gets given pointer to output from fftwapi so needs no allocated memory
+		_mfccs = nullptr;
+
+		initSetters();
+	}
+
+	void reInit() {
+		memset(_bandEnergies, 0.0f, _filterBank.numBands() * sizeof(float));
+		memset(_melSpectrogram, 0.0f, _filterBank.numBands() * sizeof(float));
 	}
 
 	void calculateNext();
@@ -89,21 +115,18 @@ public:
 		}
 	}
 
-	std::vector<float> getBandEnergy() {
-		return _bandEnergy;
-	}
+	float* getBandEnergies() { return _bandEnergies; }
 
-	std::vector<float> getMelSpectrogram() {
-		return _melSpectrogram;
-	}
+	float* getMelSpectrogram() { return _melSpectrogram; }
 
-	std::vector<float> getMfccs() {
-		return _mfccs;
-	}
+	float* getMfccs() { return _mfccs; }
+
+	int getNumMelBands() { return _filterBank.numBands(); }
 
 private:
 	Master* _m;
 	FFTWdct _dct;
+
 
 	float mel(float hz);
 	float melInverse(float mel);
@@ -114,7 +137,10 @@ private:
 	void calculateMfccs();
 
 	FilterBank _filterBank;
-	std::vector<float> _bandEnergy;
-	std::vector<float> _melSpectrogram;
-	std::vector<float> _mfccs;
+	float* _bandEnergies;
+	float* _melSpectrogram;
+	float* _mfccs;
+
+	void initSetters();
+	void deleteSetters();
 };

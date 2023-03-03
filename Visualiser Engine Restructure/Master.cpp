@@ -15,12 +15,28 @@ Master::Master() :
 {
 }
 
+Master::~Master()
+{
+	deleteSetters();
+}
+
 void Master::init(float* audioData, int sampleRate)
 {
 	_fftHistory.init(_fftwAPI.numHarmonics());
 
 	_audioData = audioData;
 	_sampleRate = sampleRate;
+
+	initSetters();
+}
+
+void Master::reInit(float* audioData, int sampleRate) {
+
+	_audioData = audioData;
+	_sampleRate = sampleRate;
+
+	_previousSample = -1;
+	_sampleFftLastCalculated = -1;
 }
 
 void Master::beginCalculations(int currentSample) {
@@ -54,11 +70,7 @@ void Master::endCalculations() {
 	_previousSample = _currentSample;
 }
 
-void Master::reset() {
 
-	_previousSample = -1;
-	_sampleFftLastCalculated = -1;
-}
 
 //*** helper functions ***
 
@@ -73,4 +85,28 @@ float Master::sumOfConvolutionOfHistory(History<float>* history, int entries, Ke
 		conv += history->get(i) * Kernels::apply(kernel, i, entries); //integral of the multiplication = dot product   (in discrete space)
 	}
 	return conv;
+}
+
+float* Master::getBaseFftOutput()
+{
+	return _fftHistory.newest();
+}
+
+int Master::getBaseFftNumHarmonics()
+{
+	return _fftHistory.numHarmonics();
+}
+
+void Master::initSetters()
+{
+	std::function<int()> masterNumHarmonicsSetterFunction = std::bind(&Master::getBaseFftNumHarmonics, this);
+	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Master #harmonics", masterNumHarmonicsSetterFunction);
+
+	std::function<float* ()> harmonicValueSetterFunction = std::bind(&Master::getBaseFftOutput, this);
+	VisualiserShaderManager::SSBOs::addPossibleSSBOSetter("Master FT", harmonicValueSetterFunction, _fftHistory.numHarmonics());
+}
+
+void Master::deleteSetters()
+{
+	VisualiserShaderManager::Uniforms::deletePossibleUniformSetter("Master #harmonics");
 }

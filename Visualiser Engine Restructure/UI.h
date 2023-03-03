@@ -46,9 +46,18 @@ private:
 
 	//ssbo menu vars
 	bool _showSSBOmanager;
+	bool _showUniformManager;
+	bool _showImportShaderUi;
+
+	void ssboManagerUi();
+	void uniformManagerUi();
+	void importShaderUi();
+
+	bool _showGeneralSignalProcessingUi;
 	bool _showFourierTransformUi;
 	bool _showNoteOnsetUi;
 	bool _showTempoDetectionUi;
+	bool _showMFCCsUi;
 	bool _showSimilarityMeasureUi;
 
 	//calculate
@@ -57,7 +66,7 @@ private:
 	int _errorMessageTimerId;
 
 	//ui functions
-	void ssboManagerUi();
+	void generalSignalProcessingUi();
 	void fourierTransformsUi();
 	void noteOnsetUi();
 	void tempoDetectionUi();

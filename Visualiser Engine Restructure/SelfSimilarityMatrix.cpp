@@ -8,15 +8,15 @@ void SelfSimilarityMatrix::calculateNext()
 	}
 
 	if (_linkedTo == MFCC) {
-		_similarityMatrix.add(_mfccsPtr->getMfccs());
+		_similarityMatrix.add(_mfccsPtr->getMfccs(), _mfccsPtr->getNumMelBands());
 		return;
 	}
 	if (_linkedTo == MelBandEnergies) {
-		_similarityMatrix.add(_mfccsPtr->getBandEnergy());
+		_similarityMatrix.add(_mfccsPtr->getBandEnergies(), _mfccsPtr->getNumMelBands());
 		return;
 	}
 	if (_linkedTo == MelSpectrogram) {
-		_similarityMatrix.add(_mfccsPtr->getMelSpectrogram());
+		_similarityMatrix.add(_mfccsPtr->getMelSpectrogram(), _mfccsPtr->getNumMelBands());
 		return;
 	}
 	if (_linkedTo == FT) {

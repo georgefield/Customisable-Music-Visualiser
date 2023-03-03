@@ -15,15 +15,16 @@
 /// also does the base fft transform
 /// </summary>
 
-struct Master {
+class Master {
+public:
 	Master();
+	~Master();
 
 	void init(float* audioData, int sampleRate);
+	void reInit(float* audioData, int sampleRate);
 
 	void beginCalculations(int currentSample);
 	void endCalculations();
-
-	void reset();
 
 	float* _audioData;
 	int _sampleRate;
@@ -36,7 +37,12 @@ struct Master {
 	//helper functions
 	float sumOfConvolutionOfHistory(History<float>* history, int entries = 0, Kernel kernel = LINEAR_PYRAMID);
 
+	float* getBaseFftOutput();
+	int getBaseFftNumHarmonics();
 private:
 	int _sampleFftLastCalculated;
 	FFTWfft _fftwAPI;
+
+	void initSetters();
+	void deleteSetters();
 };

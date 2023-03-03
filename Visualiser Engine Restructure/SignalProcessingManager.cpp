@@ -5,61 +5,89 @@
 #include <functional>
 #include <Vengine/DrawFunctions.h>
 
-Master* SignalProcessing::_master = nullptr;
-RMS* SignalProcessing::_rms = nullptr;
-Energy* SignalProcessing::_energy = nullptr;
-NoteOnset* SignalProcessing::_noteOnset = nullptr;
-TempoDetection* SignalProcessing::_tempoDetection = nullptr;
-MFCCs* SignalProcessing::_mfccs = nullptr;
-SelfSimilarityMatrix* SignalProcessing::_selfSimilarityMatrix = nullptr;
+Master* SignalProcessingManager::_master = nullptr;
+RMS* SignalProcessingManager::_rms = nullptr;
+NoteOnset* SignalProcessingManager::_noteOnset = nullptr;
+TempoDetection* SignalProcessingManager::_tempoDetection = nullptr;
+MFCCs* SignalProcessingManager::_mfccs = nullptr;
+SelfSimilarityMatrix* SignalProcessingManager::_selfSimilarityMatrix = nullptr;
 
-std::string SignalProcessing::_currentAudioFilepath = "";
+bool SignalProcessingManager::UI_computeFourierTransform = true;
+bool SignalProcessingManager::UI_computeRms = true;
+bool SignalProcessingManager::UI_computeNoteOnset = true;
+bool SignalProcessingManager::UI_computeTempoDetection = true;
+bool SignalProcessingManager::UI_computeMFCCs = false;
+bool SignalProcessingManager::UI_computeSelfSimilarityMatrix = false;
 
-bool SignalProcessing::_started = false;
+std::string SignalProcessingManager::_currentAudioFilepath = "";
 
-void SignalProcessing::start()
+bool SignalProcessingManager::_started = false;
+
+int SignalProcessingManager::GENERAL_HISTORY_SIZE = 1000;
+
+void SignalProcessingManager::start()
 {
+	if (_started) {
+		Vengine::warning("start already called for signal processing manager");
+		return;
+	}
+
 	if (!ready()) {
 		Vengine::warning("Cannot start yet as no audio to play");
 		return;
 	}
 
-	//if master already exists from previous song then delete it
-	if (_master != nullptr) {
-		delete _master;
-	}
-
 	_master = new Master();
 	_master->init(AudioManager::getAudioData(), AudioManager::getSampleRate());
+
+	initAlgorithmObjects(true, true, true, true, true);
+
+	//set up general history size uniform setter
+	std::function<int()> generalHistorySizeSetterFunction = SignalProcessingManager::getGeneralHistorySize;
+	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("General history size", generalHistorySizeSetterFunction);
 
 	//set filepath
 	_currentAudioFilepath = AudioManager::getAudioFilepath();
 
-	//reset all
-	processChangesToWhatIsCalculated(false, false, false, false, false, false);
-
 	_started = true;
 }
 
-bool SignalProcessing::ready()
+void SignalProcessingManager::restart()
+{
+	if (!_started) {
+		Vengine::warning("SignalProcessing: Cannot call reset before calling start");
+		return;
+	}
+
+	_master->reInit(AudioManager::getAudioData(), AudioManager::getSampleRate()); //will tell all other algorithms to reinit
+	FourierTransformManager::reInitAll();
+
+	initAlgorithmObjects(true, true, true, true, true);
+
+	//set filepath
+	_currentAudioFilepath = AudioManager::getAudioFilepath();
+}
+
+bool SignalProcessingManager::ready()
 {
 	return AudioManager::isAudioLoaded();
 }
 
-void SignalProcessing::calculate(bool fourierTransform, bool rms, bool energy, bool noteOnset, bool tempoDetection, bool mfccs, bool selfSimilarityMatrix)
+void SignalProcessingManager::calculate()
 {
+	if (!_started) {
+		Vengine::warning("Cannot calculate as signalProcessing not started");
+		return;
+	}
+
 	if (_currentAudioFilepath != AudioManager::getAudioFilepath()) { //change in song
 		Vengine::warning("Change in audio source, reseting signal processing");
 		start(); //reset
 	}
 
 	//dependencies
-	if (tempoDetection) { noteOnset = true; }
+	if (UI_computeTempoDetection) { UI_computeNoteOnset = true; }
 
-	if (noteOnset) { energy = true; }
-
-
-	processChangesToWhatIsCalculated(rms, energy, noteOnset, tempoDetection, mfccs, selfSimilarityMatrix);
 
 	if (!AudioManager::isAudioPlaying()) { //no calculations unless audio playing
 		return;
@@ -68,26 +96,22 @@ void SignalProcessing::calculate(bool fourierTransform, bool rms, bool energy, b
 	_master->beginCalculations(AudioManager::getCurrentSample());
 
 	//all other signal processing done between begin and end--
-	_master->calculateFourierTransform(); //always calculate fourier transform
 
-	if (fourierTransform) {
+	if (UI_computeFourierTransform) {
+		_master->calculateFourierTransform();
 		FourierTransformManager::calculateFourierTransforms();
 	}
-
-	if (rms) {
+	if (UI_computeRms) {
 		_rms->calculateNext(4096, LINEAR_PYRAMID);
 	}
-	
-	if (energy) {
-		_energy->calculateNext(4096, LINEAR_PYRAMID);
-	}
-
-	if (noteOnset) {
+	if (UI_computeNoteOnset) {
 		_noteOnset->calculateNext();
 	}
-
-	if (tempoDetection) {
+	if (UI_computeTempoDetection) {
 		_tempoDetection->calculateNext();
+	}
+	if (UI_computeMFCCs) {
+		_mfccs->calculateNext();
 	}
 	//--
 
@@ -97,77 +121,56 @@ void SignalProcessing::calculate(bool fourierTransform, bool rms, bool energy, b
 
 //private
 
-void SignalProcessing::processChangesToWhatIsCalculated(bool rms, bool energy, bool noteOnset, bool tempoDetection, bool mfccs, bool selfSimilarityMatrix)
+void SignalProcessingManager::initAlgorithmObjects(bool rms, bool noteOnset, bool tempoDetection, bool mfccs, bool selfSimilarityMatrix)
 {
+	if (_master == nullptr) {
+		Vengine::fatalError("Cannot create algorithm objects when master = nullptr");
+	}
 	/// <summary>
-	/// on a change of whether a variable is calculated or not create/delete the signal processor object.
-	/// ALSO add/delete the uniform & ssbo setter functions
+	/// Change in 
 	/// </summary>
-	if (rms && _rms == nullptr) {
-		_rms = new RMS(400);
-		_rms->init(_master);
-		std::function<float()> rmsSetterFunc = std::bind(&RMS::getRMS, _rms);
-		VisualiserShaderManager::Uniforms::addPossibleUniformSetter("RMS", rmsSetterFunc);
-
-		std::function<float*()> rmsHistorySetterFunc = std::bind(&History<float>::getAsContiguousArray, std::bind(&RMS::getHistory, _rms));
-		VisualiserShaderManager::SSBOs::addPossibleSSBOSetter("RMS history", rmsHistorySetterFunc, _rms->getHistory()->totalSize());
-
-		std::function<int()> rmsHistoryLengthSetterFunc = std::bind(&History<float>::totalSize, std::bind(&RMS::getHistory, _rms));
-		VisualiserShaderManager::Uniforms::addPossibleUniformSetter("RMS history length", rmsHistoryLengthSetterFunc);
-	}
-	if (!rms && _rms != nullptr) {
-		delete _rms;
-		VisualiserShaderManager::Uniforms::deletePossibleUniformSetter("RMS");
-		VisualiserShaderManager::SSBOs::deleteSSBOsetter("RMS history");
-		VisualiserShaderManager::Uniforms::deletePossibleUniformSetter("RMS history length");
+	if (rms) {
+		if (_rms != nullptr) {
+			_rms->reInit();
+		}
+		else {
+			_rms = new RMS(GENERAL_HISTORY_SIZE);
+			_rms->init(_master);
+		}
 	}
 
 
-	if (energy && _energy == nullptr) {
-		_energy = new Energy(800);
-		_energy->init(_master);
-		std::function<float()> energySetterFunc = std::bind(&Energy::getEnergy, _energy);
-		VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Energy", energySetterFunc);
-
-		std::function<float* ()> energyHistorySetterFunc = std::bind(&History<float>::getAsContiguousArray, std::bind(&Energy::getHistory, _energy));
-		VisualiserShaderManager::SSBOs::addPossibleSSBOSetter("Energy history", energyHistorySetterFunc, _energy->getHistory()->totalSize());
-
-		std::function<int()> rmsHistoryLengthSetterFunc = std::bind(&History<float>::totalSize, std::bind(&Energy::getHistory, _energy));
-		VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Energy history length", rmsHistoryLengthSetterFunc);
-	}
-	if (!energy && _energy != nullptr) {
-		delete _energy;
-		VisualiserShaderManager::Uniforms::deletePossibleUniformSetter("Energy");
-		VisualiserShaderManager::SSBOs::deleteSSBOsetter("Energy history");
-		VisualiserShaderManager::Uniforms::deletePossibleUniformSetter("Energy history length");
+	if (noteOnset) {
+		if (_noteOnset != nullptr) {
+			_noteOnset->reInit();
+		}
+		else {
+			_noteOnset = new NoteOnset(GENERAL_HISTORY_SIZE);
+			_noteOnset->init(_master);
+		}
 	}
 
 
-	if (noteOnset && _noteOnset == nullptr) {
-		_noteOnset = new NoteOnset(2000);
-		_noteOnset->init(_master, _energy);
-		std::function<float()> noteOnsetValueSetterFunction = std::bind(&NoteOnset::getOnset, _noteOnset);
-		VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Note onset", noteOnsetValueSetterFunction);
 
-		std::function<float* ()> CONVonsetHistorySetterFunction = std::bind(&History<float>::getAsContiguousArray, std::bind(&NoteOnset::getCONVonsetHistory, _noteOnset));
-		VisualiserShaderManager::SSBOs::addPossibleSSBOSetter("Note onset history", CONVonsetHistorySetterFunction, _noteOnset->getCONVonsetHistory()->totalSize());
-
-		std::function<int()> CONVonsetHistoryLengthSetterFunc = std::bind(&History<float>::totalSize, std::bind(&NoteOnset::getCONVonsetHistory, _noteOnset));
-		VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Note onset history length", CONVonsetHistoryLengthSetterFunc);
-	}
-	if (!noteOnset && _noteOnset != nullptr) {
-		delete _noteOnset;
-		VisualiserShaderManager::Uniforms::deletePossibleUniformSetter("Note onset");
-		VisualiserShaderManager::SSBOs::deleteSSBOsetter("Note onset history");
-		VisualiserShaderManager::Uniforms::deletePossibleUniformSetter("Note onset history length");
+	if (tempoDetection) {
+		if (_tempoDetection != nullptr) {
+			_tempoDetection->reInit();
+		}
+		else {
+			_tempoDetection = new TempoDetection();
+			_tempoDetection->init(_master, _noteOnset);
+		}
 	}
 
 
-	if (tempoDetection && _tempoDetection == nullptr) {
-		_tempoDetection = new TempoDetection(2000);
-		_tempoDetection->init(_master, _noteOnset);
+	if (mfccs) {
+		if (_mfccs != nullptr) {
+			_mfccs->reInit();
+		}
+		else {
+			_mfccs = new MFCCs();
+			_mfccs->init(_master, 25, 0, 20000);
+		}
 	}
-	if (!tempoDetection && _tempoDetection != nullptr) {
-		delete _tempoDetection;
-	}
+
 }

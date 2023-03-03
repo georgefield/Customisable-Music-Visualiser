@@ -17,7 +17,7 @@ public:
 	static void addSprite(glm::vec2 pos, glm::vec2 dim, float depth = 0.0f, std::string textureFilepath = "", GLuint glDrawType = GL_DYNAMIC_DRAW);
 	static void deleteSprite(int id);
 
-	static void drawAll(bool batching);
+	static void drawAll();
 
 	static void processInput(Vengine::InputManager* inputManager);
 

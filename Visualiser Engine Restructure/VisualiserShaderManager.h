@@ -6,9 +6,11 @@
 #include <functional>
 #include <string>
 
-#include "VisualiserShader.h"
 
+#include "VisualiserShader.h"
+#include "History.h"
 #include "SSBOsetter.h"
+
 
 
 class VisualiserShaderManager
@@ -20,6 +22,8 @@ public:
 
 	static VisualiserShader* getShader(std::string fragPath);
 	static std::string getDefaultFragmentShaderPath();
+
+	static void getUsableShaderFragPaths(std::vector<std::string>& shaderPaths);
 	//--
 
 	//ssbo managing--
@@ -45,10 +49,9 @@ public:
 
 	//uniform setter function managing--
 	struct Uniforms {
+		//can only set with function now to allow for variable changes
 		static void addPossibleUniformSetter(std::string functionName, std::function<float()> function);
 		static void addPossibleUniformSetter(std::string functionName, std::function<int()> function); //overload for int dynamic functions
-		static void addPossibleUniformSetter(std::string constantName, float constant); //<
-		static void addPossibleUniformSetter(std::string constantName, int constant); //  < overloads for constant value initialisation 
 
 		static void deletePossibleUniformSetter(std::string functionName);
 		static void getUniformSetterNames(std::vector<std::string>& names);
@@ -59,6 +62,9 @@ public:
 		static UniformSetter<int> getIntUniformSetter(std::string functionName);
 	};
 	//--
+
+	static void addHistoryAsPossibleSSBOsetter(std::string historyName, History<float>* history);
+	static void deleteHistoryAsPossibleSSBOsetter(std::string historyName);
 private:
 
 	static std::string _currentVisualiserPath;

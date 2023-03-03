@@ -1,5 +1,8 @@
 #pragma once
 #include "Master.h"
+#include "VisualiserShaderManager.h"
+
+#include <functional>
 
 class RMS {
 public:
@@ -9,8 +12,19 @@ public:
 	{
 	}
 
+	~RMS() {
+		deleteSetters();
+	}
+
 	void init(Master* master) {
 		_m = master;
+		_sampleLastCalculated = -1;
+		_sumOfSamplesSquared = 0;
+
+		initSetters();
+	}
+
+	void reInit() {
 		_sampleLastCalculated = -1;
 		_sumOfSamplesSquared = 0;
 	}
@@ -33,7 +47,9 @@ public:
 		//dependencies
 		//none
 
-		if (_sampleLastCalculated != -1 && _m->_previousSample != -1 && _m->_currentSample - _m->_previousSample < windowSize) { //save compute power if window only adjusted by a bit
+		//saves compute power by just removing a old samples and adding new ones to _sumOfSamplesSquared. Only works if currentSample - previousSample < windowSize
+		if (_sampleLastCalculated != -1 && _m->_previousSample != -1 && _m->_currentSample - _m->_previousSample < windowSize) { 
+
 			for (int i = _m->_previousSample; i < _m->_currentSample; i++) {
 				_sumOfSamplesSquared -= _m->_audioData[i] * _m->_audioData[i];
 			}
@@ -42,6 +58,7 @@ public:
 				_sumOfSamplesSquared += _m->_audioData[i] * _m->_audioData[i];
 			}
 		}
+		//basic rms if cannot optimise
 		else {
 			_sumOfSamplesSquared = 0;
 			for (int i = _m->_currentSample; i < _m->_currentSample + windowSize; i++) {
@@ -59,4 +76,12 @@ private:
 	float _sumOfSamplesSquared;
 
 	int _sampleLastCalculated;
+
+	void initSetters() {
+		VisualiserShaderManager::addHistoryAsPossibleSSBOsetter("RMS", &_rms);
+	}
+	
+	void deleteSetters() {
+		VisualiserShaderManager::deleteHistoryAsPossibleSSBOsetter("RMS");
+	}
 };

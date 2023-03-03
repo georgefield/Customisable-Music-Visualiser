@@ -135,6 +135,7 @@
   <ItemGroup>
     <ClCompile Include="AudioManager.cpp" />
     <ClCompile Include="CustomisableSprite.cpp" />
+    <ClCompile Include="DixonAlgVariableDefinitions.cpp" />
     <ClCompile Include="FourierTransform.cpp" />
     <ClCompile Include="FFTWapi.cpp" />
     <ClCompile Include="FourierTransformManager.cpp" />

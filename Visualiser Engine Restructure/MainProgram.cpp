@@ -22,7 +22,7 @@ MainProgram::MainProgram() :
 
 //RESTRUCTURE ENTIRE ENGINE, CLONE THIS PROJECT AS BACKUP
 
-const std::string musicFilepath = "Music/Gorillaz - On Melancholy Hill.wav";
+const std::string musicFilepath = "Music/King Geedorah - Next Levels.wav";
 
 
 void MainProgram::run() {
@@ -46,11 +46,10 @@ void MainProgram::initSystems() {
 
 	_UI.init(&_window, &_inputManager);
 
-	//time since load start
+	//time since load setter function
 	Vengine::MyTiming::startTimer(_timeSinceLoadTimerId);
-	std::function<float()> SETTER_FUNCtimeSinceLoad = std::bind(&MainProgram::getTimeSinceLoad, this);
-	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Time since program start", SETTER_FUNCtimeSinceLoad);
-	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("p9", 0.9f);
+	std::function<float()> timeSinceLoadSetterFunction = std::bind(&MainProgram::getTimeSinceLoad, this);
+	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Time since program start", timeSinceLoadSetterFunction);
 
 
 	//enable alpha belnding
@@ -100,7 +99,7 @@ void MainProgram::gameLoop() {
 	//_signalProc._selfSimilarityMatrix.linkToDebug();
 
 	AudioManager::loadAudio(musicFilepath);
-	SignalProcessing::start();
+	SignalProcessingManager::start();
 
 	//main while loop
 	while (_gameState != ProgramState::EXIT) {
@@ -153,12 +152,12 @@ void MainProgram::drawVis() {
 	glViewport(0,0,_viewport.width,_viewport.height);
 
 	//signal processing tmp
-	SignalProcessing::calculate(true, true, true, true, true, true, true);
+	SignalProcessingManager::calculate();
 
 	//
 
 	//batch if not showing ui
-	SpriteManager::drawAll(!_UI.getShowUi());
+	SpriteManager::drawAll();
 
 	VisualiserShaderManager::SSBOs::updateDynamicSSBOs();
 	

@@ -32,26 +32,36 @@ public:
 		_CONVonsetDetectionHistory(historySize),
 
 		_generalLimiter(1.0, 0.5, 10.0, 0.2),
-		_lastAboveThresh(false),
-		_goingDownFromPeak(false),
 
 		_thresholder(500),
 
 		_ftForSpectralDistance(2)
 	{}
 
-	FourierTransform _ftForSpectralDistance;
+	~NoteOnset() {
+		deleteSetters();
+	}
 
-	void init(Master* master, Energy* energy) {
+	void init(Master* master) {
 		_m = master;
-		_energy = energy;
 
 		_sampleLastCalculated = -1;
 
-		//thresholding vars
-		_justGoneOverThreshold = false;
+		//thresholding vars		
+		_lastAboveThreshold = false;
 
-		_ftForSpectralDistance.init(_m);
+		_ftForSpectralDistance.init(_m, "Note Onset FT", false);
+
+		initSetters();
+	}
+
+	void reInit() {
+		_sampleLastCalculated = -1;
+
+		//thresholding vars
+		_lastAboveThreshold = false;
+
+		_ftForSpectralDistance.reInit();
 	}
 
 	void calculateNext(
@@ -78,6 +88,8 @@ private:
 	Master* _m;
 	Energy* _energy;
 
+	FourierTransform _ftForSpectralDistance;
+
 	int _sampleLastCalculated;
 	
 	float derivativeOfLogEnergy();
@@ -90,9 +102,10 @@ private:
 
 	Limiter _generalLimiter;
 	Threshold _thresholder;
-	bool _lastAboveThresh;
-	bool _goingDownFromPeak;
 
 	History<Peak> _onsetPeaks; //in sample time
-	bool _justGoneOverThreshold;
+	bool _lastAboveThreshold;
+
+	void initSetters();
+	void deleteSetters();
 };

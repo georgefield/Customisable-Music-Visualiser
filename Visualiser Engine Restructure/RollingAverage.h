@@ -17,7 +17,12 @@ public:
 	}
 
 	float get() {
-		return sum / float(history.totalSize());
+		return sum / float(history.entries());
+	}
+
+	void clear() {
+		history.clear();
+		sum = 0;
 	}
 private:
 	float sum;

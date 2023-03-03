@@ -85,6 +85,7 @@ void TempoDetection::calculateNext() {
 		//new peak => calculate
 
 		if (_noteOnset->getPeakHistory()->entries() < 8) { //8 onsets atleast before starting to calculate
+			_confidenceRollingAvg.add(0.0f); //want to start confidence as low
 			return;
 		}
 
@@ -96,11 +97,13 @@ void TempoDetection::calculateNext() {
 		else {
 			continuousDixonAlg();
 		}
+
 		_agents->calculateScoresAccountingForClusterIntervalScores(_clusters);
 		_agents->sortAgentsByScoresAccountingForIntervalScores();
-		_agents->shrinkSetToSize(40); //only keep this many best agents after every round
+		_agents->shrinkSetToSize(DixonAlgVars::MAX_AGENTS_STORED); //only keep this many best agents after every round
 		_agents->calculateConfidenceInBestAgent(_clusters->_clusterRadius);
-		_agents->devalueScores(0.954); //multiply each agent score by this factor. (0.954 means 15 beats to half)
+		_agents->devalueScores(DixonAlgVars::SCORE_FACTOR_PER_NEW_BEAT); //multiply each agent score by this factor. (0.954 means 15 beats to half)
+
 
 		//add to rolling avgs
 		float tempo = 60.0f * float(_m->_sampleRate) / float(_agents->_highestScoringAgent->_beatInterval);
@@ -111,17 +114,19 @@ void TempoDetection::calculateNext() {
 
 	//add values to histories, do every call if initialised
 	if (_initialCalculated) {
-		_tempoHistory.add(_tempoRollingAvg.get(), _m->_currentSample);
+		_tempo = _tempoRollingAvg.get();
+		//set confidence value
+		_tempoConfidence = _confidenceRollingAvg.get();
+
 
 		//predictions calc
 		int samplesSinceLastBeat = (_m->_currentSample - _agents->_highestScoringAgent->_lastEvent.onset) % _agents->_highestScoringAgent->_beatInterval;
 		float timeSinceLastBeat = float(samplesSinceLastBeat) / float(_m->_sampleRate);
-		_timeSinceLastBeatHistory.add(timeSinceLastBeat);
-		float timeToNextBeat = float(_agents->_highestScoringAgent->_beatInterval - samplesSinceLastBeat) / float(_m->_sampleRate);
-		_timeToNextBeatHistory.add(timeToNextBeat);
+		_timeSinceLastBeat = timeSinceLastBeat;
 
-		//add confidence value (can improve confidence calc later pretty bad atm)
-		_confidenceHistory.add(_confidenceRollingAvg.get(), _m->_currentSample);
+		float timeToNextBeat = float(_agents->_highestScoringAgent->_beatInterval - samplesSinceLastBeat) / float(_m->_sampleRate);
+		_timeToNextBeat = timeToNextBeat;
+
 	}
 }
 
@@ -152,21 +157,16 @@ bool intervalImpliesValidTempo(int interval, int sampleRate) {
 }
 
 
-const float CLUSTER_RADIUS_SECONDS = 0.025; //allowed error from average ioi of cluster to be added
-const int MAX_PEAKS_STORED = 30; //longer => worse perfomance, more data to use
 
 void TempoDetection::initialDixonAlg() {
 
 	_peaks = _noteOnset->getPeakHistory()->getAsVector(false, 15); //get oldest first, important for agent alg, max last 15 peaks as to
 
 	//*** tempo induction ***
-	int clusterRadius = int(CLUSTER_RADIUS_SECONDS * _m->_sampleRate); //need radius in samples
 
-	_clusters = new ClusterSet(clusterRadius);
 	computeClusters(_clusters, _peaks);
 
 	//*** phase induction ***
-	_agents = new AgentSet(_m->_sampleRate);
 
 	for (auto rit = _clusters->set.rbegin(); rit != _clusters->set.rend(); ++rit) {
 		for (auto& peak : _peaks) {
@@ -179,7 +179,7 @@ void TempoDetection::initialDixonAlg() {
 void TempoDetection::continuousDixonAlg()
 {
 	//remove oldest add newest (still oldest first)
-	if (_peaks.size() >= MAX_PEAKS_STORED) {
+	if (_peaks.size() >= DixonAlgVars::MAX_PEAKS_STORED) {
 		_peaks.erase(_peaks.begin());
 	}
 	_peaks.push_back(_noteOnset->getPeakHistory()->newest());
@@ -247,8 +247,8 @@ void TempoDetection::computeAgents(AgentSet* agents, std::vector<Peak>& peaks)
 {
 	agents->sortAgentsByPrediction(); //agents sorted by score so need to be fully resorted. lots of errors so dont use insertion
 
-	float tolPrePercentage = 0.2; //20%
-	float tolPostPercentage = 0.4; //40%
+	float tolPrePercentage = 0.1; //10%
+	float tolPostPercentage = 0.2; //20%
 
 	int maxTolPre = tolPrePercentage * (60 / MIN_TEMPO) * _m->_sampleRate; //used for optimisation
 
@@ -269,9 +269,6 @@ void TempoDetection::computeAgents(AgentSet* agents, std::vector<Peak>& peaks)
 
 
 			if (peak.onset - (*A)._lastEvent.onset > timeOut) {
-				if (&(*A) == _agents->_highestScoringAgent) {
-					std::cout << "OH NO" << std::endl;
-				}
 				//after specified time passes since last matching beat then discontinue this agent
 				//std::cout << (*A)._lastEvent.onset << " <- last event TIMEOUT" << std::endl;
 				auto nextA = std::next(A);
@@ -319,4 +316,30 @@ void TempoDetection::computeAgents(AgentSet* agents, std::vector<Peak>& peaks)
 		agents->insertionSortAgentsByPrediction(); //fix any small change in order due to error correction, insertion sort O(n) for minor errors
 		agents->removeDuplicateAgents();
 	}
+}
+
+void TempoDetection::initSetters()
+{
+	std::function<float()> tempoSetterFunction = std::bind(&TempoDetection::getTempo, this);
+	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Tempo", tempoSetterFunction);
+
+	std::function<float()> timeSinceLastBeatSetterFunction = std::bind(&TempoDetection::getTimeSinceLastBeat, this);
+	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Time since last beat", timeSinceLastBeatSetterFunction);
+
+	std::function<float()> timeToNextBeatSetterFunction = std::bind(&TempoDetection::getTimeToNextBeat, this);
+	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Time to next beat", timeToNextBeatSetterFunction);
+
+	std::function<float()> confidenceInTempoSetterFunction = std::bind(&TempoDetection::getTempo, this);
+	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Tempo confidence", confidenceInTempoSetterFunction);
+}
+
+void TempoDetection::deleteSetters()
+{
+	VisualiserShaderManager::Uniforms::deletePossibleUniformSetter("Tempo");
+
+	VisualiserShaderManager::Uniforms::deletePossibleUniformSetter("Time since last beat");
+
+	VisualiserShaderManager::Uniforms::deletePossibleUniformSetter("Time to next beat");
+
+	VisualiserShaderManager::Uniforms::deletePossibleUniformSetter("Tempo confidence");
 }

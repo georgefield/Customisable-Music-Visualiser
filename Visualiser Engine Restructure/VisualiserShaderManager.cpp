@@ -1,5 +1,6 @@
 #include "VisualiserShaderManager.h"
 #include "VisualiserManager.h"
+#include "SignalProcessingManager.h"
 #include <Vengine/IOManager.h>
 
 //visualiser shader managing--
@@ -25,7 +26,6 @@ static const std::string DEFAULT_FRAGMENT_SHADER_PATH = "Resources/shaders/simpl
 
 VisualiserShader* VisualiserShaderManager::getShader(std::string fragPath) {
 	if (_shaderCache.find(fragPath) != _shaderCache.end()) {
-		std::cout << "Shader " + fragPath + " already loaded" << std::endl;
 		return &_shaderCache[fragPath];
 	}
 
@@ -44,6 +44,15 @@ VisualiserShader* VisualiserShaderManager::getShader(std::string fragPath) {
 std::string VisualiserShaderManager::getDefaultFragmentShaderPath()
 {
 	return DEFAULT_FRAGMENT_SHADER_PATH;
+}
+
+void VisualiserShaderManager::getUsableShaderFragPaths(std::vector<std::string>& shaderPaths)
+{
+	shaderPaths.clear();
+
+	for (auto& it : _shaderCache){
+		shaderPaths.push_back(it.first);
+	}
 }
 
 //***
@@ -193,6 +202,31 @@ std::string VisualiserShaderManager::SSBOs::getSSBOsetterName(int bindingID)
 	return _setSSBOinfoMap[bindingID].name;
 }
 
+void VisualiserShaderManager::addHistoryAsPossibleSSBOsetter(std::string historyName, History<float>* history)
+{
+	std::function<float()> newestValueSetterFunction = std::bind(&History<float>::newest, history);
+	VisualiserShaderManager::Uniforms::addPossibleUniformSetter(historyName, newestValueSetterFunction);
+
+	std::function<float* ()> historySetterFunction = std::bind(&History<float>::getAsContiguousArray, history);
+	VisualiserShaderManager::SSBOs::addPossibleSSBOSetter(historyName + " history", historySetterFunction, history->totalSize());
+
+	if (history->totalSize() != SignalProcessingManager::GENERAL_HISTORY_SIZE) {
+		//need to create specific size var if history size different from general size
+		std::function<int ()> historySizeSetterFunction = std::bind(&History<float>::totalSize, history);
+		VisualiserShaderManager::Uniforms::addPossibleUniformSetter(historyName + " history size", historySizeSetterFunction);
+	}
+}
+
+void VisualiserShaderManager::deleteHistoryAsPossibleSSBOsetter(std::string historyName)
+{
+	VisualiserShaderManager::Uniforms::deletePossibleUniformSetter(historyName);
+
+	VisualiserShaderManager::SSBOs::deleteSSBOsetter(historyName + " history");
+
+	VisualiserShaderManager::Uniforms::deletePossibleUniformSetter(historyName + " history size");
+
+}
+
 bool VisualiserShaderManager::SSBOinitPossible()
 {
 	//add checks using gl functions that there is enough space in memory
@@ -212,7 +246,7 @@ void VisualiserShaderManager::Uniforms::addPossibleUniformSetter(std::string fun
 		return;
 	}
 
-	_floatFunctions[functionName].initialiseAsDynamic(functionName, function);
+	_floatFunctions[functionName].initialise(functionName, function);
 }
 
 void VisualiserShaderManager::Uniforms::addPossibleUniformSetter(std::string functionName, std::function<int()> function)
@@ -222,30 +256,9 @@ void VisualiserShaderManager::Uniforms::addPossibleUniformSetter(std::string fun
 		return;
 	}
 
-	_intFunctions[functionName].initialiseAsDynamic(functionName, function);
+	_intFunctions[functionName].initialise(functionName, function);
 }
 
-void VisualiserShaderManager::Uniforms::addPossibleUniformSetter(std::string constantName, float constant)
-{
-	if (_floatFunctions.find(constantName) != _floatFunctions.end()) {
-		Vengine::warning("Function with name '" + constantName + "' already in uniform updater list. Uniform updater list not changed.");
-		return;
-	}
-
-	_floatFunctions[constantName].initialiseAsConstant(constantName, constant);
-
-}
-
-void VisualiserShaderManager::Uniforms::addPossibleUniformSetter(std::string constantName, int constant)
-{
-	if (_intFunctions.find(constantName) != _intFunctions.end()) {
-		Vengine::warning("Function with name '" + constantName + "' already in uniform updater list. Uniform updater list not changed.");
-		return;
-	}
-
-	_intFunctions[constantName].initialiseAsConstant(constantName, constant);
-
-}
 
 void VisualiserShaderManager::Uniforms::deletePossibleUniformSetter(std::string name)
 {

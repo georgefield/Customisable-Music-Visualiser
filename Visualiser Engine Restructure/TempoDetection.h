@@ -5,25 +5,70 @@
 
 #include "NoteOnset.h"
 #include "DixonAlgorithmStructures.h"
+#include "imgui.h"
 
 class TempoDetection {
 public:
 
-	TempoDetection(int historySize) :
-		_tempoHistory(historySize),
-		_timeSinceLastBeatHistory(historySize),
-		_timeToNextBeatHistory(historySize),
-		_confidenceHistory(historySize),
-		_lastPeakOnset(-1),
-		_initialCalculated(false),
+	TempoDetection() :
 		_tempoRollingAvg(5),
 		_confidenceRollingAvg(8)
 	{}
 
+	~TempoDetection() {
+		deleteSetters();
+	}
+
 	void init(Master* master, NoteOnset* noteOnset) {
 		_m = master;
 		_noteOnset = noteOnset;
+
 		_sampleLastCalculated = -1;
+		_lastPeakOnset = -1;
+
+		_tempo = 100;
+		_tempoConfidence = 0.0f;
+		_timeSinceLastBeat = 0.0f;
+		_timeToNextBeat = 0.0f;
+
+		_initialCalculated = false;
+
+		//set up clusters and agents--
+		int clusterRadius = int(DixonAlgVars::CLUSTER_RADIUS_SECONDS * _m->_sampleRate); //need radius in samples
+		_clusters = new ClusterSet(clusterRadius);
+
+		_agents = new AgentSet(_m->_sampleRate);
+		//--
+
+		initSetters();
+	}
+
+	void reInit() {
+		_sampleLastCalculated = -1;
+		_lastPeakOnset = -1;
+
+		_tempo = 100;
+		_tempoConfidence = 0.0f;
+		_timeSinceLastBeat = 0.0f;
+		_timeToNextBeat = 0.0f;
+
+		_initialCalculated = false;
+
+		//set up structures again--
+		delete _clusters;
+		delete _agents;
+
+		int clusterRadius = int(DixonAlgVars::CLUSTER_RADIUS_SECONDS * _m->_sampleRate); //need radius in samples
+		_clusters = new ClusterSet(clusterRadius);
+
+		_agents = new AgentSet(_m->_sampleRate);
+		//--
+
+		//clear data--
+		_peaks.clear();
+		_tempoRollingAvg.clear();
+		_confidenceRollingAvg.clear();
+		//--
 	}
 
 	void calculateNext();
@@ -32,21 +77,29 @@ public:
 		return _initialCalculated;
 	}
 
-	History<float>* getTimeSinceLastBeatHistory() {
-		return &_timeSinceLastBeatHistory;
+	float getTimeSinceLastBeat() {
+		return _timeSinceLastBeat;
 	}
-	History<float>* getTimeToNextBeatHistory() {
-		return &_timeToNextBeatHistory;
+	float getTimeToNextBeat() {
+		return _timeToNextBeat;
 	}
-	History<float>* getTempoHistory() {
-		return &_tempoHistory;
+	float getTempo() {
+		return _tempo;
 	}
-	History<float>* getConfidenceInTempoHistory() {
-		return &_confidenceHistory;
+	float getConfidenceInTempo() {
+		return _tempoConfidence;
+	}
+
+	void getDebugInfo(std::vector<std::string>& debugInfo) {
+
+		if (!_initialCalculated) {
+			debugInfo.push_back("Not enough peak data to calculate tempo");
+			return;
+		}
+
+		_agents->debug3(debugInfo, _m->_sampleRate);
 	}
 private:
-	RollingAverage _tempoRollingAvg;
-	RollingAverage _confidenceRollingAvg;
 
 	Master* _m;
 	NoteOnset* _noteOnset;
@@ -54,19 +107,27 @@ private:
 	bool _initialCalculated;
 	int _sampleLastCalculated;
 
-	History<float> _tempoHistory; //in bpm
-	History<float> _timeSinceLastBeatHistory; //in seconds
-	History<float> _timeToNextBeatHistory; //in seconds
-	History<float> _confidenceHistory; //from 0 to 1
+	//calculated values--
+	RollingAverage _tempoRollingAvg;
+	RollingAverage _confidenceRollingAvg;
 
-	float _clusterRadiusInSeconds;
+	float _tempo;
+	float _timeSinceLastBeat;
+	float _timeToNextBeat;
+	float _tempoConfidence;
+	//--
+
 	ClusterSet* _clusters;
 	AgentSet* _agents;
 
 	std::vector<Peak> _peaks;
 	int _lastPeakOnset;
+
 	void initialDixonAlg();
 	void continuousDixonAlg();
 	void computeClusters(ClusterSet* clusters, std::vector<Peak>& peaks);
 	void computeAgents(AgentSet* agents, std::vector<Peak>& peaks);
+
+	void initSetters();
+	void deleteSetters();
 };

@@ -22,6 +22,14 @@ public:
 		}
 	}
 
+	void reInit() {
+		//memset all to 0.0f
+		for (int i = 0; i < _history.totalSize(); i++) {
+			memset(_history.get(i), 0.0f, (_vectorDim * sizeof(float)));
+		}
+		_added = 0; //reset num added to 0
+	}
+
 
 	~VectorHistory() {
 		if (_vectorDim != -1) { //only delete if initialised

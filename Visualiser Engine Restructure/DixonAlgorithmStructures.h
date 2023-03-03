@@ -8,6 +8,16 @@
 #include "NoteOnset.h"
 #include "Tools.h"
 
+struct DixonAlgVars {
+	static float CLUSTER_RADIUS_SECONDS;
+	static int MAX_PEAKS_STORED;
+	static float SCORE_FACTOR_PER_NEW_BEAT;
+	static int MAX_AGENTS_STORED;
+	static float ACCOUNT_FOR_CLUSTER_SCORE; //between 0 and 1, 1 is fully and 0 is none
+	static float ERROR_CORRECTION_AMOUNT;
+};
+
+
 //*** Cluster struct and container
 
 struct Cluster {
@@ -109,6 +119,19 @@ struct ClusterSet {
 		set.emplace(std::next(addPosition), ioi);
 	}
 
+	Cluster* bestCluster() {
+		Cluster* best = nullptr;
+		for (auto& it : set) {
+			if (best == nullptr) {
+				best = &it;
+			}
+			else if (best != nullptr && it._score > best->_score) {
+				best = &it;
+			}
+		}
+		return best;
+	}
+
 	void getClusterWithClosestInterval(int ioi, std::list<Cluster>::iterator& nearest, bool& isNearestAbove, int& distanceToNearest) {
 
 		//get above and below clusters
@@ -188,8 +211,10 @@ struct Agent {
 		_score(firstEventToAdd.salience),
 		_accountingForIntervalScore(0.0f)
 	{
+		id = rand();
 	}
 
+	int id;
 	int _beatInterval;
 	int _prediction;
 	float _score;
@@ -223,6 +248,17 @@ struct AgentSet {
 	void debug2() {
 		for (auto it = set.begin(); it != set.end(); it++) {
 			std::cout << "bi, prd, sc" << it->_beatInterval << ", " << it->_prediction << ", " << it->_accountingForIntervalScore << std::endl;
+		}
+	}
+
+	void debug3(std::vector<std::string>& debugInfo, int sampleRate) {
+		sortAgentsByScoresAccountingForIntervalScores();
+
+		int count = 1;
+		for (auto it = set.rbegin(); it != set.rend(); it++) {
+			std::string info = "Rank " + std::to_string(count) + ": tempo = " + std::to_string(float(60 * sampleRate) / float((*it)._beatInterval)) + ", score = " + std::to_string((*it)._accountingForIntervalScore) + ", id = " + std::to_string((*it).id);
+			debugInfo.push_back(info);
+			count++;
 		}
 	}
 
@@ -292,7 +328,7 @@ struct AgentSet {
 			return;
 		}
 
-
+		float bestClusterScore = clusters->bestCluster()->_score;
 
 		std::list<Cluster>::iterator nearest;
 		bool isNearestAbove;
@@ -306,7 +342,11 @@ struct AgentSet {
 			else {
 				relativeErrorFromClosest = 1.0f - (float(distanceToNearest) / float((*nearest)._avgInterval));
 			}
-			(*it)._accountingForIntervalScore = relativeErrorFromClosest * (*nearest)._score * (*it)._score;
+			float clusterScore = (relativeErrorFromClosest * (*nearest)._score);
+			float score = (*it)._score;
+			(*it)._accountingForIntervalScore = 
+				(1.0f - DixonAlgVars::ACCOUNT_FOR_CLUSTER_SCORE) * bestClusterScore * score +
+				DixonAlgVars::ACCOUNT_FOR_CLUSTER_SCORE * score * clusterScore;
 
 			//set highest scoring agent variable
 			if (_highestScoringAgent == nullptr || (*it)._accountingForIntervalScore > _highestScoringAgent->_accountingForIntervalScore) {

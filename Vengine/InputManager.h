@@ -24,8 +24,10 @@ namespace Vengine {
 		glm::vec2 getMouseCoords() { return _mouseCoords; }
 
 		bool isChangeThisFrame() { return _isChangeThisFrame; }
+		bool isKeyPressOrMouseClickThisFrame() { return _isKeyPressThisFrame; }
 	private:
 		bool _isChangeThisFrame;
+		bool _isKeyPressThisFrame;
 
 		bool wasKeyDown(unsigned int keyID);
 

@@ -3,12 +3,13 @@
 
 using namespace Vengine;
 
-InputManager::InputManager() : _mouseCoords(0, 0), _isChangeThisFrame(false) {
+InputManager::InputManager() : _mouseCoords(0, 0), _isChangeThisFrame(false), _isKeyPressThisFrame(false) {
 
 }
 
 void InputManager::update(){
 	_isChangeThisFrame = false;
+	_isKeyPressThisFrame = false;
 	//for (auto it = _keyMap.begin(); it != _keyMap.end()) {
 	for (auto& it : _keyMap){ //iterate through keymap, does same as above
 		_prevKeyMap[it.first] = it.second;
@@ -19,6 +20,7 @@ void InputManager::update(){
 void InputManager::pressKey(unsigned int keyID) {
 	_keyMap[keyID] = true;
 	_isChangeThisFrame = true;
+	_isKeyPressThisFrame = true;
 }
 
 void InputManager::releaseKey(unsigned int keyID) {

@@ -105,9 +105,9 @@ void VisualiserShader::updateUniformValues()
 			if (!(*setFloatUniformLoc).second.isValid()) {
 				Vengine::fatalError("Invalid float setter");
 			}
-			else if ((*setFloatUniformLoc).second.functionIsAttached) {
-				(*setFloatUniformLoc).second.callUpdater(); //only call updater if function attached
-			}
+
+			(*setFloatUniformLoc).second.callUpdater();
+
 			glUniform1f(_program->getUniformLocation((*setFloatUniformLoc).first), (*setFloatUniformLoc).second.functionValue);
 		}
 		else if (uniformIsSet(it) && getUniformType(it) == GL_INT) {
@@ -119,9 +119,9 @@ void VisualiserShader::updateUniformValues()
 			if (!(*setIntUniformLoc).second.isValid()) {
 				Vengine::fatalError("Invalid int setter");
 			}
-			else if ((*setIntUniformLoc).second.functionIsAttached) {
-				(*setIntUniformLoc).second.callUpdater(); //only call updater if function attached
-			}
+
+			(*setIntUniformLoc).second.callUpdater();
+
 			glUniform1i(_program->getUniformLocation((*setIntUniformLoc).first), (*setIntUniformLoc).second.functionValue);
 		}
 

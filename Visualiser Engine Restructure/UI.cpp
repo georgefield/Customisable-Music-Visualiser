@@ -98,15 +98,45 @@ void UI::toolbar() {
 	}
 
 
-	if (ImGui::BeginMenu("SSBO manager")) {
-		ImGui::MenuItem("Show SSBO manager", NULL, &_showSSBOmanager);
+	if (ImGui::BeginMenu("Shader Managing")) {
+		ImGui::MenuItem("Shader Storage Buffer Objects (SSBOs)", NULL, &_showSSBOmanager);
+		ImGui::MenuItem("Uniforms", NULL, &_showUniformManager);
+		ImGui::MenuItem("Import shader", NULL, &_showImportShaderUi);
 		ImGui::EndMenu();
 	}
 
 	if (_showSSBOmanager) {
 		ssboManagerUi();
 	}
+	if (_showUniformManager) {
+		uniformManagerUi();
+	}
+	if (_showImportShaderUi) {
+		importShaderUi();
+	}
 
+	if (ImGui::BeginMenu("Signal Processing")) {
+		ImGui::MenuItem("General", NULL, &_showGeneralSignalProcessingUi);
+		ImGui::MenuItem("Frequency bands", NULL, &_showFourierTransformUi);
+		ImGui::MenuItem("Note onset detection", NULL, &_showNoteOnsetUi);
+		ImGui::MenuItem("Tempo detection", NULL, &_showTempoDetectionUi);
+		ImGui::MenuItem("MFCCs", NULL, &_showMFCCsUi);
+		//add rest
+		ImGui::EndMenu();
+	}
+
+	if (_showGeneralSignalProcessingUi) {
+		generalSignalProcessingUi();
+	}
+	if (_showFourierTransformUi) {
+		fourierTransformsUi();
+	}
+	if (_showNoteOnsetUi) {
+		noteOnsetUi();
+	}
+	if (_showTempoDetectionUi) {
+		tempoDetectionUi();
+	}
 
 	ImGui::EndMenuBar();
 
@@ -122,34 +152,6 @@ void UI::toolbar() {
 		}
 		ImGui::EndPopup();
 	}
-
-	//signal processing check boxes
-	ImGui::SameLine();
-	ImGui::Checkbox("Fourier Transforms UI", &_showFourierTransformUi);
-
-	if (_showFourierTransformUi) {
-		fourierTransformsUi();
-	}
-
-	ImGui::SameLine();
-	ImGui::Checkbox("Note Onset UI", &_showNoteOnsetUi);
-
-	ImGui::SameLine();
-	ImGui::Checkbox("Tempo Detection UI", &_showTempoDetectionUi);
-
-	if (_showTempoDetectionUi) {
-		//hacked in for now
-		ImGui::Begin("Tempo debug", (bool*)0, ImGuiWindowFlags_AlwaysAutoResize);
-		ImGui::Text("Predicted tempo: "); ImGui::SameLine();
-		ImGui::Text(std::to_string(SignalProcessing::_tempoDetection->getTempoHistory()->newest()).c_str());
-
-		ImGui::Text("Confidence: "); ImGui::SameLine();
-		ImGui::Text(std::to_string(SignalProcessing::_tempoDetection->getConfidenceInTempoHistory()->newest()).c_str());
-		ImGui::End();
-	}
-
-	ImGui::SameLine();
-	ImGui::Checkbox("Similarity Measure UI", &_showSimilarityMeasureUi);
 
 
 	//background colour picker
@@ -252,6 +254,9 @@ Vengine::Viewport UI::getViewport()
 	return tmp;
 }
 
+
+//*** SHADER UI ***
+
 void UI::ssboManagerUi()
 {
 	//*** SHOW CURRENT BINDINGS ***
@@ -320,10 +325,163 @@ void UI::ssboManagerUi()
 	ImGui::End();
 }
 
+void UI::uniformManagerUi()
+{
+	//*** CHOOSE SHADER TO EDIT UNIFORMS OF ***
+
+	ImGui::Begin("Uniform manager", &_showUniformManager, ImGuiWindowFlags_AlwaysAutoResize);
+
+	static std::vector<std::string> shaderFileNames;
+	static bool firstOpen = true;
+
+	if (firstOpen || _inputManager->isKeyPressOrMouseClickThisFrame()) {
+		Vengine::IOManager::getFilesInDir(VisualiserManager::shadersFolder(), shaderFileNames, true, ".frag");
+		firstOpen = false;
+	}
+
+	ImGui::Text("Select shader: ");
+
+	std::string shaderComboStr = UI::ImGuiComboStringMaker(shaderFileNames);
+
+	const char* shaderItems = shaderComboStr.c_str();
+	static int currentShader = 0;
+	ImGui::PushID(2);
+	ImGui::Combo("Shaders", &currentShader, shaderItems, shaderFileNames.size());
+	ImGui::PopID();
+
+	if (shaderFileNames.size() == 0) {
+		ImGui::Text("No shaders in visualiser shaders folder");
+		ImGui::End();
+		return;
+	}
+
+	VisualiserShader* chosenShader = VisualiserShaderManager::getShader(VisualiserManager::shadersFolder() + "/" + shaderFileNames.at(currentShader));
+
+	ImGui::Separator();
+
+
+	//*** DISPLAY CURRENT SET UNIFORMS ***
+
+	std::vector<std::string> setUniformNames;
+	chosenShader->getSetUniformNames(setUniformNames);
+
+	//display pairings
+	for (auto& it : setUniformNames) {
+		std::string info = chosenShader->getUniformSetterName(it) + " -> " + it;
+
+		ImGui::Text(info.c_str()); ImGui::SameLine();
+		if (ImGui::Button("Erase")) {
+			chosenShader->eraseSetterUniformPair(it);
+		}
+	}
+
+	if (setUniformNames.size() > 0) {
+		ImGui::Separator();
+	}
+
+
+	//*** UI FOR CREATING NEW PAIRINGS OF UNIFORMS AND SETTERS FOR SHADER ***
+
+	//show possible new pairing information
+	std::vector<std::string> unsetUniformNames; //any unset uniform
+	chosenShader->getUnsetUniformNames(unsetUniformNames);
+
+	if (unsetUniformNames.size() + setUniformNames.size() > 0) {
+
+		//choose from uniforms to set--
+		std::string uniformComboStr = UI::ImGuiComboStringMaker(unsetUniformNames);
+
+		const char* uniformItems = uniformComboStr.c_str();
+		static int currentUniform = 0;
+		ImGui::PushID(0);
+		ImGui::Combo("Uniforms", &currentUniform, uniformItems, unsetUniformNames.size());
+		ImGui::PopID();
+		//--
+
+		ImGui::Text("To be set to:");
+
+		//choose from valid possible uniform setters--
+		std::vector<std::string> possibleUniformSetterFunctionNames; //can be paired with any function
+
+		if (unsetUniformNames.size() != 0 && chosenShader->getUniformType(unsetUniformNames.at(currentUniform)) == GL_INT) {
+			VisualiserShaderManager::Uniforms::getIntUniformSetterNames(possibleUniformSetterFunctionNames);
+		}
+		else if (unsetUniformNames.size() != 0 && chosenShader->getUniformType(unsetUniformNames.at(currentUniform)) == GL_FLOAT) {
+			VisualiserShaderManager::Uniforms::getFloatUniformSetterNames(possibleUniformSetterFunctionNames);
+		}
+
+		std::string uniformSetterComboStr = UI::ImGuiComboStringMaker(possibleUniformSetterFunctionNames);
+
+		const char* uniformSetterItems = uniformSetterComboStr.c_str();
+		static int currentUniformSetter = 0;
+		ImGui::PushID(1);
+		ImGui::Combo("Setters", &currentUniformSetter, uniformSetterItems, possibleUniformSetterFunctionNames.size());
+		ImGui::PopID();
+		//--
+
+		//button to confirm
+		if (ImGui::Button("Confirm")) {
+			if (possibleUniformSetterFunctionNames.size() == 0 || unsetUniformNames.size() == 0) {
+				//do nothing
+			}
+			else if (chosenShader->getUniformType(unsetUniformNames.at(currentUniform)) == GL_INT) {
+				chosenShader->initSetterUniformPair(unsetUniformNames.at(currentUniform), VisualiserShaderManager::Uniforms::getIntUniformSetter(possibleUniformSetterFunctionNames.at(currentUniformSetter)));
+			}
+			else if (chosenShader->getUniformType(unsetUniformNames.at(currentUniform)) == GL_FLOAT) {
+				chosenShader->initSetterUniformPair(unsetUniformNames.at(currentUniform), VisualiserShaderManager::Uniforms::getFloatUniformSetter(possibleUniformSetterFunctionNames.at(currentUniformSetter)));
+			}
+		}
+	}
+	else {
+		ImGui::Text("No uniforms in shader");
+	}
+
+	ImGui::End();
+}
+
+void UI::importShaderUi()
+{
+	std::string chosenFile = "";
+	if (PFDapi::fileChooser("Choose shader to add", Vengine::IOManager::getProjectDirectory(), chosenFile, { "Fragment Files (.frag)", "*.frag" }, true)) {
+		VisualiserShaderManager::getShader(chosenFile);
+	}
+	else {
+		_errorQueue.push_back("Could not import shader " + chosenFile);
+	}
+
+	_showImportShaderUi = false;
+}
+
+//***
+
+
+//*** SIGNAL PROCESSING UIs ***
+
+void UI::generalSignalProcessingUi()
+{
+	ImGui::Begin("General", &_showGeneralSignalProcessingUi, ImGuiWindowFlags_AlwaysAutoResize);
+
+	ImGui::Checkbox("Compute Fourier Transforms", &SignalProcessingManager::UI_computeFourierTransform);
+	ImGui::Checkbox("Compute RMS", &SignalProcessingManager::UI_computeRms);
+	ImGui::Checkbox("Compute Note Onset", &SignalProcessingManager::UI_computeNoteOnset);
+	ImGui::Checkbox("Compute Tempo Detection", &SignalProcessingManager::UI_computeTempoDetection);
+	ImGui::Checkbox("Compute MFCCs", &SignalProcessingManager::UI_computeMFCCs);
+	ImGui::Checkbox("Compute Self Similarity Matrix", &SignalProcessingManager::UI_computeSelfSimilarityMatrix);
+
+	std::string fpsInfo = "FPS: " + std::to_string(int(Vengine::MyTiming::getFPS()));
+	ImGui::Text(fpsInfo.c_str());
+
+	if (ImGui::Button("Restart signal processing")) {
+		SignalProcessingManager::restart();
+	}
+	ImGui::End();
+}
+
 void UI::fourierTransformsUi()
 {
-	ImGui::ShowDemoWindow();
 	ImGui::Begin("Fourier Tranforms", &_showFourierTransformUi, ImGuiWindowFlags_AlwaysAutoResize);
+
+	ImGui::Checkbox("Compute Fourier Transforms", &SignalProcessingManager::UI_computeFourierTransform);
 
 	//get id array
 	std::vector<int> fourierTransformIds = FourierTransformManager::idArr();
@@ -333,18 +491,19 @@ void UI::fourierTransformsUi()
 	//display already created ft and info about them
 	for (int i = 0; i < fourierTransformIds.size(); i++) {
 		int id = fourierTransformIds[i];
+		std::string ftName = "Fourier Transform " + std::to_string(id);
+		if (ImGui::CollapsingHeader(ftName.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
 
-		if (FourierTransformManager::fourierTransformExists(id)) {
 			ImGui::PushID(i);
 
 			//name of ft--
 			ImGui::Text(("Fourier transform " + std::to_string(id)).c_str());
 			//--
-			
+
 			//plot low res graph of ft--
 			ImGui::PlotLines("##", FourierTransformManager::getFourierTransform(id)->getLowResOutput(), FourierTransformManager::getFourierTransform(id)->getLowResOutputSize());
 			//--
-			
+
 			//show cutoff information--
 			float cutoffLow = FourierTransformManager::getFourierTransform(id)->getCutoffLow();
 			ImGui::Text(("Cutoff low: " + std::to_string(cutoffLow)).c_str());
@@ -377,11 +536,11 @@ void UI::fourierTransformsUi()
 
 	//imgui vars
 	static float nextCutoffLow = 0.0f;
-	static float nextCutoffHigh = SignalProcessing::getMasterPtr()->_sampleRate / 2.0f;
+	static float nextCutoffHigh = SignalProcessingManager::getMasterPtr()->_sampleRate / 2.0f;
 	static float nextCutoffSmoothFactor = 0.0f;
 	ImGui::Text("Ctrl+Click to edit manually");
-	ImGui::SliderFloat("Cutoff Hz low", &nextCutoffLow, 0.0f, SignalProcessing::getMasterPtr()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
-	ImGui::SliderFloat("Cutoff Hz high", &nextCutoffHigh, 0.0f, SignalProcessing::getMasterPtr()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+	ImGui::SliderFloat("Cutoff Hz low", &nextCutoffLow, 0.0f, SignalProcessingManager::getMasterPtr()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+	ImGui::SliderFloat("Cutoff Hz high", &nextCutoffHigh, 0.0f, SignalProcessingManager::getMasterPtr()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
 	ImGui::SliderFloat("Cutoff smooth fraction", &nextCutoffSmoothFactor, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 
 	if (ImGui::Button("Create new")) {
@@ -394,10 +553,64 @@ void UI::fourierTransformsUi()
 		}
 	}
 
-	ImGui::ShowDemoWindow();
 
 	ImGui::End();
 }
+
+void UI::noteOnsetUi()
+{
+	ImGui::Begin("Note Onset", &_showNoteOnsetUi, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::End();
+}
+
+void UI::tempoDetectionUi()
+{
+	ImGui::Begin("Tempo", &_showTempoDetectionUi, ImGuiWindowFlags_AlwaysAutoResize);
+
+	ImGui::Checkbox("Compute Tempo", &SignalProcessingManager::UI_computeTempoDetection);
+
+	std::string tempo = "Tempo guess: " + std::to_string(SignalProcessingManager::_tempoDetection->getTempo());
+	ImGui::Text(tempo.c_str());
+	float confidence = SignalProcessingManager::_tempoDetection->getConfidenceInTempo();
+	std::string confidenceStr = "Confidence: " + std::to_string(confidence);
+	ImGui::Text(confidenceStr.c_str());
+	ImGui::SameLine();
+	if (confidence < 0.3) {
+		ImGui::Text(" (No idea)");
+	}
+	else if (confidence < 0.5) {
+		ImGui::Text(" (Unsure)");
+	}
+	else if (confidence < 0.66) {
+		ImGui::Text(" (Somewhat confident)");
+	}
+	else {
+		ImGui::Text(" (Confident)");
+	}
+
+	std::string timeToNextBeat = "Time to next beat: " + std::to_string(SignalProcessingManager::_tempoDetection->getTimeToNextBeat());
+	ImGui::Text(timeToNextBeat.c_str());
+	std::string timeSinceLastBeat = "Time since last beat: " + std::to_string(SignalProcessingManager::_tempoDetection->getTimeSinceLastBeat());
+	ImGui::Text(timeSinceLastBeat.c_str());
+
+	ImGui::SliderFloat("Accounting for interval score amount (instead of only agent score)", &DixonAlgVars::ACCOUNT_FOR_CLUSTER_SCORE, 0.0f, 1.0f);
+	
+	static bool showDebug = false;
+	ImGui::Checkbox("Debug", &showDebug);
+	if (showDebug) {
+		ImGui::BeginChild("debug", ImVec2(500, 350), true);
+		std::vector < std::string> debugInfo;
+		SignalProcessingManager::_tempoDetection->getDebugInfo(debugInfo);
+		for (auto& it : debugInfo) {
+			ImGui::Text(it.c_str());
+		}
+		ImGui::EndChild();
+	}
+
+	ImGui::End();
+}
+
+//***
 
 void UI::processFileMenuSelection()
 {

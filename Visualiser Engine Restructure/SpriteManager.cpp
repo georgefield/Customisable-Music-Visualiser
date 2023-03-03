@@ -65,9 +65,10 @@ void SpriteManager::deleteSprite(int id) {
 }
 
 
-void SpriteManager::drawAll(bool batching) {
+void SpriteManager::drawAll() {
 
-	if (batching) {
+	if (false) {
+		//premature optimisation is the cause of all that is wrong in the world
 		drawWithBatching();
 	}
 	else {

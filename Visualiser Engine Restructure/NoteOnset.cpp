@@ -12,7 +12,7 @@ void NoteOnset::calculateNext(DataExtractionAlg dataAlg, PeakPickingAlg peakAlg)
 	//onset detection
 	float onsetValue = 0;
 	if (dataAlg == DataExtractionAlg::DER_OF_LOG_ENERGY) {
-		_energy->calculateNext(4096, LINEAR_PYRAMID); //depends on energy
+		_energy->calculateNext(_m->_fftHistory.newest(), _m->_fftHistory.numHarmonics()); //depends on energy
 		onsetValue = derivativeOfLogEnergy();
 		onsetValue *= 10; //somewhat normalise
 	}
@@ -34,29 +34,20 @@ void NoteOnset::calculateNext(DataExtractionAlg dataAlg, PeakPickingAlg peakAlg)
 	//peak detection
 	bool aboveThreshold = false;
 	if (peakAlg == PeakPickingAlg::THRESHOLD) {
-		aboveThreshold = thresholdPercent(getOnsetHistory(), 5); //peak if in top 5%
+		aboveThreshold = thresholdPercent(getOnsetHistory(), 10); //peak if in top 7%
 	}
 	if (peakAlg == PeakPickingAlg::CONVOLVE_THEN_THRESHOLD) {
-		aboveThreshold = thresholdPercent(getCONVonsetHistory(), 5); //peak if in top 5%
+		aboveThreshold = thresholdPercent(getCONVonsetHistory(), 10); //peak if in top 7%
 	}
 
-	//wait for highest point before adding peak, means the timing will be 1 frame off but not big deal. 
-	//Can fix if change tempo detection to assume current sample is the last peaks
-	if (_onsetDetectionHistory.newest() <=_onsetDetectionHistory.previous()) {
-		if (!_goingDownFromPeak && _lastAboveThresh) {
-			std::cout << _onsetDetectionHistory.previousSample() << ", " << _onsetDetectionHistory.previous() << std::endl;
-			_onsetPeaks.add({ _onsetDetectionHistory.previousSample(), _onsetDetectionHistory.previous() });
-			_goingDownFromPeak = true;
-		}
-	}
-
-	if (aboveThreshold && !_lastAboveThresh) {
-		_lastAboveThresh = true;
+	if (aboveThreshold && !_lastAboveThreshold) {
+		_lastAboveThreshold = true;
+		_onsetPeaks.add({ _m->_currentSample, onsetValue });
 	}
 	if (!aboveThreshold) {
-		_goingDownFromPeak = false;
-		_lastAboveThresh = false;
+		_lastAboveThreshold = false;
 	}
+
 }
 
 //*** onset algorithms ***
@@ -99,4 +90,14 @@ bool NoteOnset::thresholdPercent(History<float>* historyToUse, float topXpercent
 {
 	_thresholder.addValue(historyToUse->newest());
 	return _thresholder.testThreshold(historyToUse->newest(), topXpercent);
+}
+
+void NoteOnset::initSetters()
+{
+	VisualiserShaderManager::addHistoryAsPossibleSSBOsetter("Note Onset", &_onsetDetectionHistory);
+}
+
+void NoteOnset::deleteSetters()
+{
+	VisualiserShaderManager::deleteHistoryAsPossibleSSBOsetter("Note Onset");
 }

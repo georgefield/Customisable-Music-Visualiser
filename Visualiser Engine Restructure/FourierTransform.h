@@ -1,6 +1,7 @@
 #pragma once
 #include "Master.h"
 #include "FourierTransformHistory.h"
+#include "Energy.hpp"
 
 class FourierTransform {
 public:
@@ -10,11 +11,11 @@ public:
 		FREQUENCY_CONVOLVE
 	};
 
-	FourierTransform(int historySize = 1, float cutOffLow = 0.0f, float cutOffHigh = 22050.0f, float cutoffSmoothFrac = 0.0f);
+	FourierTransform(int transformHistorySize = 1, float cutOffLow = 0.0f, float cutOffHigh = 22050.0f, float cutoffSmoothFrac = 0.0f);
 	~FourierTransform();
 	
-	void init(Master* master);
-	void reInit(Master* master);
+	void init(Master* master, std::string name, bool useSetters = true);
+	void reInit();
 
 	void beginCalculation(); //applying filters must be between begin and end
 
@@ -22,6 +23,7 @@ public:
 
 	void applyFunction(FunctionType type); //must be called in every frame to work
 	void applyFunctions(FunctionType* args, int numArgs);
+
 
 	//for setting functions for ft vars--
 	void setFrequencyConvolvingVars(int windowSize, Kernel kernel = LINEAR_PYRAMID) {
@@ -50,6 +52,8 @@ public:
 	float getCutoffSmoothFraction() const { return _cutoffSmoothFrac; }
 
 	Master* getMasterPtr() const { return _m; }
+
+	std::string getName() const { return _nameOfFT; }
 private:
 	FourierTransformHistory* _current;
 	FourierTransformHistory* _next;
@@ -57,16 +61,22 @@ private:
 	FourierTransformHistory _working1;
 	FourierTransformHistory _working2;
 
+	Energy _energyOfFt;
+
+	//state vars
+	Master* _m;
+	bool _initialised;
+	bool _useSetters;
+	int _historySize;
+	std::string _nameOfFT;
+
+	//low res output config
 	int _maxLowResOutputSize;
 	int _lowResOutputSize;
 	float* _lowResOutputLogScale;
 
-	bool _initialised;
-	Master* _m;
+	//fourier transform descriptors vars
 	int _numHarmonics;
-	int _historySize;
-
-	//cutoff vars
 	float _cutOffLow, _cutOffHigh;
 	int _harmonicLow, _harmonicHigh;
 	float _cutoffSmoothFrac;
@@ -94,12 +104,17 @@ private:
 	void applyFreqConvolving(float* in, float* out);
 	//--
 
-	void commonInit();
+	//calculates all the important frequency vars based of cutoffs
+	void setFourierTransformFrequencyInfo();
 
 	//called by init
 	void initDefaultVars();
 
 	//used when getting the cut fourier transform
 	float smoothCutoff(int i);
-};
+
+	//setter functions
+	void initSetters();
+	void deleteSetters();
+ };
 

@@ -44,7 +44,6 @@ private:
 	//called in draw ui
 	void textureChooser();
 	void shaderChooser();
-	void uniformSetterUi();
 
 	void updateOptionsRect();
 
