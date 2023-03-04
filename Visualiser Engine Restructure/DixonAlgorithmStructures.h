@@ -6,6 +6,7 @@
 #include <iostream>
 
 #include "NoteOnset.h"
+#include "Peak.h"
 #include "Tools.h"
 
 struct DixonAlgVars {
@@ -15,8 +16,8 @@ struct DixonAlgVars {
 	static int MAX_AGENTS_STORED;
 	static float ACCOUNT_FOR_CLUSTER_SCORE; //between 0 and 1, 1 is fully and 0 is none
 	static float ERROR_CORRECTION_AMOUNT;
+	static int NUM_PEAKS_NEEDED_BEFORE_START;
 };
-
 
 //*** Cluster struct and container
 

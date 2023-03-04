@@ -49,6 +49,11 @@ void FourierTransform::init(Master* master, std::string name, bool useSetters)
 	_useSetters = useSetters;
 	_m = master;
 
+	if (_cutOffLow == -1)
+		_cutOffLow = 0.0f;
+
+	if (_cutOffHigh == -1)
+		_cutOffHigh = _m->nyquist();
 
 	initDefaultVars();
 
@@ -251,8 +256,8 @@ void FourierTransform::applyTimeConvolving(FourierTransformHistory* in, float* o
 void FourierTransform::setFourierTransformFrequencyInfo()
 {
 	//calculate cutoff points
-	float fourierLowFrac = _cutOffLow * 2.0f / float(_m->_sampleRate); //as nyquist max freq
-	float fourierHighFrac = _cutOffHigh * 2.0f / float(_m->_sampleRate);
+	float fourierLowFrac = _cutOffLow / _m->nyquist(); //as nyquist max freq
+	float fourierHighFrac = _cutOffHigh / _m->nyquist();
 	if (fourierHighFrac > 1) {
 		fourierHighFrac = 1;
 	}

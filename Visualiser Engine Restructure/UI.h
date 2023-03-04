@@ -58,7 +58,7 @@ private:
 	bool _showNoteOnsetUi;
 	bool _showTempoDetectionUi;
 	bool _showMFCCsUi;
-	bool _showSimilarityMeasureUi;
+	bool _showSelfSimilarityMatrixUi;
 
 	//calculate
 	//--
@@ -70,12 +70,16 @@ private:
 	void fourierTransformsUi();
 	void noteOnsetUi();
 	void tempoDetectionUi();
+	void mfccUi();
+	void selfSimilarityMatrixUi();
 
 	//process functions
 	void processFileMenuSelection();
 
 	//helper gui functions
 	bool textInputPrompt(const std::string& message, char* buf, int bufSize, bool& useText);
+
+	void imguiHistoryPlotter(History<float>* history);
 
 };
 

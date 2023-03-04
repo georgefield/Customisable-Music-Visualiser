@@ -11,6 +11,7 @@ public:
 	static void restart();
 
 	static float* getAudioData() { return _audio.getNormalisedWavData(); }
+	static int getAudioDataSize() { return int(_audio.getWavLength()); }
 	static int getCurrentSample() { return std::min(Uint32(_audio.getCurrentSample()), _audio.getWavLength()); }
 	static int getSampleRate() { return _audio.getSampleRate(); }
 	static std::string getAudioFilepath() { return _audioFilepath; }

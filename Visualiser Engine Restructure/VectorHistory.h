@@ -22,14 +22,21 @@ public:
 		}
 	}
 
-	void reInit() {
-		//memset all to 0.0f
-		for (int i = 0; i < _history.totalSize(); i++) {
-			memset(_history.get(i), 0.0f, (_vectorDim * sizeof(float)));
+	void reInit(int vectorDim) {
+		for (int i = 0; i < _history.totalSize(); i++) { //allocate memory for history (init memory to 0)
+			delete[] get(i);
 		}
-		_added = 0; //reset num added to 0
+		_added = 0;
+
+		init(vectorDim);
 	}
 
+	void reInit() {
+		for (int i = 0; i < _history.totalSize(); i++) { //allocate memory for history (init memory to 0)
+			memset(_history.get(i), 0.0f, (_vectorDim * sizeof(float)));
+		}
+		_added = 0;
+	}
 
 	~VectorHistory() {
 		if (_vectorDim != -1) { //only delete if initialised
@@ -43,7 +50,7 @@ public:
 	float* workingArray() //modify values here in memory
 	{
 		if (_vectorDim == -1) {
-			Vengine::fatalError("FourierTransformHistory used without being initialised");
+			Vengine::fatalError("Vector history used without being initialised");
 		}
 		return _history.oldest(); //work on oldest entries
 	}
@@ -71,7 +78,7 @@ public:
 	//same functionality as history required
 	float* get(int index) {
 		if (_vectorDim == -1) {
-			Vengine::fatalError("FourierTransformHistory used without being initialised");
+			Vengine::fatalError("Vector history used without being initialised");
 		}
 		return _history.get(index);
 	}

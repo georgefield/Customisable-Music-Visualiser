@@ -99,6 +99,7 @@ public:
 
 		_agents->debug3(debugInfo, _m->_sampleRate);
 	}
+
 private:
 
 	Master* _m;

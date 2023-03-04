@@ -14,13 +14,10 @@ void MFCCs::calculateBandEnergy()
 {
 	memset(_bandEnergies, 0.0f, _filterBank.numBands() * sizeof(float));
 
+	_filterBank.updateAll();
+
 	for (int i = 0; i < _filterBank.numBands(); i++) {
-		for (int j = _filterBank.getBandPtr(i)->harmonicLow; j <= _filterBank.getBandPtr(i)->harmonicHigh; j++) {
-			_bandEnergies[i] += powf(_m->_fftHistory.newest()[j] * _filterBank.getBandPtr(i)->getHarmonicFactor(j), 2); //energy is squared
-		}
-		_bandEnergies[i] /= float(_m->_fftHistory.numHarmonics()); //energy per sample, num harmonics = window size / 2, would divide by window size if working with audio data but because we delete half of fourier transform we divide by num harmonics
-		_bandEnergies[i] *= float(_m->_sampleRate); //energy per second
-		//although this not accurate anyway as we applied gain to fourier transform but its okay as only calculate from fourier transform. Bother doing this to sync between fourier values and energy
+		_bandEnergies[i] = _filterBank.getBand(i)->getBandEnergy();
 	}
 }
 
@@ -36,7 +33,6 @@ void MFCCs::calculateMelSpectrogram()
 void MFCCs::calculateMfccs()
 {
 	_dct.calculate(_melSpectrogram);
-	_mfccs = _dct.getOutput();
 }
 
 
@@ -59,7 +55,7 @@ void MFCCs::createMelLinearlySpacedFilters(int numFilters, float lowerHz, float 
 		fractionLow = fractionIncrement * i;
 		fractionHigh = fractionLow + (2*fractionIncrement);
 
-		_filterBank.add(_m,
+		_filterBank.add(
 			melInverse(Tools::lerp(mel(lowerHz), mel(upperHz), fractionLow)), 
 			melInverse(Tools::lerp(mel(lowerHz), mel(upperHz), fractionHigh)), 1.0f
 		);
@@ -70,7 +66,7 @@ void MFCCs::createMelLinearlySpacedFilters(int numFilters, float lowerHz, float 
 void MFCCs::initSetters()
 {
 	//mel band energys
-	std::function<int()> numMelBandsSetterFunction = std::bind(&FilterBank::numBands, _filterBank);
+	std::function<int()> numMelBandsSetterFunction = std::bind(&MFCCs::getNumMelBands, this);
 	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("# Mel bands", numMelBandsSetterFunction);
 
 	std::function<float* ()> melBandEnergiesSetterFunction = std::bind(&MFCCs::getBandEnergies, this);

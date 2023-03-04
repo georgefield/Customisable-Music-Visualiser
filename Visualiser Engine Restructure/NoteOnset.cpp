@@ -12,16 +12,13 @@ void NoteOnset::calculateNext(DataExtractionAlg dataAlg, PeakPickingAlg peakAlg)
 	//onset detection
 	float onsetValue = 0;
 	if (dataAlg == DataExtractionAlg::DER_OF_LOG_ENERGY) {
-		_energy->calculateNext(_m->_fftHistory.newest(), _m->_fftHistory.numHarmonics()); //depends on energy
 		onsetValue = derivativeOfLogEnergy();
-		onsetValue *= 10; //somewhat normalise
+	}
+	if (dataAlg == BANDED_DER_OF_LOG_ENERGY) {
+		onsetValue = bandedDerOfLogEnergy();
 	}
 	if (dataAlg == DataExtractionAlg::SPECTRAL_DISTANCE) {
-		_ftForSpectralDistance.beginCalculation();
-		_ftForSpectralDistance.applyFunction(FourierTransform::SMOOTH);
-		_ftForSpectralDistance.applyFunction(FourierTransform::FREQUENCY_CONVOLVE);
-		_ftForSpectralDistance.endCalculation();
-		onsetValue = 20*spectralDistanceOfHarmonics();
+		onsetValue = spectralDistanceOfHarmonics();
 	}
 
 	_onsetDetectionHistory.add(onsetValue, _m->_currentSample);
@@ -32,27 +29,29 @@ void NoteOnset::calculateNext(DataExtractionAlg dataAlg, PeakPickingAlg peakAlg)
 	);
 
 	//peak detection
-	bool aboveThreshold = false;
 	if (peakAlg == PeakPickingAlg::THRESHOLD) {
-		aboveThreshold = thresholdPercent(getOnsetHistory(), 10); //peak if in top 7%
+		_thresholder.addValue(onsetValue, _m->_currentSample);
 	}
 	if (peakAlg == PeakPickingAlg::CONVOLVE_THEN_THRESHOLD) {
-		aboveThreshold = thresholdPercent(getCONVonsetHistory(), 10); //peak if in top 7%
+		_thresholder.addValue(_CONVonsetDetectionHistory.newest(), _m->_currentSample);
 	}
 
-	if (aboveThreshold && !_lastAboveThreshold) {
-		_lastAboveThreshold = true;
-		_onsetPeaks.add({ _m->_currentSample, onsetValue });
-	}
-	if (!aboveThreshold) {
-		_lastAboveThreshold = false;
-	}
+	Peak lastPeak;
+	if (_thresholder.getLastPeak(10, lastPeak)) {
+		_onsetPeaks.add(lastPeak);
 
+		_displayPeaks.add(0.999f);
+	}
+	else {
+		_displayPeaks.add(std::max(0.0f, 2 * _displayPeaks.newest() - 1.0f));
+	}
 }
 
 //*** onset algorithms ***
 
 float NoteOnset::derivativeOfLogEnergy() {
+
+	_energy->calculateNext(_m->_fftHistory.newest(), _m->_fftHistory.numHarmonics()); //depends on energy
 
 	float one_over_dt = ((float)_m->_sampleRate / (float)(_m->_currentSample - _m->_previousSample)) * 0.001; //do dt in ms as otherwise numbers too big
 
@@ -69,10 +68,46 @@ float NoteOnset::derivativeOfLogEnergy() {
 }
 
 
+float NoteOnset::bandedDerOfLogEnergy()
+{
+	float one_over_dt = ((float)_m->_sampleRate / (float)(_m->_currentSample - _m->_previousSample)) * 0.001; //do dt in ms as otherwise numbers too big
+
+	//same as der of log energy but weight the bands
+
+	//calculate bands -- 
+	_derOfLogEnergyBands.getMasterTransform()->beginCalculation();
+	_derOfLogEnergyBands.getMasterTransform()->applyFunction(FourierTransform::SMOOTH);
+	_derOfLogEnergyBands.getMasterTransform()->applyFunction(FourierTransform::FREQUENCY_CONVOLVE);
+	_derOfLogEnergyBands.getMasterTransform()->endCalculation();
+
+	_derOfLogEnergyBands.updateAll(true);
+	//--
+
+	float weights[9] = { 1,1,2,2,5,5,10,20,50 };
+
+	float sum = 0;
+	for (int i = 0; i < _derOfLogEnergyBands.numBands(); i++) {
+		float bandDOLE = (logf(_derOfLogEnergyBands.getBand(i)->getBandEnergy()) - logf(_derOfLogEnergyBands.getBand(i)->getPrevBandEnergy()));
+		bandDOLE *= one_over_dt; // *= 1/dt
+		if (isnan(bandDOLE) || isinf(bandDOLE)) { bandDOLE = 0; } //if an energy is 0, log is -inf, stops cascade of nan/inf
+		sum += weights[i] * bandDOLE * _derOfLogEnergyBands.getBand(i)->getBandEnergy();
+	}
+
+	return (sum < 0 ? 0 : sum); //only take onset (positive change in energy)
+}
+
+
 float NoteOnset::spectralDistanceOfHarmonics() {
 	float one_over_dt = ((float)_m->_sampleRate / (float)(_m->_currentSample - _m->_previousSample)) * 0.001; //do dt in ms as otherwise numbers too big
 
-	//same as above but with the convolved harmonics--
+	//calculate the fourier transform to use for spectral distance--
+	_ftForSpectralDistance.beginCalculation();
+	_ftForSpectralDistance.applyFunction(FourierTransform::SMOOTH);
+	_ftForSpectralDistance.applyFunction(FourierTransform::FREQUENCY_CONVOLVE);
+	_ftForSpectralDistance.endCalculation();
+	//--
+
+	//l2 norm of fourier transform--
 	float spectralDistanceConvolvedHarmonics = Tools::L2distanceMetricIncDimOnly(
 		_ftForSpectralDistance.getHistory()->newest(),
 		_ftForSpectralDistance.getHistory()->previous(),
@@ -84,13 +119,7 @@ float NoteOnset::spectralDistanceOfHarmonics() {
 	//--
 }
 
-//*** peak picking algorithms ***
-
-bool NoteOnset::thresholdPercent(History<float>* historyToUse, float topXpercent)
-{
-	_thresholder.addValue(historyToUse->newest());
-	return _thresholder.testThreshold(historyToUse->newest(), topXpercent);
-}
+//***
 
 void NoteOnset::initSetters()
 {

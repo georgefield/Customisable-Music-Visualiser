@@ -39,6 +39,8 @@ public:
 
 	float* getBaseFftOutput();
 	int getBaseFftNumHarmonics();
+
+	int nyquist() const { if (_sampleRate == 0) { Vengine::fatalError("Used master before initialising"); } return _sampleRate / 2; }
 private:
 	int _sampleFftLastCalculated;
 	FFTWfft _fftwAPI;

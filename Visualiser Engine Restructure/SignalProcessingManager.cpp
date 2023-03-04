@@ -113,6 +113,9 @@ void SignalProcessingManager::calculate()
 	if (UI_computeMFCCs) {
 		_mfccs->calculateNext();
 	}
+	if (UI_computeSelfSimilarityMatrix) {
+		_selfSimilarityMatrix->calculateNext();
+	}
 	//--
 
 	_master->endCalculations();
@@ -170,6 +173,14 @@ void SignalProcessingManager::initAlgorithmObjects(bool rms, bool noteOnset, boo
 		else {
 			_mfccs = new MFCCs();
 			_mfccs->init(_master, 25, 0, 20000);
+		}
+	}
+
+	if (selfSimilarityMatrix) {
+		if (_selfSimilarityMatrix != nullptr) {
+		}
+		else {
+			_selfSimilarityMatrix = new SelfSimilarityMatrix(1000, GENERAL_HISTORY_SIZE);
 		}
 	}
 

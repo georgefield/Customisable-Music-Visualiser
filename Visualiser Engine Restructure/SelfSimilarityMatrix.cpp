@@ -2,26 +2,28 @@
 
 void SelfSimilarityMatrix::calculateNext()
 {
+	if (_linkedTo == MFCC) {
+		if (_coeffLow < 1) {
+			Vengine::fatalError("MFCC coefficients start from 1");
+		}
+		_similarityMatrix.add(&(_mfccsPtr->getMfccs()[_coeffLow - 1]));
+	}
+	if (_linkedTo == MelBandEnergies) {
+		_similarityMatrix.add(_mfccsPtr->getBandEnergies());
+	}
+	if (_linkedTo == MelSpectrogram) {
+		_similarityMatrix.add(_mfccsPtr->getMelSpectrogram());
+	}
+	if (_linkedTo == FT) {
+		_similarityMatrix.add(_ftPtr->getOutput());
+	} 
+
 	if (_linkedTo == NONE) {
 		Vengine::warning("Self similarity matrix not linked to any vector data, no calculation performed");
 		return;
 	}
-
-	if (_linkedTo == MFCC) {
-		_similarityMatrix.add(_mfccsPtr->getMfccs(), _mfccsPtr->getNumMelBands());
-		return;
-	}
-	if (_linkedTo == MelBandEnergies) {
-		_similarityMatrix.add(_mfccsPtr->getBandEnergies(), _mfccsPtr->getNumMelBands());
-		return;
-	}
-	if (_linkedTo == MelSpectrogram) {
-		_similarityMatrix.add(_mfccsPtr->getMelSpectrogram(), _mfccsPtr->getNumMelBands());
-		return;
-	}
-	if (_linkedTo == FT) {
-		_similarityMatrix.add(_ftPtr->getOutput(), _ftPtr->getNumHarmonics());
-		return;
+	else {
+		calculateSimilarityMeasure();
 	}
 
 	if (_linkedTo == DEBUG) {
@@ -43,33 +45,63 @@ void SelfSimilarityMatrix::calculateNext()
 			_switch = !_switch;
 		}
 
-		_similarityMatrix.add(debugVec);
+		_similarityMatrix.add(&(debugVec[0]));
 		return;
 	}
 }
 
-void SelfSimilarityMatrix::linkToMFCCs(MFCCs* mfcc)
+float SelfSimilarityMatrix::checkerboardKernel(int i, int j) {
+	float middle = (_similarityMatrix.entries() - 1) / 2.0f;
+	int sign = 1;
+	if ((i < middle && j > middle) || (i > middle && j < middle)) {
+		sign = -1;
+	}
+
+	return sqrt(powf((i - middle), 2) * powf((j - middle), 2)) * sign;
+}
+
+void SelfSimilarityMatrix::calculateSimilarityMeasure()
 {
+	float sum = 0;
+	for (int i = 0; i < _similarityMatrix.entries(); i++) {
+		for (int j = 0; j < i; j++) {
+			sum += getSelfSimilarityMatrixValue(i, j) * checkerboardKernel(i, j) * 2;
+		}
+		sum += getSelfSimilarityMatrixValue(i, i) * checkerboardKernel(i, i);
+	}
+	_similarityMeasureHistory.add(sum);
+
+}
+
+void SelfSimilarityMatrix::linkToMFCCs(MFCCs* mfcc, int coeffLow, int coeffHigh)
+{
+	_coeffLow = coeffLow;
+	_coeffHigh = coeffHigh;
+
 	_mfccsPtr = mfcc;
 	_linkedTo = MFCC;
+	_similarityMatrix.start(_coeffHigh - _coeffLow + 1);
 }
 
 void SelfSimilarityMatrix::linkToMelBandEnergies(MFCCs* mfcc)
 {
 	_mfccsPtr = mfcc;
 	_linkedTo = MelBandEnergies;
+	_similarityMatrix.start(_mfccsPtr->getNumMelBands());
 }
 
 void SelfSimilarityMatrix::linkToMelSpectrogram(MFCCs* mfcc)
 {
 	_mfccsPtr = mfcc;
 	_linkedTo = MelSpectrogram;
+	_similarityMatrix.start(_mfccsPtr->getNumMelBands());
 }
 
 void SelfSimilarityMatrix::linkToFourierTransform(FourierTransform* ft)
 {
 	_ftPtr = ft;
 	_linkedTo = FT;
+	_similarityMatrix.start(_ftPtr->getNumHarmonics());
 }
 
 void SelfSimilarityMatrix::linkToDebug()
@@ -77,6 +109,7 @@ void SelfSimilarityMatrix::linkToDebug()
 	_linkedTo = DEBUG;
 	Vengine::MyTiming::startTimer(_debugTimerId);
 	_switch = true;
+	_similarityMatrix.start(2);
 }
 
 void SelfSimilarityMatrix::debug()

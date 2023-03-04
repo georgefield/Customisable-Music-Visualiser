@@ -51,20 +51,29 @@ public:
 		}
 	}
 
-	void add(std::vector<float> v) {
+	void start(int newVectorDim) {
+		_start = 0;
 		if (_vectorDim == -1) {
-			_vectorDim = v.size();
-			_vectorHistory.init(_vectorDim);
+			_vectorHistory.init(newVectorDim);
 		}
-		else if (_vectorDim != v.size()) {
-			Vengine::fatalError("Tried to add a vector of different dimension to others to self similarity matrix");
+		else {
+			_vectorHistory.reInit(newVectorDim);
+		}
+		_vectorDim = newVectorDim;
+	}
+
+	void add(float* v) {
+		if (_vectorDim == -1) {
+			Vengine::fatalError("Tried to add a vector without first calling start on similarity matrix");
 		}
 
 		_start--;
 		if (_start < 0) { //wrap round, just like history class
 			_start = _sideLength - 1;
 		}
-		_vectorHistory.add(v);
+
+		memcpy(_vectorHistory.workingArray(), v, sizeof(float) * _vectorDim);
+		_vectorHistory.addWorkingArrayToHistory();
 
 		for (int i = 0; i < _vectorHistory.entries(); i++) {
 			float measure = similarityMeasure(&(v[0]), _vectorHistory.get(i));
@@ -84,21 +93,6 @@ public:
 		}
 	}
 
-	void add(float* v, int dim) //overload for if given float* not vector
-	{
-		std::vector<float> arrayAsVector;
-		arrayAsVector.resize(dim);
-		for (int i = 0; i < dim; i++) {
-			arrayAsVector[i] = v[i];
-		}
-		add(arrayAsVector);
-	}
-
-	void clear() {
-		_start = 0;
-		_vectorDim = -1;
-		_vectorHistory = VectorHistory(_sideLength); //replace vector history
-	}
 
 	void setCorrelationWindowSize(int windowSize) {
 		_correlationWindowSize = windowSize;
@@ -165,22 +159,31 @@ class SelfSimilarityMatrix
 {
 public:
 
-	SelfSimilarityMatrix(int size) :
+	SelfSimilarityMatrix(int size, int historySize) :
 		_similarityMatrix(size, 1), //default small correlation (computationally expensive)
 
 		_linkedTo(NONE),
 		_mfccsPtr(nullptr),
-		_ftPtr(nullptr)
+		_ftPtr(nullptr),
+
+		_similarityMeasureHistory(historySize)
 	{
 	}
 
 	void calculateNext();
 
-	void linkToMFCCs(MFCCs* mfcc);
+	void linkToMFCCs(MFCCs* mfcc, int coeffLow, int coeffHigh);
 	void linkToMelBandEnergies(MFCCs* mfcc);
 	void linkToMelSpectrogram(MFCCs* mfcc);
 	void linkToFourierTransform(FourierTransform* ft);
 	void linkToDebug();
+
+	float getSimilarityMeasure() {
+		return _similarityMeasureHistory.newest();
+	}
+	History<float>* getSimilarityMeasureHistory() {
+		return &_similarityMeasureHistory;
+	}
 
 	float getSelfSimilarityMatrixValue(int i, int j) {
 		return _similarityMatrix.get(i, j);
@@ -194,6 +197,8 @@ public:
 	void debug();
 
 private:
+	void calculateSimilarityMeasure();
+
 	static enum LinkedTo {
 		NONE,
 		DEBUG,
@@ -203,15 +208,20 @@ private:
 		FT
 	};
 
+	History<float> _similarityMeasureHistory;
+
 	SimilarityMatrixStructure _similarityMatrix;
 	LinkedTo _linkedTo;
 
 	//link ptrs
 	MFCCs* _mfccsPtr;
+	int _coeffLow, _coeffHigh;
 	FourierTransform* _ftPtr;
 
 	//debug
 	int _debugTimerId;
 	bool _switch;
+
+	float checkerboardKernel(int i, int j);
 };
 

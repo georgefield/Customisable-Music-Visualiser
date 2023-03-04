@@ -34,9 +34,6 @@
     <Filter Include="Header Files\Sprite Managing">
       <UniqueIdentifier>{8866842f-b067-4dd1-b7ad-69244ce35cab}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Signal Processing Managers">
-      <UniqueIdentifier>{3a780cd8-f715-4246-af70-a64a75d0ca2b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Sprite Managing">
       <UniqueIdentifier>{fa0d62cc-cd76-4871-acc3-2a24b3e6c7a0}</UniqueIdentifier>
     </Filter>
@@ -48,6 +45,9 @@
     </Filter>
     <Filter Include="Source Files\Signal Processing Algorithms">
       <UniqueIdentifier>{81c9e6ae-9017-4488-970b-2a815d22131a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Signal Processing Managers">
+      <UniqueIdentifier>{ee0c6cb1-2c11-40cb-a542-429839b91e6d}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -113,6 +113,9 @@
     </ClCompile>
     <ClCompile Include="DixonAlgVariableDefinitions.cpp">
       <Filter>Source Files\Signal Processing Algorithms</Filter>
+    </ClCompile>
+    <ClCompile Include="FutureProcessingManager.cpp">
+      <Filter>Source Files\Signal Processing Managers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -206,14 +209,23 @@
     <ClInclude Include="CustomisableSprite.h">
       <Filter>Header Files\Sprite Managing</Filter>
     </ClInclude>
+    <ClInclude Include="AudioManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FilterBank.h">
+      <Filter>Header Files\Signal Processing Algorithms</Filter>
+    </ClInclude>
+    <ClInclude Include="Peak.h">
+      <Filter>Header Files\Data Structures</Filter>
+    </ClInclude>
     <ClInclude Include="SignalProcessingManager.h">
       <Filter>Header Files\Signal Processing Managers</Filter>
     </ClInclude>
     <ClInclude Include="FourierTransformManager.h">
       <Filter>Header Files\Signal Processing Managers</Filter>
     </ClInclude>
-    <ClInclude Include="AudioManager.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="FutureProcessingManager.h">
+      <Filter>Header Files\Signal Processing Managers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

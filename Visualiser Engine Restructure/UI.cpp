@@ -121,6 +121,7 @@ void UI::toolbar() {
 		ImGui::MenuItem("Note onset detection", NULL, &_showNoteOnsetUi);
 		ImGui::MenuItem("Tempo detection", NULL, &_showTempoDetectionUi);
 		ImGui::MenuItem("MFCCs", NULL, &_showMFCCsUi);
+		ImGui::MenuItem("Self Similarity Matrix", NULL, &_showSelfSimilarityMatrixUi);
 		//add rest
 		ImGui::EndMenu();
 	}
@@ -136,6 +137,12 @@ void UI::toolbar() {
 	}
 	if (_showTempoDetectionUi) {
 		tempoDetectionUi();
+	}
+	if (_showMFCCsUi) {
+		mfccUi();
+	}
+	if (_showSelfSimilarityMatrixUi) {
+		selfSimilarityMatrixUi();
 	}
 
 	ImGui::EndMenuBar();
@@ -559,7 +566,15 @@ void UI::fourierTransformsUi()
 
 void UI::noteOnsetUi()
 {
+	ImGui::ShowDemoWindow();
+
 	ImGui::Begin("Note Onset", &_showNoteOnsetUi, ImGuiWindowFlags_AlwaysAutoResize);
+
+	ImGui::Checkbox("Compute note onset", &SignalProcessingManager::UI_computeNoteOnset);
+
+	imguiHistoryPlotter(SignalProcessingManager::_noteOnset->getCONVonsetHistory());
+	imguiHistoryPlotter(SignalProcessingManager::_noteOnset->getDisplayPeaks());
+
 	ImGui::End();
 }
 
@@ -592,8 +607,6 @@ void UI::tempoDetectionUi()
 	ImGui::Text(timeToNextBeat.c_str());
 	std::string timeSinceLastBeat = "Time since last beat: " + std::to_string(SignalProcessingManager::_tempoDetection->getTimeSinceLastBeat());
 	ImGui::Text(timeSinceLastBeat.c_str());
-
-	ImGui::SliderFloat("Accounting for interval score amount (instead of only agent score)", &DixonAlgVars::ACCOUNT_FOR_CLUSTER_SCORE, 0.0f, 1.0f);
 	
 	static bool showDebug = false;
 	ImGui::Checkbox("Debug", &showDebug);
@@ -606,6 +619,96 @@ void UI::tempoDetectionUi()
 		}
 		ImGui::EndChild();
 	}
+
+	ImGui::End();
+}
+
+void UI::mfccUi()
+{
+	ImGui::Begin("MFCCs", &_showMFCCsUi, ImGuiWindowFlags_AlwaysAutoResize);
+
+	ImGui::Checkbox("Compute MFCCs", &SignalProcessingManager::UI_computeMFCCs);
+
+	ImGui::PlotHistogram("Mel band energies", SignalProcessingManager::_mfccs->getBandEnergies(), SignalProcessingManager::_mfccs->getNumMelBands());
+	ImGui::PlotHistogram("Mel spectrogram", SignalProcessingManager::_mfccs->getMelSpectrogram(), SignalProcessingManager::_mfccs->getNumMelBands());
+	ImGui::PlotHistogram("MFCCs", SignalProcessingManager::_mfccs->getMfccs(), SignalProcessingManager::_mfccs->getNumMelBands());
+
+	ImGui::End();
+}
+
+void UI::selfSimilarityMatrixUi()
+{
+	ImGui::Begin("Self Similarity Matrix", &_showSelfSimilarityMatrixUi, ImGuiWindowFlags_AlwaysAutoResize);
+
+	ImGui::Checkbox("Compute Self Similarity Matrix", &SignalProcessingManager::UI_computeSelfSimilarityMatrix);
+
+	static int linkTo = 0;
+	ImGui::Text("Link to:");
+	ImGui::RadioButton("MFCCs", &linkTo, 0);
+	ImGui::RadioButton("Mel band energies", &linkTo, 1);
+	ImGui::RadioButton("Mel spectrogram", &linkTo, 2);
+	ImGui::RadioButton("Fourier transform", &linkTo, 3);
+
+	if (linkTo == 0) {
+		ImGui::Separator();
+
+		ImGui::Text("MFCCs coefficients: ");
+		static int low = 4;
+		ImGui::PushID(0);
+		ImGui::SliderInt("##", &low, 0, SignalProcessingManager::_mfccs->getNumMelBands());
+		ImGui::PopID();
+
+		ImGui::Text("to");
+
+		static int high = 13;
+		ImGui::PushID(1);
+		ImGui::SliderInt("##", &high, 0, SignalProcessingManager::_mfccs->getNumMelBands());
+		ImGui::PopID();
+
+		if (ImGui::Button("Confirm")) {
+			SignalProcessingManager::_selfSimilarityMatrix->linkToMFCCs(SignalProcessingManager::_mfccs, low, high);
+		}
+	}
+	if (linkTo == 1) {
+		if (ImGui::Button("Confirm")) {
+			SignalProcessingManager::_selfSimilarityMatrix->linkToMelBandEnergies(SignalProcessingManager::_mfccs);
+		}
+	}
+	if (linkTo == 2) {
+		if (ImGui::Button("Confirm")) {
+			SignalProcessingManager::_selfSimilarityMatrix->linkToMelSpectrogram(SignalProcessingManager::_mfccs);
+		}
+	}
+	if (linkTo == 3) {
+		ImGui::Separator();
+
+		std::vector<int> fourierTransformIds = FourierTransformManager::idArr();
+
+		std::vector<FourierTransform*> fourierTransforms;
+		for (auto& it : fourierTransformIds) {
+			fourierTransforms.push_back(FourierTransformManager::getFourierTransform(it));
+		}
+
+		//create fourier transform selector
+		std::vector<std::string> fourierTransformNames;
+		for (auto& it : fourierTransforms) {
+			fourierTransformNames.push_back(it->getName());
+		}
+		std::string comboStr = UI::ImGuiComboStringMaker(fourierTransformNames);
+		
+		const char* ftItems = comboStr.c_str();
+		static int currentFt = 0;
+		ImGui::PushID(0);
+		ImGui::Combo("fourier transforms", &currentFt, ftItems, fourierTransformNames.size());
+		ImGui::PopID();
+		//--
+
+		if (ImGui::Button("Confirm")) {
+			SignalProcessingManager::_selfSimilarityMatrix->linkToFourierTransform(fourierTransforms.at(currentFt));
+		}
+	}
+
+	imguiHistoryPlotter(SignalProcessingManager::_selfSimilarityMatrix->getSimilarityMeasureHistory());
 
 	ImGui::End();
 }
@@ -698,6 +801,11 @@ bool UI::textInputPrompt(const std::string& message, char* buf, int bufSize, boo
 
 	useText = confirmedName;
 	return !promptNotForceClosed || confirmedName; //return true when user either closes window or confirms name of copy
+}
+
+void UI::imguiHistoryPlotter(History<float>* history)
+{
+	ImGui::PlotLines("Lines", history->dataStartPtr(), history->totalSize(), history->firstPartOffset());
 }
 
 std::string UI::ImGuiComboStringMaker(std::vector<std::string>& options)

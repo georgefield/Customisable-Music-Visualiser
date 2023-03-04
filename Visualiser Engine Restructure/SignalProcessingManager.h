@@ -6,6 +6,7 @@
 #include "FourierTransform.h"
 #include "MFCCs.h"
 #include "SelfSimilarityMatrix.h"
+#include "FutureSimilarityMatrix.h"
 #include "RMS.hpp"
 
 #include "AudioManager.h"
@@ -29,6 +30,7 @@ public:
 	static TempoDetection* _tempoDetection;
 	static MFCCs* _mfccs;
 	static SelfSimilarityMatrix* _selfSimilarityMatrix;
+	static FutureSimilarityMatrix* _futureSimilarityMatrix;
 
 	static int GENERAL_HISTORY_SIZE;
 

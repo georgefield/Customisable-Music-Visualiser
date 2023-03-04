@@ -57,6 +57,7 @@ void FFTWdct::init(int windowSize)
 
 	//dct type 2, n in, n out
 	_out = (float*)fftwf_malloc(sizeof(float) * _windowSize);
+	memset(_out, 0.0f, sizeof(float) * _windowSize);
 }
 
 void FFTWdct::calculate(float* dataIn)

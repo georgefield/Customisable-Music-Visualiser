@@ -11,7 +11,7 @@ public:
 		FREQUENCY_CONVOLVE
 	};
 
-	FourierTransform(int transformHistorySize = 1, float cutOffLow = 0.0f, float cutOffHigh = 22050.0f, float cutoffSmoothFrac = 0.0f);
+	FourierTransform(int transformHistorySize = 7, float cutOffLow = -1.0f, float cutOffHigh = -1.0f, float cutoffSmoothFrac = 0.0f);
 	~FourierTransform();
 	
 	void init(Master* master, std::string name, bool useSetters = true);
@@ -54,6 +54,9 @@ public:
 	Master* getMasterPtr() const { return _m; }
 
 	std::string getName() const { return _nameOfFT; }
+
+	float getEnergy() { return _energyOfFt.getEnergy(); }
+	History<float>* getEnergyHistory() { return _energyOfFt.getHistory(); }
 private:
 	FourierTransformHistory* _current;
 	FourierTransformHistory* _next;

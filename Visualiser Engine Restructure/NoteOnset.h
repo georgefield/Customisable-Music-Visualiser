@@ -6,19 +6,17 @@
 #include "Energy.hpp"
 #include "FourierTransform.h"
 
+#include "FilterBank.h"
+
 #include <set>
 #include "Limiter.h"
-
-struct Peak {
-	int onset;
-	float salience;
-};
 
 class NoteOnset {
 public:
 	static enum DataExtractionAlg {
 		SPECTRAL_DISTANCE,
-		DER_OF_LOG_ENERGY
+		DER_OF_LOG_ENERGY,
+		BANDED_DER_OF_LOG_ENERGY
 	};
 
 	static enum PeakPickingAlg {
@@ -30,10 +28,11 @@ public:
 		_onsetDetectionHistory(historySize),
 		_onsetPeaks(historySize),
 		_CONVonsetDetectionHistory(historySize),
+		_displayPeaks(historySize),
 
 		_generalLimiter(1.0, 0.5, 10.0, 0.2),
 
-		_thresholder(500),
+		_thresholder(2500), //approx 5 seconds
 
 		_ftForSpectralDistance(2)
 	{}
@@ -53,6 +52,17 @@ public:
 		_ftForSpectralDistance.init(_m, "Note Onset FT", false);
 
 		initSetters();
+
+		_derOfLogEnergyBands.init(_m);
+		_derOfLogEnergyBands.add(0.0, 150, 1.0f);
+		_derOfLogEnergyBands.add(100, 600, 1.0f);
+		_derOfLogEnergyBands.add(150, 1500, 1.0f);
+		_derOfLogEnergyBands.add(600, 3000, 1.0f);
+		_derOfLogEnergyBands.add(1500, 6000, 1.0f);
+		_derOfLogEnergyBands.add(3000, 10000, 1.0f);
+		_derOfLogEnergyBands.add(6000, 15000, 1.0f);
+		_derOfLogEnergyBands.add(10000, 20000, 1.0f);
+		_derOfLogEnergyBands.add(15000, 22050, 1.0f);
 	}
 
 	void reInit() {
@@ -62,6 +72,10 @@ public:
 		_lastAboveThreshold = false;
 
 		_ftForSpectralDistance.reInit();
+
+		_derOfLogEnergyBands.reInit();
+
+		_onsetPeaks.clear();
 	}
 
 	void calculateNext(
@@ -69,21 +83,12 @@ public:
 		PeakPickingAlg peakAlg = PeakPickingAlg::CONVOLVE_THEN_THRESHOLD
 	);
 
-	float getOnset() {
-		return _onsetDetectionHistory.newest();
-	}
+	float getOnset() { return _onsetDetectionHistory.newest(); }
+	History<float>* getOnsetHistory() { return &_onsetDetectionHistory; }
+	History<float>* getCONVonsetHistory() { return &_CONVonsetDetectionHistory; }
 
-	History<float>* getOnsetHistory() {
-		return &_onsetDetectionHistory;
-	}
-
-	History<Peak>* getPeakHistory() {
-		return &_onsetPeaks;
-	}
-
-	History<float>* getCONVonsetHistory() {
-		return &_CONVonsetDetectionHistory;
-	}
+	History<Peak>* getPeakHistory() { return &_onsetPeaks; }
+	History<float>* getDisplayPeaks() { return &_displayPeaks; }
 private:
 	Master* _m;
 	Energy* _energy;
@@ -95,7 +100,8 @@ private:
 	float derivativeOfLogEnergy();
 	float spectralDistanceOfHarmonics();
 
-	bool thresholdPercent(History<float>* historyToUse, float topXpercent);
+	float bandedDerOfLogEnergy();
+	FilterBank _derOfLogEnergyBands;
 
 	History<float> _onsetDetectionHistory;
 	History<float> _CONVonsetDetectionHistory;
@@ -103,6 +109,7 @@ private:
 	Limiter _generalLimiter;
 	Threshold _thresholder;
 
+	History<float> _displayPeaks;
 	History<Peak> _onsetPeaks; //in sample time
 	bool _lastAboveThreshold;
 

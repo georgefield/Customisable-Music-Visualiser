@@ -82,9 +82,9 @@ void TempoDetection::calculateNext() {
 
 		_lastPeakOnset = _noteOnset->getPeakHistory()->newest().onset;
 
-		//new peak => calculate
 
-		if (_noteOnset->getPeakHistory()->entries() < 8) { //8 onsets atleast before starting to calculate
+		//new peak => calculate
+		if (_noteOnset->getPeakHistory()->entries() < DixonAlgVars::NUM_PEAKS_NEEDED_BEFORE_START) { //8 onsets atleast before starting to calculate
 			_confidenceRollingAvg.add(0.0f); //want to start confidence as low
 			return;
 		}
@@ -133,16 +133,22 @@ void TempoDetection::calculateNext() {
 //*** dixon algorithm ***
 
 //relationship function
-const float MIN_TEMPO = 30;
-const float MAX_TEMPO = 240;
+const float MIN_TEMPO = 40;
+const float MAX_TEMPO = 230;
 const int TEST_RATIOS_UP_TO = 8;
 int f(int d) {
 	if (d > 8)
 		return 0;
 	if (d > 4)
 		return 1;
-	if (d > 0)
-		return 6 - d;
+	if (d == 4)
+		return 4;
+	if (d == 3)
+		return 3;
+	if (d == 2)
+		return 5;
+	if (d == 1)
+		return 6;
 	Vengine::warning("negative d value for relationship function");
 	return 0;
 }
@@ -160,7 +166,10 @@ bool intervalImpliesValidTempo(int interval, int sampleRate) {
 
 void TempoDetection::initialDixonAlg() {
 
-	_peaks = _noteOnset->getPeakHistory()->getAsVector(false, 15); //get oldest first, important for agent alg, max last 15 peaks as to
+	_peaks.clear();
+	for (int i = _noteOnset->getPeakHistory()->entries() - 1; i >= 0; i--) {
+		_peaks.push_back( _noteOnset->getPeakHistory()->get(i) ); //oldest first, important for agent alg
+	}
 
 	//*** tempo induction ***
 
@@ -170,9 +179,12 @@ void TempoDetection::initialDixonAlg() {
 
 	for (auto rit = _clusters->set.rbegin(); rit != _clusters->set.rend(); ++rit) {
 		for (auto& peak : _peaks) {
-			_agents->add((*rit)._avgInterval, peak);
+			if (intervalImpliesValidTempo((*rit)._avgInterval, _m->_sampleRate)) {
+				_agents->add((*rit)._avgInterval, peak);
+			}
 		}
 	}
+
 	computeAgents(_agents, _peaks);
 }
 
@@ -182,7 +194,7 @@ void TempoDetection::continuousDixonAlg()
 	if (_peaks.size() >= DixonAlgVars::MAX_PEAKS_STORED) {
 		_peaks.erase(_peaks.begin());
 	}
-	_peaks.push_back(_noteOnset->getPeakHistory()->newest());
+	_peaks.push_back( _noteOnset->getPeakHistory()->newest() ); //time and salience
 
 	//*** tempo induction ***
 	_clusters->reset(); //delete old clusters
@@ -194,8 +206,10 @@ void TempoDetection::continuousDixonAlg()
 	std::vector<Peak> single;
 	single.push_back(_peaks.back());
 
-	for (auto rit = _clusters->set.rbegin(); rit != _clusters->set.rend(); ++rit) { //top ten times only
-		_agents->add((*rit)._avgInterval, single.back());
+	for (auto rit = _clusters->set.rbegin(); rit != _clusters->set.rend(); ++rit) {
+		if (intervalImpliesValidTempo((*rit)._avgInterval, _m->_sampleRate)) {
+			_agents->add((*rit)._avgInterval, single.back());
+		}
 	}
 
 	computeAgents(_agents, single);
@@ -209,10 +223,8 @@ void TempoDetection::computeClusters(ClusterSet* clusters, std::vector<Peak>& pe
 			if (E1.onset == E2.onset) { break; }
 
 			int ioi = fabsf(E1.onset - E2.onset);
-			//only add cluster if interval would put tempo as >MIN_TEMPO && <MAX_TEMPO
-			if (intervalImpliesValidTempo(ioi, _m->_sampleRate)) {
-				clusters->add(ioi); //handles which cluster its added to
-			}
+
+			clusters->add(ioi); //handles which cluster its added to
 		}
 	}
 
@@ -247,8 +259,8 @@ void TempoDetection::computeAgents(AgentSet* agents, std::vector<Peak>& peaks)
 {
 	agents->sortAgentsByPrediction(); //agents sorted by score so need to be fully resorted. lots of errors so dont use insertion
 
-	float tolPrePercentage = 0.1; //10%
-	float tolPostPercentage = 0.2; //20%
+	float tolPrePercentage = 0.2; //20%
+	float tolPostPercentage = 0.4; //40%
 
 	int maxTolPre = tolPrePercentage * (60 / MIN_TEMPO) * _m->_sampleRate; //used for optimisation
 
@@ -256,7 +268,7 @@ void TempoDetection::computeAgents(AgentSet* agents, std::vector<Peak>& peaks)
 
 	int timeOut = 8 * (60 / MIN_TEMPO) * _m->_sampleRate; //how long after last peak that aligns with beat hypothesis before deleteing that agent, 
 
-	float correctionFactor = 0.2; //how fast tempo changes to incorporate new beat information, 0->1, 1 instant, 0 not at all
+	float correctionFactor = DixonAlgVars::ERROR_CORRECTION_AMOUNT; //how fast tempo changes to incorporate new beat information, 0->1, 1 instant, 0 not at all
 	int tolPre, tolPost;
 
 	//loop through peaks. must be sorted by increasing event time to stop agent predictions being increased too much immediantly

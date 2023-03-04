@@ -19,6 +19,9 @@ public:
 	~History() {
 		delete[] _data;
 		delete[] _assocSampleData;
+		if (_usingContiguousArray) {
+			delete[] _contiguousArray;
+		}
 	}
 	
 
@@ -96,6 +99,8 @@ public:
 	int firstPartSize() { return _size - _start; }
 	T* secondPartPtr() { return _data; } //[1][1][0][1][0]
 	int secondPartSize() { return _start; }
+	T* dataStartPtr() { return _data; } //same as second part ptr but easier to understand
+	int firstPartOffset() { return _start; } //also same as second part size
 
 	int totalSize() { return _size; }
 	int added() { return _addCalls; }

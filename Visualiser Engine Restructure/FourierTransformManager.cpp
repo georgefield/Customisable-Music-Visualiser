@@ -2,6 +2,7 @@
 #include "VisualiserShaderManager.h"
 #include "VisualiserManager.h"
 #include "SignalProcessingManager.h"
+#include "FutureSimilarityMatrix.h"
 
 #include <functional>
 

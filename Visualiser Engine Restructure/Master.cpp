@@ -11,7 +11,8 @@ Master::Master() :
 	_fftwAPI(4096), 
 	_fftHistory(17),//store 17 previous fourier transforms
 
-	_sampleFftLastCalculated(-1)
+	_sampleFftLastCalculated(-1),
+	_sampleRate(0)
 {
 }
 
