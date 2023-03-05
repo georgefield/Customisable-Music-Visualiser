@@ -1,5 +1,5 @@
 ﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(517,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (Visualiser.vcxproj).  This can lead to incorrect clean and rebuild behavior.
-  UI.cpp
+  MainProgram.cpp
 C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(18,14): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
           with
           [
@@ -10,9 +10,9 @@ C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(19,15): wa
           [
               T=float
           ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(21,30): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(36,28): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(66,16): warning C4018: '>': signed/unsigned mismatch
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(33,30): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(59,28): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\VectorHistory.h(85,16): warning C4018: '>': signed/unsigned mismatch
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(43,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(50,26): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(117,38): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
@@ -77,24 +77,15 @@ C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(388,34): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(391,38): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(401,18): warning C4018: '<=': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MFCCs.h(40,25): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MFCCs.h(41,27): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MFCCs.h(51,25): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MFCCs.h(52,27): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(37,21): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(44,40): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(209,3): warning C4091: 'static ': ignored on left of 'SelfSimilarityMatrix::LinkedTo' when no variable is declared
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(45,63): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(66,61): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(66,57): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(165,54): warning C4305: 'initializing': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(181,77): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(181,59): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(182,77): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(182,34): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(257,14): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(258,14): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(499,20): warning C4018: '<': signed/unsigned mismatch
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(783,53): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(814,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MFCCs.h(42,25): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MFCCs.h(43,27): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MFCCs.h(55,25): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MFCCs.h(56,27): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SimilarityMatrixStructure.h(37,21): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SimilarityMatrixStructure.h(47,40): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SelfSimilarityMatrix.h(84,3): warning C4091: 'static ': ignored on left of 'SelfSimilarityMatrix::LinkedTo' when no variable is declared
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\FutureSimilarityMatrix.h(26,3): warning C4091: 'static ': ignored on left of 'FutureSimilarityMatrix::LinkedTo' when no variable is declared
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MainProgram.cpp(58,33): warning C4305: 'argument': truncation from 'double' to 'GLclampf'
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MainProgram.cpp(85,59): warning C4244: 'argument': conversion from 'Sint32' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\MainProgram.cpp(85,44): warning C4244: 'argument': conversion from 'Sint32' to 'float', possible loss of data
   Visualiser Engine Restructure.vcxproj -> C:\Users\George\Documents\3rd year project\Project\Debug\Visualiser Engine Restructure.exe

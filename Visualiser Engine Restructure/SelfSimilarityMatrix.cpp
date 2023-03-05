@@ -1,21 +1,26 @@
 #include "SelfSimilarityMatrix.h"
+#include <iomanip>
 
 void SelfSimilarityMatrix::calculateNext()
 {
+	if (_initialised == false) {
+		Vengine::fatalError("Cannot calculate similarity matrix without initialising");
+	}
+
 	if (_linkedTo == MFCC) {
 		if (_coeffLow < 1) {
 			Vengine::fatalError("MFCC coefficients start from 1");
 		}
-		_similarityMatrix.add(&(_mfccsPtr->getMfccs()[_coeffLow - 1]));
+		_similarityMatrix->add(&(_mfccsPtr->getMfccs()[_coeffLow - 1]));
 	}
 	if (_linkedTo == MelBandEnergies) {
-		_similarityMatrix.add(_mfccsPtr->getBandEnergies());
+		_similarityMatrix->add(_mfccsPtr->getBandEnergies());
 	}
 	if (_linkedTo == MelSpectrogram) {
-		_similarityMatrix.add(_mfccsPtr->getMelSpectrogram());
+		_similarityMatrix->add(_mfccsPtr->getMelSpectrogram());
 	}
 	if (_linkedTo == FT) {
-		_similarityMatrix.add(_ftPtr->getOutput());
+		_similarityMatrix->add(_ftPtr->getOutput());
 	} 
 
 	if (_linkedTo == NONE) {
@@ -45,13 +50,13 @@ void SelfSimilarityMatrix::calculateNext()
 			_switch = !_switch;
 		}
 
-		_similarityMatrix.add(&(debugVec[0]));
+		_similarityMatrix->add(&(debugVec[0]));
 		return;
 	}
 }
 
 float SelfSimilarityMatrix::checkerboardKernel(int i, int j) {
-	float middle = (_similarityMatrix.entries() - 1) / 2.0f;
+	float middle = (_similarityMatrix->entries() - 1) / 2.0f;
 	int sign = 1;
 	if ((i < middle && j > middle) || (i > middle && j < middle)) {
 		sign = -1;
@@ -63,7 +68,7 @@ float SelfSimilarityMatrix::checkerboardKernel(int i, int j) {
 void SelfSimilarityMatrix::calculateSimilarityMeasure()
 {
 	float sum = 0;
-	for (int i = 0; i < _similarityMatrix.entries(); i++) {
+	for (int i = 0; i < _similarityMatrix->entries(); i++) {
 		for (int j = 0; j < i; j++) {
 			sum += getSelfSimilarityMatrixValue(i, j) * checkerboardKernel(i, j) * 2;
 		}
@@ -80,28 +85,28 @@ void SelfSimilarityMatrix::linkToMFCCs(MFCCs* mfcc, int coeffLow, int coeffHigh)
 
 	_mfccsPtr = mfcc;
 	_linkedTo = MFCC;
-	_similarityMatrix.start(_coeffHigh - _coeffLow + 1);
+	_similarityMatrix->start(_coeffHigh - _coeffLow + 1);
 }
 
 void SelfSimilarityMatrix::linkToMelBandEnergies(MFCCs* mfcc)
 {
 	_mfccsPtr = mfcc;
 	_linkedTo = MelBandEnergies;
-	_similarityMatrix.start(_mfccsPtr->getNumMelBands());
+	_similarityMatrix->start(_mfccsPtr->getNumMelBands());
 }
 
 void SelfSimilarityMatrix::linkToMelSpectrogram(MFCCs* mfcc)
 {
 	_mfccsPtr = mfcc;
 	_linkedTo = MelSpectrogram;
-	_similarityMatrix.start(_mfccsPtr->getNumMelBands());
+	_similarityMatrix->start(_mfccsPtr->getNumMelBands());
 }
 
 void SelfSimilarityMatrix::linkToFourierTransform(FourierTransform* ft)
 {
 	_ftPtr = ft;
 	_linkedTo = FT;
-	_similarityMatrix.start(_ftPtr->getNumHarmonics());
+	_similarityMatrix->start(_ftPtr->getNumHarmonics());
 }
 
 void SelfSimilarityMatrix::linkToDebug()
@@ -109,12 +114,12 @@ void SelfSimilarityMatrix::linkToDebug()
 	_linkedTo = DEBUG;
 	Vengine::MyTiming::startTimer(_debugTimerId);
 	_switch = true;
-	_similarityMatrix.start(2);
+	_similarityMatrix->start(2);
 }
 
 void SelfSimilarityMatrix::debug()
 {
-	int n = std::min(10, _similarityMatrix.sideLength());
+	int n = std::min(10, _similarityMatrix->sideLength());
 	for (int i = 0; i < n; i++) {
 		for (int j = 0; j < n; j++) {
 			std::cout << std::fixed << std::setprecision(2) << getSelfSimilarityMatrixValue(i, j) << ", ";

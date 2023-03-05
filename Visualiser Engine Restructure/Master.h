@@ -20,7 +20,7 @@ public:
 	Master();
 	~Master();
 
-	void init(float* audioData, int sampleRate);
+	void init(float* audioData, int sampleRate, bool initSetters = true);
 	void reInit(float* audioData, int sampleRate);
 
 	void beginCalculations(int currentSample);
@@ -44,6 +44,8 @@ public:
 private:
 	int _sampleFftLastCalculated;
 	FFTWfft _fftwAPI;
+
+	bool _useSetters;
 
 	void initSetters();
 	void deleteSetters();

@@ -468,12 +468,12 @@ void UI::generalSignalProcessingUi()
 {
 	ImGui::Begin("General", &_showGeneralSignalProcessingUi, ImGuiWindowFlags_AlwaysAutoResize);
 
-	ImGui::Checkbox("Compute Fourier Transforms", &SignalProcessingManager::UI_computeFourierTransform);
-	ImGui::Checkbox("Compute RMS", &SignalProcessingManager::UI_computeRms);
-	ImGui::Checkbox("Compute Note Onset", &SignalProcessingManager::UI_computeNoteOnset);
-	ImGui::Checkbox("Compute Tempo Detection", &SignalProcessingManager::UI_computeTempoDetection);
-	ImGui::Checkbox("Compute MFCCs", &SignalProcessingManager::UI_computeMFCCs);
-	ImGui::Checkbox("Compute Self Similarity Matrix", &SignalProcessingManager::UI_computeSelfSimilarityMatrix);
+	ImGui::Checkbox("Compute Fourier Transforms", &SPvars::UI::_computeFourierTransform);
+	ImGui::Checkbox("Compute RMS", &SPvars::UI::_computeRms);
+	ImGui::Checkbox("Compute Note Onset", &SPvars::UI::_computeNoteOnset);
+	ImGui::Checkbox("Compute Tempo Detection", &SPvars::UI::_computeTempoDetection);
+	ImGui::Checkbox("Compute MFCCs", &SPvars::UI::_computeMFCCs);
+	ImGui::Checkbox("Compute Self Similarity Matrix", &SPvars::UI::_computeSimilarityMatrix);
 
 	std::string fpsInfo = "FPS: " + std::to_string(int(Vengine::MyTiming::getFPS()));
 	ImGui::Text(fpsInfo.c_str());
@@ -488,7 +488,7 @@ void UI::fourierTransformsUi()
 {
 	ImGui::Begin("Fourier Tranforms", &_showFourierTransformUi, ImGuiWindowFlags_AlwaysAutoResize);
 
-	ImGui::Checkbox("Compute Fourier Transforms", &SignalProcessingManager::UI_computeFourierTransform);
+	ImGui::Checkbox("Compute Fourier Transforms", &SPvars::UI::_computeFourierTransform);
 
 	//get id array
 	std::vector<int> fourierTransformIds = FourierTransformManager::idArr();
@@ -546,8 +546,8 @@ void UI::fourierTransformsUi()
 	static float nextCutoffHigh = SignalProcessingManager::getMasterPtr()->_sampleRate / 2.0f;
 	static float nextCutoffSmoothFactor = 0.0f;
 	ImGui::Text("Ctrl+Click to edit manually");
-	ImGui::SliderFloat("Cutoff Hz low", &nextCutoffLow, 0.0f, SignalProcessingManager::getMasterPtr()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
-	ImGui::SliderFloat("Cutoff Hz high", &nextCutoffHigh, 0.0f, SignalProcessingManager::getMasterPtr()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+	ImGui::SliderFloat("Cutoff Hz low", &nextCutoffLow, 0.0f, SignalProcessingManager::getMasterPtr()->nyquist(), "%.1f", ImGuiSliderFlags_AlwaysClamp);
+	ImGui::SliderFloat("Cutoff Hz high", &nextCutoffHigh, 0.0f, SignalProcessingManager::getMasterPtr()->nyquist(), "%.1f", ImGuiSliderFlags_AlwaysClamp);
 	ImGui::SliderFloat("Cutoff smooth fraction", &nextCutoffSmoothFactor, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 
 	if (ImGui::Button("Create new")) {
@@ -570,7 +570,7 @@ void UI::noteOnsetUi()
 
 	ImGui::Begin("Note Onset", &_showNoteOnsetUi, ImGuiWindowFlags_AlwaysAutoResize);
 
-	ImGui::Checkbox("Compute note onset", &SignalProcessingManager::UI_computeNoteOnset);
+	ImGui::Checkbox("Compute note onset", &SPvars::UI::_computeNoteOnset);
 
 	imguiHistoryPlotter(SignalProcessingManager::_noteOnset->getCONVonsetHistory());
 	imguiHistoryPlotter(SignalProcessingManager::_noteOnset->getDisplayPeaks());
@@ -582,7 +582,7 @@ void UI::tempoDetectionUi()
 {
 	ImGui::Begin("Tempo", &_showTempoDetectionUi, ImGuiWindowFlags_AlwaysAutoResize);
 
-	ImGui::Checkbox("Compute Tempo", &SignalProcessingManager::UI_computeTempoDetection);
+	ImGui::Checkbox("Compute Tempo", &SPvars::UI::_computeTempoDetection);
 
 	std::string tempo = "Tempo guess: " + std::to_string(SignalProcessingManager::_tempoDetection->getTempo());
 	ImGui::Text(tempo.c_str());
@@ -627,7 +627,7 @@ void UI::mfccUi()
 {
 	ImGui::Begin("MFCCs", &_showMFCCsUi, ImGuiWindowFlags_AlwaysAutoResize);
 
-	ImGui::Checkbox("Compute MFCCs", &SignalProcessingManager::UI_computeMFCCs);
+	ImGui::Checkbox("Compute MFCCs", &SPvars::UI::_computeMFCCs);
 
 	ImGui::PlotHistogram("Mel band energies", SignalProcessingManager::_mfccs->getBandEnergies(), SignalProcessingManager::_mfccs->getNumMelBands());
 	ImGui::PlotHistogram("Mel spectrogram", SignalProcessingManager::_mfccs->getMelSpectrogram(), SignalProcessingManager::_mfccs->getNumMelBands());
@@ -640,76 +640,148 @@ void UI::selfSimilarityMatrixUi()
 {
 	ImGui::Begin("Self Similarity Matrix", &_showSelfSimilarityMatrixUi, ImGuiWindowFlags_AlwaysAutoResize);
 
-	ImGui::Checkbox("Compute Self Similarity Matrix", &SignalProcessingManager::UI_computeSelfSimilarityMatrix);
+	//which one to calculate (future or real time)--
+	static int realTimeOrFuture = 0;
+	ImGui::Text("Link to:");
+	ImGui::RadioButton("Real time", &realTimeOrFuture, 0); ImGui::SameLine();
+	ImGui::RadioButton("Future (recommended)", &realTimeOrFuture, 1);
 
+	static bool computeMatrix = false;
+	ImGui::Checkbox("Compute Self Similarity Matrix", &computeMatrix);
+
+	bool isRealTime = (realTimeOrFuture == 0);
+	bool isFuture = (realTimeOrFuture == 1);
+
+	if (isRealTime && computeMatrix) {
+		SPvars::UI::_computeSimilarityMatrix = true;
+		SPvars::UI::_computeFutureSimilarityMatrix = false;
+	}
+	else if (isFuture && computeMatrix){
+		SPvars::UI::_computeSimilarityMatrix = false;
+		SPvars::UI::_computeFutureSimilarityMatrix = true;
+	}
+	//--
+
+	//matrix size--
+	static int matrixSizeTmp = SPvars::UI::_nextSimilarityMatrixSize;
+	ImGui::SliderInt("Matrix Size", &matrixSizeTmp, 0, 1000);
+	if (matrixSizeTmp != SPvars::UI::_nextSimilarityMatrixSize && ImGui::Button("Confirm")) {
+		SPvars::UI::_nextSimilarityMatrixSize = matrixSizeTmp;
+		if (isRealTime) {
+			SignalProcessingManager::_similarityMatrix->reInit(SPvars::UI::_nextSimilarityMatrixSize);
+		}
+		else if (isFuture) {
+			SignalProcessingManager::_futureSimilarityMatrix->reInit(SPvars::UI::_nextSimilarityMatrixSize);
+		}
+	}
+	//--
+
+	//link to options--
 	static int linkTo = 0;
 	ImGui::Text("Link to:");
 	ImGui::RadioButton("MFCCs", &linkTo, 0);
-	ImGui::RadioButton("Mel band energies", &linkTo, 1);
-	ImGui::RadioButton("Mel spectrogram", &linkTo, 2);
+	if (isRealTime) {
+		ImGui::RadioButton("Mel band energies", &linkTo, 1);
+		ImGui::RadioButton("Mel spectrogram", &linkTo, 2);
+	}
 	ImGui::RadioButton("Fourier transform", &linkTo, 3);
+	//--
 
-	if (linkTo == 0) {
+	if (linkTo == 0) { // link to mfccs vv
 		ImGui::Separator();
 
 		ImGui::Text("MFCCs coefficients: ");
 		static int low = 4;
 		ImGui::PushID(0);
-		ImGui::SliderInt("##", &low, 0, SignalProcessingManager::_mfccs->getNumMelBands());
+		ImGui::SliderInt("##", &low, 0, SPvars::Const::_numMelBands);
 		ImGui::PopID();
 
 		ImGui::Text("to");
 
 		static int high = 13;
 		ImGui::PushID(1);
-		ImGui::SliderInt("##", &high, 0, SignalProcessingManager::_mfccs->getNumMelBands());
+		ImGui::SliderInt("##", &high, 0, SPvars::Const::_numMelBands);
 		ImGui::PopID();
 
 		if (ImGui::Button("Confirm")) {
-			SignalProcessingManager::_selfSimilarityMatrix->linkToMFCCs(SignalProcessingManager::_mfccs, low, high);
+			if (isRealTime) {
+				SignalProcessingManager::_similarityMatrix->linkToMFCCs(SignalProcessingManager::_mfccs, low, high);
+			}
+			else if (isFuture) {
+				SignalProcessingManager::_futureSimilarityMatrix->linkToMFCCs(low, high);
+			}
 		}
 	}
-	if (linkTo == 1) {
+	if (linkTo == 1) { // link to mel band energies (real time only) vv
+		if (isFuture) {
+			Vengine::fatalError("Cannot link to mel band energies for future similarity matrix");
+		}
 		if (ImGui::Button("Confirm")) {
-			SignalProcessingManager::_selfSimilarityMatrix->linkToMelBandEnergies(SignalProcessingManager::_mfccs);
+			SignalProcessingManager::_similarityMatrix->linkToMelBandEnergies(SignalProcessingManager::_mfccs);
 		}
 	}
-	if (linkTo == 2) {
+	if (linkTo == 2) {	// link to mel spectrogram (real time only) vv
+		if (isFuture) {
+			Vengine::fatalError("Cannot link to mel spectrogram for future similarity matrix");
+		}
 		if (ImGui::Button("Confirm")) {
-			SignalProcessingManager::_selfSimilarityMatrix->linkToMelSpectrogram(SignalProcessingManager::_mfccs);
+			SignalProcessingManager::_similarityMatrix->linkToMelSpectrogram(SignalProcessingManager::_mfccs);
 		}
 	}
-	if (linkTo == 3) {
+	if (linkTo == 3) {	// link to fourier transform vv
 		ImGui::Separator();
 
-		std::vector<int> fourierTransformIds = FourierTransformManager::idArr();
+		//real time picks from created fourier transforms
+		if (isRealTime) {
+			std::vector<int> fourierTransformIds = FourierTransformManager::idArr();
 
-		std::vector<FourierTransform*> fourierTransforms;
-		for (auto& it : fourierTransformIds) {
-			fourierTransforms.push_back(FourierTransformManager::getFourierTransform(it));
+			std::vector<FourierTransform*> fourierTransforms;
+			for (auto& it : fourierTransformIds) {
+				fourierTransforms.push_back(FourierTransformManager::getFourierTransform(it));
+			}
+
+			//create fourier transform selector
+			std::vector<std::string> fourierTransformNames;
+			for (auto& it : fourierTransforms) {
+				fourierTransformNames.push_back(it->getName());
+			}
+			std::string comboStr = UI::ImGuiComboStringMaker(fourierTransformNames);
+
+			const char* ftItems = comboStr.c_str();
+			static int currentFt = 0;
+			ImGui::PushID(0);
+			ImGui::Combo("fourier transforms", &currentFt, ftItems, fourierTransformNames.size());
+			ImGui::PopID();
+			//--
+
+			if (fourierTransforms.size() > 0 && ImGui::Button("Confirm")) {
+				std::cout << "Confirm that shit";
+				SignalProcessingManager::_similarityMatrix->linkToFourierTransform(fourierTransforms.at(currentFt));
+			}
+		}
+		//future has its own fourier transform that you set the parameters of
+		else if (isFuture) {
+			static float nextCutoffLow = 0.0f;
+			static float nextCutoffHigh = SignalProcessingManager::getMasterPtr()->nyquist();
+			static float nextCutoffSmoothFactor = 0.0f;
+			ImGui::Text("Ctrl+Click to edit manually");
+			ImGui::SliderFloat("Cutoff Hz low", &nextCutoffLow, 0.0f, SignalProcessingManager::getMasterPtr()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+			ImGui::SliderFloat("Cutoff Hz high", &nextCutoffHigh, 0.0f, SignalProcessingManager::getMasterPtr()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+			ImGui::SliderFloat("Cutoff smooth fraction", &nextCutoffSmoothFactor, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+
+			if (ImGui::Button("Confirm")) {
+				SignalProcessingManager::_futureSimilarityMatrix->linkToFourierTransform(nextCutoffLow, nextCutoffHigh, nextCutoffSmoothFactor);
+			}
 		}
 
-		//create fourier transform selector
-		std::vector<std::string> fourierTransformNames;
-		for (auto& it : fourierTransforms) {
-			fourierTransformNames.push_back(it->getName());
-		}
-		std::string comboStr = UI::ImGuiComboStringMaker(fourierTransformNames);
-		
-		const char* ftItems = comboStr.c_str();
-		static int currentFt = 0;
-		ImGui::PushID(0);
-		ImGui::Combo("fourier transforms", &currentFt, ftItems, fourierTransformNames.size());
-		ImGui::PopID();
-		//--
-
-		if (ImGui::Button("Confirm")) {
-			SignalProcessingManager::_selfSimilarityMatrix->linkToFourierTransform(fourierTransforms.at(currentFt));
-		}
 	}
 
-	imguiHistoryPlotter(SignalProcessingManager::_selfSimilarityMatrix->getSimilarityMeasureHistory());
-
+	if (isRealTime) {
+		imguiHistoryPlotter(SignalProcessingManager::_similarityMatrix->getSimilarityMeasureHistory());
+	}
+	else if (isFuture){
+		imguiHistoryPlotter(SignalProcessingManager::_futureSimilarityMatrix->matrix.getSimilarityMeasureHistory());
+	}
 	ImGui::End();
 }
 
@@ -805,7 +877,7 @@ bool UI::textInputPrompt(const std::string& message, char* buf, int bufSize, boo
 
 void UI::imguiHistoryPlotter(History<float>* history)
 {
-	ImGui::PlotLines("Lines", history->dataStartPtr(), history->totalSize(), history->firstPartOffset());
+	ImGui::PlotLines("##", history->dataStartPtr(), history->totalSize(), history->firstPartOffset());
 }
 
 std::string UI::ImGuiComboStringMaker(std::vector<std::string>& options)

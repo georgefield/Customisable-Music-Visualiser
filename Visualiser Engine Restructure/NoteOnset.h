@@ -49,7 +49,7 @@ public:
 		//thresholding vars		
 		_lastAboveThreshold = false;
 
-		_ftForSpectralDistance.init(_m, "Note Onset FT", false);
+		_ftForSpectralDistance.init(_m, "");
 
 		initSetters();
 

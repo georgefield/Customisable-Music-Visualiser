@@ -10,20 +10,12 @@ RMS* SignalProcessingManager::_rms = nullptr;
 NoteOnset* SignalProcessingManager::_noteOnset = nullptr;
 TempoDetection* SignalProcessingManager::_tempoDetection = nullptr;
 MFCCs* SignalProcessingManager::_mfccs = nullptr;
-SelfSimilarityMatrix* SignalProcessingManager::_selfSimilarityMatrix = nullptr;
-
-bool SignalProcessingManager::UI_computeFourierTransform = true;
-bool SignalProcessingManager::UI_computeRms = true;
-bool SignalProcessingManager::UI_computeNoteOnset = true;
-bool SignalProcessingManager::UI_computeTempoDetection = true;
-bool SignalProcessingManager::UI_computeMFCCs = false;
-bool SignalProcessingManager::UI_computeSelfSimilarityMatrix = false;
+SelfSimilarityMatrix* SignalProcessingManager::_similarityMatrix = nullptr;
+FutureSimilarityMatrix* SignalProcessingManager::_futureSimilarityMatrix = nullptr;
 
 std::string SignalProcessingManager::_currentAudioFilepath = "";
 
 bool SignalProcessingManager::_started = false;
-
-int SignalProcessingManager::GENERAL_HISTORY_SIZE = 1000;
 
 void SignalProcessingManager::start()
 {
@@ -40,7 +32,7 @@ void SignalProcessingManager::start()
 	_master = new Master();
 	_master->init(AudioManager::getAudioData(), AudioManager::getSampleRate());
 
-	initAlgorithmObjects(true, true, true, true, true);
+	initAlgorithmObjects(true, true, true, true, true, true);
 
 	//set up general history size uniform setter
 	std::function<int()> generalHistorySizeSetterFunction = SignalProcessingManager::getGeneralHistorySize;
@@ -62,7 +54,7 @@ void SignalProcessingManager::restart()
 	_master->reInit(AudioManager::getAudioData(), AudioManager::getSampleRate()); //will tell all other algorithms to reinit
 	FourierTransformManager::reInitAll();
 
-	initAlgorithmObjects(true, true, true, true, true);
+	initAlgorithmObjects(true, true, true, true, true, true);
 
 	//set filepath
 	_currentAudioFilepath = AudioManager::getAudioFilepath();
@@ -86,7 +78,7 @@ void SignalProcessingManager::calculate()
 	}
 
 	//dependencies
-	if (UI_computeTempoDetection) { UI_computeNoteOnset = true; }
+	if (SPvars::UI::_computeTempoDetection) { SPvars::UI::_computeNoteOnset = true; }
 
 
 	if (!AudioManager::isAudioPlaying()) { //no calculations unless audio playing
@@ -97,24 +89,27 @@ void SignalProcessingManager::calculate()
 
 	//all other signal processing done between begin and end--
 
-	if (UI_computeFourierTransform) {
+	if (SPvars::UI::_computeFourierTransform) {
 		_master->calculateFourierTransform();
 		FourierTransformManager::calculateFourierTransforms();
 	}
-	if (UI_computeRms) {
+	if (SPvars::UI::_computeRms) {
 		_rms->calculateNext(4096, LINEAR_PYRAMID);
 	}
-	if (UI_computeNoteOnset) {
+	if (SPvars::UI::_computeNoteOnset) {
 		_noteOnset->calculateNext();
 	}
-	if (UI_computeTempoDetection) {
+	if (SPvars::UI::_computeTempoDetection) {
 		_tempoDetection->calculateNext();
 	}
-	if (UI_computeMFCCs) {
+	if (SPvars::UI::_computeMFCCs) {
 		_mfccs->calculateNext();
 	}
-	if (UI_computeSelfSimilarityMatrix) {
-		_selfSimilarityMatrix->calculateNext();
+	if (SPvars::UI::_computeSimilarityMatrix) {
+		_similarityMatrix->calculateNext();
+	}
+	if (SPvars::UI::_computeFutureSimilarityMatrix) {
+		_futureSimilarityMatrix->calculateNext();
 	}
 	//--
 
@@ -124,37 +119,35 @@ void SignalProcessingManager::calculate()
 
 //private
 
-void SignalProcessingManager::initAlgorithmObjects(bool rms, bool noteOnset, bool tempoDetection, bool mfccs, bool selfSimilarityMatrix)
+void SignalProcessingManager::initAlgorithmObjects(bool rms, bool noteOnset, bool tempoDetection, bool mfccs, bool similarityMatrix, bool futureSimilarityMatrix)
 {
 	if (_master == nullptr) {
 		Vengine::fatalError("Cannot create algorithm objects when master = nullptr");
 	}
-	/// <summary>
-	/// Change in 
-	/// </summary>
+
+	//RMS
 	if (rms) {
 		if (_rms != nullptr) {
 			_rms->reInit();
 		}
 		else {
-			_rms = new RMS(GENERAL_HISTORY_SIZE);
+			_rms = new RMS(SPvars::Const::_generalHistorySize);
 			_rms->init(_master);
 		}
 	}
 
-
+	//Note onset
 	if (noteOnset) {
 		if (_noteOnset != nullptr) {
 			_noteOnset->reInit();
 		}
 		else {
-			_noteOnset = new NoteOnset(GENERAL_HISTORY_SIZE);
+			_noteOnset = new NoteOnset(SPvars::Const::_generalHistorySize);
 			_noteOnset->init(_master);
 		}
 	}
 
-
-
+	//Tempo detection
 	if (tempoDetection) {
 		if (_tempoDetection != nullptr) {
 			_tempoDetection->reInit();
@@ -165,23 +158,36 @@ void SignalProcessingManager::initAlgorithmObjects(bool rms, bool noteOnset, boo
 		}
 	}
 
-
+	//MFCCs
 	if (mfccs) {
 		if (_mfccs != nullptr) {
 			_mfccs->reInit();
 		}
 		else {
 			_mfccs = new MFCCs();
-			_mfccs->init(_master, 25, 0, 20000);
+			_mfccs->init(_master, SPvars::Const::_numMelBands, 0, 20000);
 		}
 	}
 
-	if (selfSimilarityMatrix) {
-		if (_selfSimilarityMatrix != nullptr) {
+	//Similarity matrix
+	if (similarityMatrix) {
+		if (_similarityMatrix != nullptr) {
+			_similarityMatrix->reInit(SPvars::UI::_nextSimilarityMatrixSize);
 		}
 		else {
-			_selfSimilarityMatrix = new SelfSimilarityMatrix(1000, GENERAL_HISTORY_SIZE);
+			_similarityMatrix = new SelfSimilarityMatrix(SPvars::Const::_generalHistorySize);
+			_similarityMatrix->init(SPvars::UI::_nextSimilarityMatrixSize);
 		}
 	}
 
+	//Future similarity matrix
+	if (futureSimilarityMatrix) {
+		if (_futureSimilarityMatrix != nullptr) {
+			_futureSimilarityMatrix->reInit(SPvars::UI::_nextSimilarityMatrixSize);
+		}
+		else {
+			_futureSimilarityMatrix = new FutureSimilarityMatrix(SPvars::Const::_generalHistorySize);
+			_futureSimilarityMatrix->init(SPvars::UI::_nextSimilarityMatrixSize);
+		}
+	}
 }

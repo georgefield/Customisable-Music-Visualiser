@@ -55,7 +55,7 @@ int Window::create(std::string windowName, int screenWidth, int screenHeight, Ui
 	printf("***OpenGL version %s***\n", glGetString(GL_VERSION));
 
 	//VSYNC!!!
-	SDL_GL_SetSwapInterval(0); //1 on, 0 off
+	SDL_GL_SetSwapInterval(1); //1 on, 0 off
 
 	//what colour the window clears to (rgba)
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);

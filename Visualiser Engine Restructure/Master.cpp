@@ -18,17 +18,22 @@ Master::Master() :
 
 Master::~Master()
 {
-	deleteSetters();
+	if (_useSetters) {
+		deleteSetters();
+	}
 }
 
-void Master::init(float* audioData, int sampleRate)
+void Master::init(float* audioData, int sampleRate, bool useSetters)
 {
 	_fftHistory.init(_fftwAPI.numHarmonics());
 
 	_audioData = audioData;
 	_sampleRate = sampleRate;
 
-	initSetters();
+	_useSetters = useSetters;
+	if (_useSetters) {
+		initSetters();
+	}
 }
 
 void Master::reInit(float* audioData, int sampleRate) {

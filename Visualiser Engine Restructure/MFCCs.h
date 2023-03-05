@@ -18,13 +18,15 @@ public:
 	}
 
 	~MFCCs() {
-		deleteSetters();
+		if (_useSetters) {
+			deleteSetters();
+		}
 
 		delete[] _bandEnergies;
 		delete[] _melSpectrogram;
 	}
 
-	void init(Master* m, int numMelBands, float lowerHz, float upperHz) {
+	void init(Master* m, int numMelBands, float lowerHz, float upperHz, bool useSetters = true) {
 		_m = m;
 
 		_filterBank.init(_m);
@@ -43,8 +45,10 @@ public:
 		//mfccs gets given pointer to output from fftwapi so needs no allocated memory
 		_mfccs = _dct.getOutput();
 
-
-		initSetters();
+		_useSetters = useSetters;
+		if (_useSetters) {
+			initSetters();
+		}
 	}
 
 	void reInit() {
@@ -73,6 +77,7 @@ private:
 	Master* _m;
 	FFTWdct _dct;
 
+	bool _useSetters;
 
 	float mel(float hz);
 	float melInverse(float mel);

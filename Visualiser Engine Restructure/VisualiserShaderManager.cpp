@@ -210,7 +210,7 @@ void VisualiserShaderManager::addHistoryAsPossibleSSBOsetter(std::string history
 	std::function<float* ()> historySetterFunction = std::bind(&History<float>::getAsContiguousArray, history);
 	VisualiserShaderManager::SSBOs::addPossibleSSBOSetter(historyName + " history", historySetterFunction, history->totalSize());
 
-	if (history->totalSize() != SignalProcessingManager::GENERAL_HISTORY_SIZE) {
+	if (history->totalSize() != SPvars::Const::_generalHistorySize) {
 		//need to create specific size var if history size different from general size
 		std::function<int ()> historySizeSetterFunction = std::bind(&History<float>::totalSize, history);
 		VisualiserShaderManager::Uniforms::addPossibleUniformSetter(historyName + " history size", historySizeSetterFunction);

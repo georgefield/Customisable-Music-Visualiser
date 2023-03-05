@@ -8,34 +8,10 @@ public:
 	VectorHistory(int historySize) :
 		_history(historySize),
 		_added(0),
-		_vectorDim(-1)
+		_vectorDim(-1),
+
+		_initialised(false)
 	{
-
-	}
-
-	void init(int vectorDim) {
-		_vectorDim = vectorDim;
-
-		for (int i = 0; i < _history.totalSize(); i++) { //allocate memory for history (init memory to 0)
-			_history.add(new float[_vectorDim]);
-			memset(_history.newest(), 0.0f, (_vectorDim * sizeof(float)));
-		}
-	}
-
-	void reInit(int vectorDim) {
-		for (int i = 0; i < _history.totalSize(); i++) { //allocate memory for history (init memory to 0)
-			delete[] get(i);
-		}
-		_added = 0;
-
-		init(vectorDim);
-	}
-
-	void reInit() {
-		for (int i = 0; i < _history.totalSize(); i++) { //allocate memory for history (init memory to 0)
-			memset(_history.get(i), 0.0f, (_vectorDim * sizeof(float)));
-		}
-		_added = 0;
 	}
 
 	~VectorHistory() {
@@ -46,7 +22,50 @@ public:
 		}
 	}
 
-	//unique functions
+
+	//*** initing and resetting vector history ***
+
+	void init(int vectorDim) {
+		_vectorDim = vectorDim;
+
+		for (int i = 0; i < _history.totalSize(); i++) { //allocate memory for history (init memory to 0)
+			_history.add(new float[_vectorDim]);
+			memset(_history.newest(), 0.0f, (_vectorDim * sizeof(float)));
+		}
+
+		_initialised = true;
+	}
+
+	void reInit(int vectorDim) { //reinit with different vector size (need to wipe heap malloc)
+		if (vectorDim == _vectorDim) {
+			clear(); //just call clear as no need to create new array ptrs
+			return;
+		}
+
+		for (int i = 0; i < _history.totalSize(); i++) {
+			delete[] get(i);
+		}
+		_added = 0;
+
+		init(vectorDim);
+	}
+
+	void reInit() { //reinit of same size, just clear
+		clear();
+	}
+
+	void clear() {
+		for (int i = 0; i < _history.totalSize(); i++) {
+			memset(_history.get(i), 0.0f, (_vectorDim * sizeof(float)));
+		}
+		_added = 0;
+	}
+
+	//***
+
+	
+	//*** working with vector history ***
+
 	float* workingArray() //modify values here in memory
 	{
 		if (_vectorDim == -1) {
@@ -55,7 +74,7 @@ public:
 		return _history.oldest(); //work on oldest entries
 	}
 
-	void addWorkingArrayToHistory(int currentSample = -1) //call after setting to add to front of history
+	void addWorkingArrayToHistory(int currentSample = -1) //call after setting working array values to what you want
 	{
 		_history.add(_history.oldest(), currentSample);
 		_added++;
@@ -75,29 +94,26 @@ public:
 		return _vectorDim;
 	}
 
-	//same functionality as history required
+	//***
+
+	//have functionality of history
+	bool isInitialised() const { return _initialised; }
+
 	float* get(int index) {
 		if (_vectorDim == -1) {
 			Vengine::fatalError("Vector history used without being initialised");
 		}
 		return _history.get(index);
 	}
-	float* newest() {
-		return _history.get(0);
-	}
-	float* previous() {
-		return _history.get(1);
-	}
+	float* newest() { return _history.get(0); }
+	float* previous() { return _history.get(1); }
 
-	int totalSize() {
-		return _history.totalSize();
-	}
-
-	int entries() {
-		return std::min(_added, totalSize());
-	}
+	int totalSize() { return _history.totalSize();}
+	int entries() { return std::min(_added, totalSize()); }
 private:
 	int _added;
 	int _vectorDim;
 	History<float*> _history;
+
+	bool _initialised;
 };

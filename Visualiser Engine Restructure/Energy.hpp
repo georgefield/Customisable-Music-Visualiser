@@ -21,18 +21,18 @@ public:
 
 	//only calculate energy from fourier transform to keep consistent as if allow from audio data have to deal with accounting for hanning window
 	//and the frequencies removed when only including half fourier transform
-	void init(Master* m, std::string nameOfFT, bool useSetters = true) {
+	void init(Master* m, std::string nameOfFT = "") {
 		if (_initialised) {
 			Vengine::warning("Please call reInit to restart already initialised energy class");
 			return;
 		}
 
-		_nameOfFTtoBeAnalysed = nameOfFT;
+		_nameOfFTtoBeingAnalysed = nameOfFT;
 
 		_m = m;
 		_sampleLastCalculated = -1;
 		_initialised = true;
-		_useSetters = useSetters;
+		_useSetters = (nameOfFT != "");
 
 		if (_useSetters) {
 			initSetters();
@@ -81,7 +81,7 @@ private:
 	Master* _m;
 
 	History<float> _energy;
-	std::string _nameOfFTtoBeAnalysed;
+	std::string _nameOfFTtoBeingAnalysed;
 
 	bool _initialised;
 	bool _useSetters;
@@ -89,10 +89,10 @@ private:
 	int _sampleLastCalculated;
 
 	void initSetters() {
-		VisualiserShaderManager::addHistoryAsPossibleSSBOsetter(_nameOfFTtoBeAnalysed + " energy", &_energy);
+		VisualiserShaderManager::addHistoryAsPossibleSSBOsetter(_nameOfFTtoBeingAnalysed + " energy", &_energy);
 	}
 
 	void deleteSetters() {
-		VisualiserShaderManager::deleteHistoryAsPossibleSSBOsetter(_nameOfFTtoBeAnalysed + " energy");
+		VisualiserShaderManager::deleteHistoryAsPossibleSSBOsetter(_nameOfFTtoBeingAnalysed + " energy");
 	}
 };

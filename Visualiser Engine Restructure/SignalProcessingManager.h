@@ -8,6 +8,7 @@
 #include "SelfSimilarityMatrix.h"
 #include "FutureSimilarityMatrix.h"
 #include "RMS.hpp"
+#include "SignalProcessingVars.h"
 
 #include "AudioManager.h"
 
@@ -29,19 +30,10 @@ public:
 	static NoteOnset* _noteOnset;
 	static TempoDetection* _tempoDetection;
 	static MFCCs* _mfccs;
-	static SelfSimilarityMatrix* _selfSimilarityMatrix;
+	static SelfSimilarityMatrix* _similarityMatrix;
 	static FutureSimilarityMatrix* _futureSimilarityMatrix;
 
-	static int GENERAL_HISTORY_SIZE;
-
-	static bool UI_computeFourierTransform;
-	static bool UI_computeRms;
-	static bool UI_computeNoteOnset;
-	static bool UI_computeTempoDetection;
-	static bool UI_computeMFCCs;
-	static bool UI_computeSelfSimilarityMatrix;
-
-	static int getGeneralHistorySize() { return GENERAL_HISTORY_SIZE; }
+	static int getGeneralHistorySize() { return SPvars::Const::_generalHistorySize; }
 private:
 	static Master* _master;
 
@@ -49,5 +41,5 @@ private:
 
 	static std::string _currentAudioFilepath;
 
-	static void initAlgorithmObjects(bool rms, bool noteOnset, bool tempoDetection, bool mfccs, bool selfSimilarityMatrix);
+	static void initAlgorithmObjects(bool rms, bool noteOnset, bool tempoDetection, bool mfccs, bool similarityMatrix, bool futureSimilarityMatrix);
 };

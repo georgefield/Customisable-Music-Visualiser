@@ -19,7 +19,7 @@ FourierTransform::FourierTransform(int historySize, float cutOffLow, float cutOf
 	_current(nullptr),
 	_next(nullptr),
 
-	_energyOfFt(SignalProcessingManager::GENERAL_HISTORY_SIZE)
+	_energyOfFt(SPvars::Const::_generalHistorySize)
 {
 	_maxLowResOutputSize = 50;
 }
@@ -38,7 +38,7 @@ FourierTransform::~FourierTransform()
 }
 
 
-void FourierTransform::init(Master* master, std::string name, bool useSetters)
+void FourierTransform::init(Master* master, std::string name)
 {
 	if (_initialised) {
 		Vengine::fatalError("Double initialisation of fourier transform");
@@ -46,7 +46,7 @@ void FourierTransform::init(Master* master, std::string name, bool useSetters)
 
 	_initialised = true;
 	_nameOfFT = name;
-	_useSetters = useSetters;
+	_useSetters = (name != ""); //empty name => not a front facing ft, so dont init setters for uniforms & ssbos
 	_m = master;
 
 	if (_cutOffLow == -1)
@@ -79,7 +79,7 @@ void FourierTransform::init(Master* master, std::string name, bool useSetters)
 	_next = &(_working2);
 
 	//init energy of ft
-	_energyOfFt.init(_m, _nameOfFT, useSetters);
+	_energyOfFt.init(_m, _nameOfFT);
 
 	if (_useSetters) {
 		initSetters();

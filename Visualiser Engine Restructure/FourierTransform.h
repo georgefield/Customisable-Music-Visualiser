@@ -14,7 +14,7 @@ public:
 	FourierTransform(int transformHistorySize = 7, float cutOffLow = -1.0f, float cutOffHigh = -1.0f, float cutoffSmoothFrac = 0.0f);
 	~FourierTransform();
 	
-	void init(Master* master, std::string name, bool useSetters = true);
+	void init(Master* master, std::string name = "");
 	void reInit();
 
 	void beginCalculation(); //applying filters must be between begin and end

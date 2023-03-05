@@ -83,7 +83,7 @@ struct FilterBank {
 	}
 
 	void init(Master* master) {
-		masterTransform.init(master, "", false);
+		masterTransform.init(master, "");
 	}
 
 	void reInit() {

@@ -25,9 +25,6 @@
     <Filter Include="Header Files\Visualiser Managing">
       <UniqueIdentifier>{55bee5f9-b572-472e-be7c-326afaa820e9}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Signal Processing Algorithms">
-      <UniqueIdentifier>{53bf489d-29e8-4d99-bc20-7ffe23c47f8a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\APIs for dependencies">
       <UniqueIdentifier>{0e4eaf77-4bb6-413c-92d7-ff2595439497}</UniqueIdentifier>
     </Filter>
@@ -40,14 +37,20 @@
     <Filter Include="Source Files\APIs for dependencies">
       <UniqueIdentifier>{11051f38-db45-48a7-9fb1-595061e6c748}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Signal Processing Managers">
-      <UniqueIdentifier>{5d31fc93-f7f3-460d-a3b9-abc70841b159}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Signal Processing Algorithms">
       <UniqueIdentifier>{81c9e6ae-9017-4488-970b-2a815d22131a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Signal Processing Managers">
+    <Filter Include="Header Files\Signal Processing Algorithms">
+      <UniqueIdentifier>{53bf489d-29e8-4d99-bc20-7ffe23c47f8a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Signal Processing Algorithms\Self Similarity Matrix">
+      <UniqueIdentifier>{b3bc2cdf-81e0-48ae-a295-69adb966680b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Signal Processing Managing">
       <UniqueIdentifier>{ee0c6cb1-2c11-40cb-a542-429839b91e6d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Signal Processing Managing">
+      <UniqueIdentifier>{5d31fc93-f7f3-460d-a3b9-abc70841b159}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -88,10 +91,10 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FourierTransformManager.cpp">
-      <Filter>Source Files\Signal Processing Managers</Filter>
+      <Filter>Source Files\Signal Processing Managing</Filter>
     </ClCompile>
     <ClCompile Include="SignalProcessingManager.cpp">
-      <Filter>Source Files\Signal Processing Managers</Filter>
+      <Filter>Source Files\Signal Processing Managing</Filter>
     </ClCompile>
     <ClCompile Include="VisualiserShader.cpp">
       <Filter>Source Files\Visualiser Managing</Filter>
@@ -114,8 +117,11 @@
     <ClCompile Include="DixonAlgVariableDefinitions.cpp">
       <Filter>Source Files\Signal Processing Algorithms</Filter>
     </ClCompile>
-    <ClCompile Include="FutureProcessingManager.cpp">
-      <Filter>Source Files\Signal Processing Managers</Filter>
+    <ClCompile Include="FutureSimilarityMatrix.cpp">
+      <Filter>Source Files\Signal Processing Algorithms</Filter>
+    </ClCompile>
+    <ClCompile Include="SignalProcessingVars.cpp">
+      <Filter>Source Files\Signal Processing Managing</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -167,9 +173,6 @@
     <ClInclude Include="MFCCs.h">
       <Filter>Header Files\Signal Processing Algorithms</Filter>
     </ClInclude>
-    <ClInclude Include="SelfSimilarityMatrix.h">
-      <Filter>Header Files\Signal Processing Algorithms</Filter>
-    </ClInclude>
     <ClInclude Include="VectorHistory.h">
       <Filter>Header Files\Data Structures</Filter>
     </ClInclude>
@@ -219,13 +222,22 @@
       <Filter>Header Files\Data Structures</Filter>
     </ClInclude>
     <ClInclude Include="SignalProcessingManager.h">
-      <Filter>Header Files\Signal Processing Managers</Filter>
+      <Filter>Header Files\Signal Processing Managing</Filter>
     </ClInclude>
     <ClInclude Include="FourierTransformManager.h">
-      <Filter>Header Files\Signal Processing Managers</Filter>
+      <Filter>Header Files\Signal Processing Managing</Filter>
     </ClInclude>
-    <ClInclude Include="FutureProcessingManager.h">
-      <Filter>Header Files\Signal Processing Managers</Filter>
+    <ClInclude Include="SelfSimilarityMatrix.h">
+      <Filter>Header Files\Signal Processing Algorithms\Self Similarity Matrix</Filter>
+    </ClInclude>
+    <ClInclude Include="SimilarityMatrixStructure.h">
+      <Filter>Header Files\Signal Processing Algorithms\Self Similarity Matrix</Filter>
+    </ClInclude>
+    <ClInclude Include="FutureSimilarityMatrix.h">
+      <Filter>Header Files\Signal Processing Algorithms\Self Similarity Matrix</Filter>
+    </ClInclude>
+    <ClInclude Include="SignalProcessingVars.h">
+      <Filter>Header Files\Signal Processing Managing</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
