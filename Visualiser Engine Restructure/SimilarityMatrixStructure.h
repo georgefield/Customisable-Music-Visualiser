@@ -2,15 +2,21 @@
 #include "VectorHistory.h"
 #include <Vengine/MyErrors.h>
 #include "Tools.h"
+#include "DataTextureCreator.h"
+#include "SignalProcessingVars.h"
 
 class SimilarityMatrixStructure {
 public:
 	SimilarityMatrixStructure(int matrixSize) :
 		_vectorHistory(matrixSize),
+		_vectorMagnitudeHistory(matrixSize),
 		_matrixSize(matrixSize),
+		_dataLength(matrixSize * matrixSize),
+		_usingOrderedData(false),
 
 		_data(nullptr),
 		_dataWindowedCorrelation(nullptr), //init to nullptr as might not be initialised in constructor
+		_orderedData(nullptr),
 
 		_initialised(false)
 	{
@@ -19,9 +25,14 @@ public:
 
 	~SimilarityMatrixStructure() {
 		if (_initialised) {
-			for (int i = 0; i < _matrixSize; i++) {
-				delete[] _data[i];
-			}
+			delete[] _data;
+			delete[] _dataWindowedCorrelation;
+		}
+		if (_usingOrderedData) {
+			delete[] _orderedData;
+		}
+		if (_textureCreator.isCreated()) {
+			_textureCreator.deleteTexture();
 		}
 	}
 
@@ -31,28 +42,30 @@ public:
 		_start = 0;
 
 		//set up matrix--
-		_data = new float* [_matrixSize];
-		for (int i = 0; i < _matrixSize; i++) {
-			_data[i] = new float[_matrixSize];
-			memset(_data[i], 0.0f, _matrixSize * sizeof(float));
-		}
+		_data = new float[_dataLength];
+		memset(_data, 0.0f, _dataLength * sizeof(float));
 		//--
 
 		//always set aside memory for correlation window matrix as just makes life easier--
 		setCorrelationWindowSize(correlationWindowSize);
 
-		_dataWindowedCorrelation = new float* [_matrixSize];
-		for (int i = 0; i < _matrixSize; i++) {
-			_dataWindowedCorrelation[i] = new float[_matrixSize];
-			memset(_dataWindowedCorrelation[i], 0.0f, _matrixSize * sizeof(float));
-		}
+		_dataWindowedCorrelation = new float[_dataLength];
+		memset(_dataWindowedCorrelation, 0.0f, _dataLength * sizeof(float));
 		//--
+
+		_vectorHistory.init(_vectorDim);
 	}
 
 	void reInit(int correlationWindowSize = 1) {
 		_start = 0;
 
 		_vectorHistory.clear();
+		_vectorMagnitudeHistory.clear();
+
+		//reset texture if created
+		if (_textureCreator.isCreated()) {
+			deleteTexture();
+		}
 
 		//set up correlation window vars again with the passed parameter--
 		setCorrelationWindowSize(correlationWindowSize);
@@ -60,6 +73,7 @@ public:
 	}
 
 	void setCorrelationWindowSize(int correlationWindowSize) {
+
 		_correlationWindowSize = correlationWindowSize;
 		_useCorrelationWindow = (_correlationWindowSize >= 2); // size 1 correlation window data = data, only needed for size 2 and up
 
@@ -99,83 +113,161 @@ public:
 
 		memcpy(_vectorHistory.workingArray(), v, sizeof(float) * _vectorDim);
 		_vectorHistory.addWorkingArrayToHistory();
+		_vectorMagnitudeHistory.add(Tools::L2norm(v, _vectorDim));
 
-		for (int i = 0; i < _vectorHistory.entries(); i++) {
-			float measure = similarityMeasure(&(v[0]), _vectorHistory.get(i));
-			(*getPtrToCoord(i, 0, false)) = measure; //do both sides as symmetrical around y = -x diagonal
-			(*getPtrToCoord(0, i, false)) = measure;
+		//calculate measure and add to similarity matrix--
+		setCoord(0, 0, false, 1.0f);
+
+		for (int i = 1; i < _vectorHistory.entries(); i++) {
+			//similarity measure
+			float measure = Tools::dot(_vectorHistory.newest(), _vectorHistory.get(i), _vectorDim);
+			measure /= (_vectorMagnitudeHistory.newest() * _vectorMagnitudeHistory.get(i));
+
+			//increase contrast
+			measure = 1.0f - (SPvars::UI::_similarityMatrixTextureContrastFactor * (1.0f - measure));
+
+			setCoord(i, 0, false, measure);
+			setCoord(0, i, false, measure);
+		}
+		//--
+
+		//calculate correlation window matrix value if applicable--
+		if (_useCorrelationWindow) {
+
+			setCoord(0, 0, true, 1.0f);
+
+			//correlation window must be done after basic similarity matrix updated as is an average
+			for (int i = 0; i < _vectorHistory.entries(); i++) {
+				float correlationMeasure = correlationOverWindow(i);
+				setCoord(i, 0, true, correlationMeasure);
+				setCoord(0, i, true, correlationMeasure);
+			}
+		}
+		//--
+
+		//update texture if it is created--
+		if (_textureCreator.isCreated()) {
+			updateTexture();
+		}
+		//--
+	}
+
+	void createTexture(bool fast) {
+		if (_textureCreator.isCreated()) {
+			_textureCreator.deleteTexture();
 		}
 
+		//if using slow updater that creates easier to work with texture--
+		_usingOrderedData = !fast;
+		if (_usingOrderedData) {
+			if (_orderedData == nullptr) {
+				_orderedData = new float[_dataLength];
+			}
+			SLOWgetDataInCorrectMemoryOrder(_orderedData);
+			_textureCreator.createTexture(_matrixSize, _matrixSize, _orderedData);
+			return;
+		}
+		//--
+
 		if (!_useCorrelationWindow) {
+			_textureCreator.createTexture(_matrixSize, _matrixSize, _data);
 			return;
 		}
 
-		//correlation window must be done after basic similarity matrix updated as is an average
-		for (int i = 0; i < _vectorHistory.entries(); i++) {
-			float correlationMeasure = correlationOverWindow(i);
-			(*getPtrToCoord(i, 0, true)) = correlationMeasure; //do both sides as symmetrical around y = -x diagonal
-			(*getPtrToCoord(0, i, true)) = correlationMeasure;
-		}
+		_textureCreator.createTexture(_matrixSize, _matrixSize, _dataWindowedCorrelation);
 	}
-
+	void deleteTexture() {
+		_textureCreator.deleteTexture();
+	}
 
 	//getters
 
 	float get(int i, int j) { //only to be used from outside of class, use get ptr inside
 		if (!_initialised) {
-			Vengine::fatalError("Cannot get fromuninitialised similarity matrix");
+			Vengine::fatalError("Cannot get from uninitialised similarity matrix");
 		}
 
 		if (i > _vectorHistory.entries() || j > _vectorHistory.entries()) {
 			return 0.0f;
 		}
 
-		return *getPtrToCoord(i, j, _useCorrelationWindow);
+		if (_useCorrelationWindow) {
+			return _dataWindowedCorrelation[((_start + i) % _matrixSize) * _matrixSize + ((_start + j) % _matrixSize)];
+		}
+		return _data[((_start + i) % _matrixSize) * _matrixSize + ((_start + j) % _matrixSize)];
 	}
 
-	int sideLength() const { return _matrixSize; }
+	Vengine::GLtexture getMatrixTexture() { return _textureCreator.getTexture(); }
+
+	int matrixSize() const { return _matrixSize; }
 	bool full() { return (_vectorHistory.entries() == _vectorHistory.totalSize()); }
 	int entries() { return _vectorHistory.entries(); }
+	int textureStartIndex() {
+		if (_usingOrderedData) { return 0; }
+		return _start;
+	}
+	bool isTextureCreated() { return _textureCreator.isCreated(); }
 private:
 	bool _initialised;
 
 	int _matrixSize;
+	int _dataLength;
 	int _start;
 
-	float** _data; //store s(i,j)
+	float* _data; //store s(i,j)
+	DataTextureCreator _textureCreator;
 
 	bool _useCorrelationWindow;
 	int _correlationWindowSize;
-	float** _dataWindowedCorrelation; //store 1/w * sum{k = [0,w - 1]]}(s(i + k, j + k))
+	float* _dataWindowedCorrelation; //store 1/w * sum{k = [0,w - 1]]}(s(i + k, j + k))
+
+	float* _orderedData; //only used when wanting slow texture updating
+	bool _usingOrderedData;
 
 	int _vectorDim;
 	VectorHistory _vectorHistory;
+	History<float> _vectorMagnitudeHistory;
 
-	float* getPtrToCoord(int i, int j, bool getWindowedCorrelation) {
-		if (getWindowedCorrelation) {
-			return &_dataWindowedCorrelation[(_start + i) % _matrixSize][(_start + j) % _matrixSize];
+
+	void setCoord(int i, int j, bool windowedCorrelation, float value) {
+		if (windowedCorrelation) {
+			_dataWindowedCorrelation[((_start + i) % _matrixSize) * _matrixSize + ((_start + j) % _matrixSize)] = value;
+			return;
 		}
-		return &_data[(_start + i) % _matrixSize][(_start + j) % _matrixSize];
-
-	}
-
-
-	float similarityMeasure(float* v1, float* v2, bool debug = false) {
-
-		float dot = Tools::dot(v1, v2, _vectorDim);
-		float n1 = Tools::L2norm(v1, _vectorDim);
-		float n2 = Tools::L2norm(v2, _vectorDim);
-
-		return dot / (n1 * n2);
+		_data[((_start + i) % _matrixSize) * _matrixSize + ((_start + j) % _matrixSize)] = value;
 	}
 
 	float correlationOverWindow(int i) {
 		int windowSizeLimitedByDataSize = std::min(_correlationWindowSize, _matrixSize - i);
 		float sum = 0;
 		for (int j = 0; j < windowSizeLimitedByDataSize; j++) {
-			sum += *getPtrToCoord(i + j, j, false);
+			sum += _data[((_start + i + j) % _matrixSize) * _matrixSize + ((_start + j) % _matrixSize)];
 		}
 		sum /= float(_correlationWindowSize);
 		return sum;
+	}
+
+	void updateTexture() {
+		float* data = _data;
+
+		if (_usingOrderedData) {
+			SLOWgetDataInCorrectMemoryOrder(_orderedData);
+			data = _orderedData;
+		}
+		else if (_useCorrelationWindow) {
+			data = _dataWindowedCorrelation;
+		}
+
+		_textureCreator.updateTexture(_matrixSize, _matrixSize, 0, 0, data);
+	}
+
+	void SLOWgetDataInCorrectMemoryOrder(float* out) {
+		for (int i = 0; i < _matrixSize; i++) {
+			for (int j = 0; j < i; j++) {
+				out[i * _matrixSize + j] = get(i, j);
+				out[j * _matrixSize + i] = out[i * _matrixSize + j];
+			}
+			out[i * _matrixSize + i] = get(i, i);
+		}
 	}
 };

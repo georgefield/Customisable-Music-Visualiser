@@ -7,10 +7,24 @@
 #include <Vengine/MyTiming.h>
 #include "SimilarityMatrixStructure.h"
 
+static enum LinkedTo {
+	NONE,
+	DEBUG,
+	MFCC,
+	MelBandEnergies,
+	MelSpectrogram,
+	FT
+};
+
+static enum MeasureType {
+	SIMILARITY = 0,
+	PRECUSSION = 1
+};
 
 class SelfSimilarityMatrix
 {
 public:
+
 
 	SelfSimilarityMatrix(int historySize) :
 
@@ -32,7 +46,8 @@ public:
 
 	void reInit(int matrixSize) {
 		_linkedTo = NONE;
-		if (matrixSize != _similarityMatrix->sideLength()) {
+		std::cout << matrixSize << " " << _similarityMatrix->matrixSize() << std::endl;
+		if (matrixSize != _similarityMatrix->matrixSize()) {
 			delete _similarityMatrix;
 			_similarityMatrix = new SimilarityMatrixStructure(matrixSize);
 			_similarityMatrix->init();
@@ -47,7 +62,7 @@ public:
 	}
 
 
-	void calculateNext(); 
+	void calculateNext(MeasureType measureType = SIMILARITY); 
 
 	void linkToMFCCs(MFCCs* mfcc, int coeffLow, int coeffHigh);
 	void linkToMelBandEnergies(MFCCs* mfcc);
@@ -67,21 +82,32 @@ public:
 	float getSelfSimilarityMatrixValue(int i, int j) {
 		return _similarityMatrix->get(i, j);
 	}
+	int getMatrixSize() {
+		return _similarityMatrix->matrixSize();
+	}
+
+	Vengine::GLtexture getMatrixTexture() {
+		if (!_similarityMatrix->isTextureCreated()) {
+			_similarityMatrix->createTexture(SPvars::UI::_fastSimilarityMatrixTexture);
+		}
+		return _similarityMatrix->getMatrixTexture();
+	}
+	int getMatrixTextureStartPixelIndex() {
+		return _similarityMatrix->textureStartIndex();
+	}
+
+
+	bool isCalculating() { return _initialised && (_linkedTo != NONE); }
 
 	void debug();
+
+	LinkedTo islinkedTo() { return _linkedTo; }
+
 private:
 	void calculateSimilarityMeasure();
+	void calculatePrecussionMeasure();
 
 	bool _initialised;
-
-	static enum LinkedTo {
-		NONE,
-		DEBUG,
-		MFCC,
-		MelBandEnergies,
-		MelSpectrogram,
-		FT
-	};
 
 	History<float> _similarityMeasureHistory;
 
@@ -98,5 +124,7 @@ private:
 	bool _switch;
 
 	float checkerboardKernel(int i, int j);
+	float inverseCrossKernel(int i, int j);
+
 };
 

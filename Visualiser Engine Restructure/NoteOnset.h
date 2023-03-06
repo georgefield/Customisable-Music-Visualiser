@@ -3,8 +3,10 @@
 #include "Master.h"
 #include "Threshold.h"
 
+#include "MFCCs.h"
 #include "Energy.hpp"
 #include "FourierTransform.h"
+#include "SelfSimilarityMatrix.h"
 
 #include "FilterBank.h"
 
@@ -16,7 +18,8 @@ public:
 	static enum DataExtractionAlg {
 		SPECTRAL_DISTANCE,
 		DER_OF_LOG_ENERGY,
-		BANDED_DER_OF_LOG_ENERGY
+		BANDED_DER_OF_LOG_ENERGY,
+		SIM_MATRIX
 	};
 
 	static enum PeakPickingAlg {
@@ -34,24 +37,27 @@ public:
 
 		_thresholder(2500), //approx 5 seconds
 
-		_ftForSpectralDistance(2)
+		_ftForSpectralDistance(2),
+		_simMatrix(historySize)
 	{}
 
 	~NoteOnset() {
 		deleteSetters();
 	}
 
-	void init(Master* master) {
+	void init(Master* master, MFCCs* mfccs) {
 		_m = master;
+		_mfcc = mfccs;
 
 		_sampleLastCalculated = -1;
 
 		//thresholding vars		
 		_lastAboveThreshold = false;
 
-		_ftForSpectralDistance.init(_m, "");
-
 		initSetters();
+
+		//init onset detection function class dependencies
+		_ftForSpectralDistance.init(_m, "");
 
 		_derOfLogEnergyBands.init(_m);
 		_derOfLogEnergyBands.add(0.0, 150, 1.0f);
@@ -63,6 +69,8 @@ public:
 		_derOfLogEnergyBands.add(6000, 15000, 1.0f);
 		_derOfLogEnergyBands.add(10000, 20000, 1.0f);
 		_derOfLogEnergyBands.add(15000, 22050, 1.0f);
+
+		_simMatrix.init(50);
 	}
 
 	void reInit() {
@@ -74,6 +82,8 @@ public:
 		_ftForSpectralDistance.reInit();
 
 		_derOfLogEnergyBands.reInit();
+
+		_simMatrix.reInit(50);
 
 		_onsetPeaks.clear();
 	}
@@ -93,12 +103,16 @@ private:
 	Master* _m;
 	Energy* _energy;
 
+	MFCCs* _mfcc;
+	SelfSimilarityMatrix _simMatrix;
+
 	FourierTransform _ftForSpectralDistance;
 
 	int _sampleLastCalculated;
 	
 	float derivativeOfLogEnergy();
 	float spectralDistanceOfHarmonics();
+	float similarityMatrixMelSpectrogram();
 
 	float bandedDerOfLogEnergy();
 	FilterBank _derOfLogEnergyBands;

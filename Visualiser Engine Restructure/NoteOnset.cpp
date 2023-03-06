@@ -20,6 +20,9 @@ void NoteOnset::calculateNext(DataExtractionAlg dataAlg, PeakPickingAlg peakAlg)
 	if (dataAlg == DataExtractionAlg::SPECTRAL_DISTANCE) {
 		onsetValue = spectralDistanceOfHarmonics();
 	}
+	if (dataAlg == DataExtractionAlg::SIM_MATRIX) {
+		onsetValue = similarityMatrixMelSpectrogram();
+	}
 
 	_onsetDetectionHistory.add(onsetValue, _m->_currentSample);
 
@@ -117,6 +120,12 @@ float NoteOnset::spectralDistanceOfHarmonics() {
 
 	return spectralDistanceConvolvedHarmonics;
 	//--
+}
+
+float NoteOnset::similarityMatrixMelSpectrogram()
+{
+	_simMatrix.calculateNext(PRECUSSION);
+	return _simMatrix.getSimilarityMeasure();
 }
 
 //***

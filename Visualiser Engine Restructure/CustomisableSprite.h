@@ -66,6 +66,8 @@ private:
 
 	std::vector<std::string> _textureFileNames;
 	std::vector<std::string> _shaderFileNames;
+
+	bool _useSimilarityMatrixTexture;
 	//--
 
 	//selected/dragging vars--

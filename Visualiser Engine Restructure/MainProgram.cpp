@@ -22,7 +22,7 @@ MainProgram::MainProgram() :
 
 //RESTRUCTURE ENTIRE ENGINE, CLONE THIS PROJECT AS BACKUP
 
-const std::string musicFilepath = "Music/DebugNoise.wav";
+const std::string musicFilepath = "Music/Gorillaz - On Melancholy Hill.wav";
 
 
 void MainProgram::run() {

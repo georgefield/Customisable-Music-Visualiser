@@ -1,10 +1,15 @@
 #include "SelfSimilarityMatrix.h"
 #include <iomanip>
 
-void SelfSimilarityMatrix::calculateNext()
+void SelfSimilarityMatrix::calculateNext(MeasureType measureType)
 {
 	if (_initialised == false) {
 		Vengine::fatalError("Cannot calculate similarity matrix without initialising");
+	}
+
+	if (_linkedTo == NONE) {
+		Vengine::warning("Self similarity matrix not linked to any vector data, no calculation performed");
+		return;
 	}
 
 	if (_linkedTo == MFCC) {
@@ -23,12 +28,12 @@ void SelfSimilarityMatrix::calculateNext()
 		_similarityMatrix->add(_ftPtr->getOutput());
 	} 
 
-	if (_linkedTo == NONE) {
-		Vengine::warning("Self similarity matrix not linked to any vector data, no calculation performed");
-		return;
-	}
-	else {
+
+	if (measureType == SIMILARITY){
 		calculateSimilarityMeasure();
+	}
+	if (measureType == PRECUSSION) {
+		calculatePrecussionMeasure();
 	}
 
 	if (_linkedTo == DEBUG) {
@@ -62,7 +67,8 @@ float SelfSimilarityMatrix::checkerboardKernel(int i, int j) {
 		sign = -1;
 	}
 
-	return sqrt(powf((i - middle), 2) * powf((j - middle), 2)) * sign;
+	//sqrt(2) * middle is max distance from middle - distance from middle * sign 
+	return ((1.414 * middle) - sqrt((i - middle) * (i - middle) + (j - middle) * (j - middle))) * sign;
 }
 
 void SelfSimilarityMatrix::calculateSimilarityMeasure()
@@ -74,8 +80,28 @@ void SelfSimilarityMatrix::calculateSimilarityMeasure()
 		}
 		sum += getSelfSimilarityMatrixValue(i, i) * checkerboardKernel(i, i);
 	}
+	sum /= _similarityMatrix->entries() * _similarityMatrix->entries();
 	_similarityMeasureHistory.add(sum);
+}
 
+float SelfSimilarityMatrix::inverseCrossKernel(int i, int j) {
+	float middle = (_similarityMatrix->entries() - 1) / 2.0f;
+	float minDist = std::min(fabs(i - middle), fabs(j - middle));
+
+	return -middle + (2*minDist);
+}
+
+void SelfSimilarityMatrix::calculatePrecussionMeasure()
+{
+	float sum = 0;
+	for (int i = 0; i < _similarityMatrix->entries(); i++) {
+		for (int j = 0; j < i; j++) {
+			sum += getSelfSimilarityMatrixValue(i, j) * inverseCrossKernel(i, j);
+		}
+		sum += getSelfSimilarityMatrixValue(i, i) * inverseCrossKernel(i, i);
+	}
+	sum /= _similarityMatrix->entries() * _similarityMatrix->entries();
+	_similarityMeasureHistory.add(sum);
 }
 
 void SelfSimilarityMatrix::linkToMFCCs(MFCCs* mfcc, int coeffLow, int coeffHigh)
@@ -119,7 +145,7 @@ void SelfSimilarityMatrix::linkToDebug()
 
 void SelfSimilarityMatrix::debug()
 {
-	int n = std::min(10, _similarityMatrix->sideLength());
+	int n = std::min(10, _similarityMatrix->matrixSize());
 	for (int i = 0; i < n; i++) {
 		for (int j = 0; j < n; j++) {
 			std::cout << std::fixed << std::setprecision(2) << getSelfSimilarityMatrixValue(i, j) << ", ";

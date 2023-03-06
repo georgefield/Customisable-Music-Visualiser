@@ -7,13 +7,15 @@ bool SPvars::UI::_computeFourierTransform = true;
 bool SPvars::UI::_computeRms = true;
 bool SPvars::UI::_computeNoteOnset = true;
 bool SPvars::UI::_computeTempoDetection = true;
-bool SPvars::UI::_computeMFCCs = false;
-bool SPvars::UI::_computeSimilarityMatrix = false;
-bool SPvars::UI::_computeFutureSimilarityMatrix = false;
+bool SPvars::UI::_computeMFCCs = true;
+bool SPvars::UI::_computeSimilarityMatrix = true;
 //--
 
 //modifying properties of algorithms--
 int SPvars::UI::_nextSimilarityMatrixSize = 100;
+bool SPvars::UI::_fastSimilarityMatrixTexture = true;
+float SPvars::UI::_similarityMatrixTextureContrastFactor = 20.0f;
+int SPvars::UI::_matrixMeasureEnum = 0;
 //--
 
 //***

@@ -607,7 +607,7 @@ void UI::tempoDetectionUi()
 	ImGui::Text(timeToNextBeat.c_str());
 	std::string timeSinceLastBeat = "Time since last beat: " + std::to_string(SignalProcessingManager::_tempoDetection->getTimeSinceLastBeat());
 	ImGui::Text(timeSinceLastBeat.c_str());
-	
+
 	static bool showDebug = false;
 	ImGui::Checkbox("Debug", &showDebug);
 	if (showDebug) {
@@ -640,39 +640,66 @@ void UI::selfSimilarityMatrixUi()
 {
 	ImGui::Begin("Self Similarity Matrix", &_showSelfSimilarityMatrixUi, ImGuiWindowFlags_AlwaysAutoResize);
 
-	//which one to calculate (future or real time)--
+	//whether to calculate & which one to calculate (future or real time)--
 	static int realTimeOrFuture = 0;
 	ImGui::Text("Link to:");
 	ImGui::RadioButton("Real time", &realTimeOrFuture, 0); ImGui::SameLine();
 	ImGui::RadioButton("Future (recommended)", &realTimeOrFuture, 1);
 
-	static bool computeMatrix = false;
-	ImGui::Checkbox("Compute Self Similarity Matrix", &computeMatrix);
-
 	bool isRealTime = (realTimeOrFuture == 0);
 	bool isFuture = (realTimeOrFuture == 1);
 
-	if (isRealTime && computeMatrix) {
-		SPvars::UI::_computeSimilarityMatrix = true;
-		SPvars::UI::_computeFutureSimilarityMatrix = false;
-	}
-	else if (isFuture && computeMatrix){
-		SPvars::UI::_computeSimilarityMatrix = false;
-		SPvars::UI::_computeFutureSimilarityMatrix = true;
-	}
+	ImGui::Checkbox("Compute Self Similarity Matrix", &SPvars::UI::_computeSimilarityMatrix);
 	//--
+
+	//track if settings changed, linking function called if confirm pressed and reset similarity matrix--
+	static bool changedMatrixSettings = false;
+	static std::function<void()> linkingFunction;
+	//--
+
+	if (changedMatrixSettings) {
+		ImGui::TextColored(ImVec4(1, 0, 0, 1), "--Need to confirm--");
+	}
+	else {
+		ImGui::TextColored(ImVec4(0, 1, 0, 1), "--Confirmed, is calculating--");
+	}
+
+
+	//*** matrix settings***
+
+	ImGui::BeginChild("Matrix settings", ImVec2(350, 400), true);
 
 	//matrix size--
 	static int matrixSizeTmp = SPvars::UI::_nextSimilarityMatrixSize;
 	ImGui::SliderInt("Matrix Size", &matrixSizeTmp, 0, 1000);
-	if (matrixSizeTmp != SPvars::UI::_nextSimilarityMatrixSize && ImGui::Button("Confirm")) {
+
+	if (matrixSizeTmp != SPvars::UI::_nextSimilarityMatrixSize) {
 		SPvars::UI::_nextSimilarityMatrixSize = matrixSizeTmp;
-		if (isRealTime) {
-			SignalProcessingManager::_similarityMatrix->reInit(SPvars::UI::_nextSimilarityMatrixSize);
-		}
-		else if (isFuture) {
-			SignalProcessingManager::_futureSimilarityMatrix->reInit(SPvars::UI::_nextSimilarityMatrixSize);
-		}
+		changedMatrixSettings = true;
+	}
+	//--
+
+	//fast or slow texture creation--
+	static int fastOrSlow = SPvars::UI::_fastSimilarityMatrixTexture;
+	ImGui::Text("Texture creation type:");
+	ImGui::RadioButton("Fast", &fastOrSlow, 1); ImGui::SameLine();
+	ImGui::RadioButton("Slow", &fastOrSlow, 0);
+
+	if (fastOrSlow != SPvars::UI::_fastSimilarityMatrixTexture) {
+		SPvars::UI::_fastSimilarityMatrixTexture = fastOrSlow;
+		changedMatrixSettings = true;
+	}
+	//--
+
+	//measure type of similarity matrix--
+	static int measureTypeEnum = SPvars::UI::_matrixMeasureEnum;
+	ImGui::Text("Matrix measure type:");
+	ImGui::RadioButton("Similarity", &measureTypeEnum, 0); ImGui::SameLine();
+	ImGui::RadioButton("Percussion", &measureTypeEnum, 1);
+
+	if (measureTypeEnum != SPvars::UI::_matrixMeasureEnum) {
+		SPvars::UI::_matrixMeasureEnum = measureTypeEnum;
+		changedMatrixSettings = true;
 	}
 	//--
 
@@ -680,12 +707,12 @@ void UI::selfSimilarityMatrixUi()
 	static int linkTo = 0;
 	ImGui::Text("Link to:");
 	ImGui::RadioButton("MFCCs", &linkTo, 0);
-	if (isRealTime) {
-		ImGui::RadioButton("Mel band energies", &linkTo, 1);
-		ImGui::RadioButton("Mel spectrogram", &linkTo, 2);
-	}
+	ImGui::RadioButton("Mel band energies", &linkTo, 1);
+	ImGui::RadioButton("Mel spectrogram", &linkTo, 2);
 	ImGui::RadioButton("Fourier transform", &linkTo, 3);
 	//--
+
+
 
 	if (linkTo == 0) { // link to mfccs vv
 		ImGui::Separator();
@@ -693,95 +720,62 @@ void UI::selfSimilarityMatrixUi()
 		ImGui::Text("MFCCs coefficients: ");
 		static int low = 4;
 		ImGui::PushID(0);
-		ImGui::SliderInt("##", &low, 0, SPvars::Const::_numMelBands);
+		ImGui::SliderInt("##", &low, 1, SPvars::Const::_numMelBands);
 		ImGui::PopID();
 
 		ImGui::Text("to");
 
 		static int high = 13;
 		ImGui::PushID(1);
-		ImGui::SliderInt("##", &high, 0, SPvars::Const::_numMelBands);
+		ImGui::SliderInt("##", &high, 1, SPvars::Const::_numMelBands);
 		ImGui::PopID();
-
-		if (ImGui::Button("Confirm")) {
-			if (isRealTime) {
-				SignalProcessingManager::_similarityMatrix->linkToMFCCs(SignalProcessingManager::_mfccs, low, high);
-			}
-			else if (isFuture) {
-				SignalProcessingManager::_futureSimilarityMatrix->linkToMFCCs(low, high);
-			}
+		//|= to stop it overriding changedMatrixSettings that was set to true elsewhere
+		changedMatrixSettings |= !SignalProcessingManager::_similarityMatrix->isLinkInfoTheSame(low, high);
+		if (changedMatrixSettings) {
+			linkingFunction = std::bind(&SimilarityMatrixHandler::linkToMFCCs, SignalProcessingManager::_similarityMatrix, low, high);
 		}
 	}
 	if (linkTo == 1) { // link to mel band energies (real time only) vv
-		if (isFuture) {
-			Vengine::fatalError("Cannot link to mel band energies for future similarity matrix");
-		}
-		if (ImGui::Button("Confirm")) {
-			SignalProcessingManager::_similarityMatrix->linkToMelBandEnergies(SignalProcessingManager::_mfccs);
+		changedMatrixSettings |= SignalProcessingManager::_similarityMatrix->isLinkedTo() != MelBandEnergies;
+		if (changedMatrixSettings) {
+			linkingFunction = std::bind(&SimilarityMatrixHandler::linkToMelBandEnergies, SignalProcessingManager::_similarityMatrix);
 		}
 	}
 	if (linkTo == 2) {	// link to mel spectrogram (real time only) vv
-		if (isFuture) {
-			Vengine::fatalError("Cannot link to mel spectrogram for future similarity matrix");
-		}
-		if (ImGui::Button("Confirm")) {
-			SignalProcessingManager::_similarityMatrix->linkToMelSpectrogram(SignalProcessingManager::_mfccs);
+		changedMatrixSettings |= SignalProcessingManager::_similarityMatrix->isLinkedTo() != MelSpectrogram;
+		if (changedMatrixSettings) {
+			linkingFunction = std::bind(&SimilarityMatrixHandler::linkToMelSpectrogram, SignalProcessingManager::_similarityMatrix);
 		}
 	}
 	if (linkTo == 3) {	// link to fourier transform vv
-		ImGui::Separator();
+		static float nextCutoffLow = 0.0f;
+		static float nextCutoffHigh = SignalProcessingManager::getMasterPtr()->nyquist();
+		static float nextCutoffSmoothFactor = 0.0f;
 
-		//real time picks from created fourier transforms
-		if (isRealTime) {
-			std::vector<int> fourierTransformIds = FourierTransformManager::idArr();
+		ImGui::Text("Ctrl+Click to edit manually");
+		ImGui::SliderFloat("Cutoff Hz low", &nextCutoffLow, 0.0f, SignalProcessingManager::getMasterPtr()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+		ImGui::SliderFloat("Cutoff Hz high", &nextCutoffHigh, 0.0f, SignalProcessingManager::getMasterPtr()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
+		ImGui::SliderFloat("Cutoff smooth fraction", &nextCutoffSmoothFactor, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 
-			std::vector<FourierTransform*> fourierTransforms;
-			for (auto& it : fourierTransformIds) {
-				fourierTransforms.push_back(FourierTransformManager::getFourierTransform(it));
-			}
-
-			//create fourier transform selector
-			std::vector<std::string> fourierTransformNames;
-			for (auto& it : fourierTransforms) {
-				fourierTransformNames.push_back(it->getName());
-			}
-			std::string comboStr = UI::ImGuiComboStringMaker(fourierTransformNames);
-
-			const char* ftItems = comboStr.c_str();
-			static int currentFt = 0;
-			ImGui::PushID(0);
-			ImGui::Combo("fourier transforms", &currentFt, ftItems, fourierTransformNames.size());
-			ImGui::PopID();
-			//--
-
-			if (fourierTransforms.size() > 0 && ImGui::Button("Confirm")) {
-				std::cout << "Confirm that shit";
-				SignalProcessingManager::_similarityMatrix->linkToFourierTransform(fourierTransforms.at(currentFt));
-			}
+		changedMatrixSettings |= !SignalProcessingManager::_similarityMatrix->isLinkInfoTheSame(nextCutoffLow, nextCutoffHigh, nextCutoffSmoothFactor);
+		if (changedMatrixSettings) {
+			linkingFunction = std::bind(&SimilarityMatrixHandler::linkToFourierTransform, SignalProcessingManager::_similarityMatrix, nextCutoffLow, nextCutoffHigh, nextCutoffSmoothFactor);
 		}
-		//future has its own fourier transform that you set the parameters of
-		else if (isFuture) {
-			static float nextCutoffLow = 0.0f;
-			static float nextCutoffHigh = SignalProcessingManager::getMasterPtr()->nyquist();
-			static float nextCutoffSmoothFactor = 0.0f;
-			ImGui::Text("Ctrl+Click to edit manually");
-			ImGui::SliderFloat("Cutoff Hz low", &nextCutoffLow, 0.0f, SignalProcessingManager::getMasterPtr()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
-			ImGui::SliderFloat("Cutoff Hz high", &nextCutoffHigh, 0.0f, SignalProcessingManager::getMasterPtr()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
-			ImGui::SliderFloat("Cutoff smooth fraction", &nextCutoffSmoothFactor, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
-
-			if (ImGui::Button("Confirm")) {
-				SignalProcessingManager::_futureSimilarityMatrix->linkToFourierTransform(nextCutoffLow, nextCutoffHigh, nextCutoffSmoothFactor);
-			}
-		}
-
 	}
 
-	if (isRealTime) {
-		imguiHistoryPlotter(SignalProcessingManager::_similarityMatrix->getSimilarityMeasureHistory());
+	ImGui::SliderFloat("Texture contrast", &SPvars::UI::_similarityMatrixTextureContrastFactor, 1, 100, "%.3f", ImGuiSliderFlags_Logarithmic);
+
+	if (changedMatrixSettings && ImGui::Button("Confirm", ImVec2(80, 25))) {
+		SignalProcessingManager::_similarityMatrix->reInit(SPvars::UI::_nextSimilarityMatrixSize);
+		linkingFunction(); //even if no change in linking function must relink after resize. Because this is static will remember last function linked to
+		changedMatrixSettings = false;
 	}
-	else if (isFuture){
-		imguiHistoryPlotter(SignalProcessingManager::_futureSimilarityMatrix->matrix.getSimilarityMeasureHistory());
-	}
+
+	ImGui::EndChild();
+	//***
+
+	imguiHistoryPlotter(SignalProcessingManager::_similarityMatrix->matrix.getSimilarityMeasureHistory());
+
 	ImGui::End();
 }
 

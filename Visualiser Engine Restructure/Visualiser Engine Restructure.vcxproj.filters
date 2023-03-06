@@ -52,6 +52,9 @@
     <Filter Include="Source Files\Signal Processing Managing">
       <UniqueIdentifier>{5d31fc93-f7f3-460d-a3b9-abc70841b159}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Signal Processing Algorithms\Self Similarity Matrix">
+      <UniqueIdentifier>{9f6efb7f-fa23-4fbe-a725-69034e683be0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -73,9 +76,6 @@
       <Filter>Source Files\Signal Processing Algorithms</Filter>
     </ClCompile>
     <ClCompile Include="MFCCs.cpp">
-      <Filter>Source Files\Signal Processing Algorithms</Filter>
-    </ClCompile>
-    <ClCompile Include="SelfSimilarityMatrix.cpp">
       <Filter>Source Files\Signal Processing Algorithms</Filter>
     </ClCompile>
     <ClCompile Include="Visualiser.cpp">
@@ -117,11 +117,17 @@
     <ClCompile Include="DixonAlgVariableDefinitions.cpp">
       <Filter>Source Files\Signal Processing Algorithms</Filter>
     </ClCompile>
-    <ClCompile Include="FutureSimilarityMatrix.cpp">
-      <Filter>Source Files\Signal Processing Algorithms</Filter>
-    </ClCompile>
     <ClCompile Include="SignalProcessingVars.cpp">
       <Filter>Source Files\Signal Processing Managing</Filter>
+    </ClCompile>
+    <ClCompile Include="SimilarityMatrixHandler.cpp">
+      <Filter>Source Files\Signal Processing Algorithms\Self Similarity Matrix</Filter>
+    </ClCompile>
+    <ClCompile Include="SelfSimilarityMatrix.cpp">
+      <Filter>Source Files\Signal Processing Algorithms\Self Similarity Matrix</Filter>
+    </ClCompile>
+    <ClCompile Include="DataTextureCreator.cpp">
+      <Filter>Source Files\Signal Processing Algorithms\Self Similarity Matrix</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -233,11 +239,14 @@
     <ClInclude Include="SimilarityMatrixStructure.h">
       <Filter>Header Files\Signal Processing Algorithms\Self Similarity Matrix</Filter>
     </ClInclude>
-    <ClInclude Include="FutureSimilarityMatrix.h">
+    <ClInclude Include="SimilarityMatrixHandler.h">
       <Filter>Header Files\Signal Processing Algorithms\Self Similarity Matrix</Filter>
     </ClInclude>
     <ClInclude Include="SignalProcessingVars.h">
       <Filter>Header Files\Signal Processing Managing</Filter>
+    </ClInclude>
+    <ClInclude Include="DataTextureCreator.h">
+      <Filter>Header Files\Signal Processing Algorithms\Self Similarity Matrix</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

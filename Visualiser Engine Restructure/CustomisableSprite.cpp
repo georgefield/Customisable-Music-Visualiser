@@ -53,6 +53,10 @@ void CustomisableSprite::draw(){
 		return;
 	}
 
+	if (_useSimilarityMatrixTexture) {
+		_texture = SignalProcessingManager::_similarityMatrix->matrix.getMatrixTexture();
+	}
+
 	//draw sprite
 	Sprite::draw();
 }
@@ -190,8 +194,12 @@ void CustomisableSprite::textureChooser()
 
 	if (applyTexture) {
 
-		ImGui::SameLine();
-		if (ImGui::Button("Use external texture")) {
+		ImGui::Checkbox("Use similarity matrix texture", &_useSimilarityMatrixTexture);
+		if (_useSimilarityMatrixTexture) {
+			return; //break from texture chooser here if using it
+		}
+
+		if (ImGui::Button("Add external texture")) {
 			std::string chosenFile = "";
 			if (PFDapi::fileChooser("Choose texture", Vengine::IOManager::getProjectDirectory(), chosenFile, { "PNG images (.png)", "*.png" }, true)) {
 				std::cout << chosenFile << " < chosen" << std::endl;
@@ -207,11 +215,14 @@ void CustomisableSprite::textureChooser()
 		if (ImGui::Button("Refresh")) {
 			Vengine::IOManager::getFilesInDir(VisualiserManager::texturesFolder(), _textureFileNames, true, ".png");
 		}
+
 		for (int i = 0; i < _textureFileNames.size(); i++) {
 			if (ImGui::SmallButton(_textureFileNames[i].c_str())) { //<- explore arrow button option, might be included directory chooser?, slows down program, maybe get user to type filename (still show list)
 				_texture = Vengine::ResourceManager::getTexture(VisualiserManager::texturesFolder() + "/" + _textureFileNames[i]);
 			}
 		}
+
+
 		ImGui::EndChild();
 		//--
 	}
