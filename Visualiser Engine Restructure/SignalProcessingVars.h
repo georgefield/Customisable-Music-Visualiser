@@ -14,6 +14,12 @@ struct SPvars {
 		//note onset
 		static int _onsetDetectionFunctionEnum;
 		static bool _convolveOnsetDetection;
+		static int _convolveWindowSize;
+		static float _thresholdPercentForPeak;
+
+		//tempo detection
+		static float MIN_TEMPO;
+		static float MAX_TEMPO;
 
 		//similarity matrix
 		static int _nextSimilarityMatrixSize;

@@ -25,6 +25,7 @@ public:
 
 		_sampleLastCalculated = -1;
 		_lastPeakOnset = -1;
+		_howManyPeaks = 0;
 
 		_tempo = 100;
 		_tempoConfidence = 0.0f;
@@ -46,6 +47,7 @@ public:
 	void reInit() {
 		_sampleLastCalculated = -1;
 		_lastPeakOnset = -1;
+		_howManyPeaks = 0;
 
 		_tempo = 100;
 		_tempoConfidence = 0.0f;
@@ -123,6 +125,7 @@ private:
 
 	std::vector<Peak> _peaks;
 	int _lastPeakOnset;
+	int _howManyPeaks;
 
 	void initialDixonAlg();
 	void continuousDixonAlg();

@@ -27,18 +27,22 @@ public:
 		return false;
 	}
 
+	bool currentlyInPeak() {
+		return aboveThreshold;
+	}
+
 	bool getLastPeak(float topXpercent, Peak& out) {
 
-		if (testThreshold(_valuesAddedInTimeOrder.newest(), topXpercent)) {
+		//when first above threshold clear vectors
+		if (!aboveThreshold && testThreshold(_valuesAddedInTimeOrder.newest(), topXpercent)) {
 			if (!aboveThreshold) {
 				samplesOfPointsAboveThreshold.clear();
 				valuesOfPointsAboveThreshold.clear();
 				aboveThreshold = true;
 			}
-			samplesOfPointsAboveThreshold.push_back(_valuesAddedInTimeOrder.newestSample());
-			valuesOfPointsAboveThreshold.push_back(_valuesAddedInTimeOrder.newest());
 		}
-		else if (aboveThreshold == true) {
+		//only choose peak onset and salience after value goes to below half the threshold
+		else if (aboveThreshold && !testThreshold(_valuesAddedInTimeOrder.newest() * 2, topXpercent)){
 			float integral = 0;
 			float weightedSum = 0;
 			for (int i = 0; i < valuesOfPointsAboveThreshold.size(); i++) {
@@ -50,6 +54,12 @@ public:
 
 			aboveThreshold = false;
 			return true;
+		}
+
+		//while above threshold add info the vectors that choose the peak
+		if (aboveThreshold) {
+			samplesOfPointsAboveThreshold.push_back(_valuesAddedInTimeOrder.newestSample());
+			valuesOfPointsAboveThreshold.push_back(_valuesAddedInTimeOrder.newest());
 		}
 		
 		return false;

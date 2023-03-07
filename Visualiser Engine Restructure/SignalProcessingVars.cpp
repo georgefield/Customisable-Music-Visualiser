@@ -12,9 +12,13 @@ bool SPvars::UI::_computeSimilarityMatrix = true;
 //--
 
 //modifying properties of algorithms--
-int SPvars::UI::_onsetDetectionFunctionEnum = 0;
+int SPvars::UI::_onsetDetectionFunctionEnum = 6;
 bool SPvars::UI::_convolveOnsetDetection = true;
+int SPvars::UI::_convolveWindowSize = 7;
+float SPvars::UI::_thresholdPercentForPeak = 7.5f;
 
+float SPvars::UI::MIN_TEMPO = 40;
+float SPvars::UI::MAX_TEMPO = 230;
 
 int SPvars::UI::_nextSimilarityMatrixSize = 100;
 bool SPvars::UI::_fastSimilarityMatrixTexture = true;

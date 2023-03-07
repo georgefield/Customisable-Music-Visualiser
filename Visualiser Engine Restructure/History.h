@@ -9,7 +9,7 @@ template <class T>
 class History
 {
 public:
-	History(int size) : _start(size - 1), _size(size), _addCalls(0), _usingContiguousArray(false) {
+	History(int size) : _start(size - 1), _size(size), _entries(0), _usingContiguousArray(false) {
 		_data = new T[_size];
 		memset(_data, NULL, _size * sizeof(T));
 
@@ -29,12 +29,16 @@ public:
 		_start = (_start == 0 ? _size - 1 : _start - 1);
 		_data[_start] = value;
 		_assocSampleData[_start] = currentSample;
-		_addCalls++;
+		_entries = (_entries >= _size ? _entries : _entries + 1);
 	};
+
+	void removeOldest() {
+		_entries = (_entries > 0 ? _entries - 1 : 0);
+	}
 
 	void clear(bool eraseData = false) {
 		_start = _size - 1;
-		_addCalls = 0;
+		_entries = 0;
 		if (eraseData) { memset(_data, NULL, _size * sizeof(T)); memset(_data, -1, _size * sizeof(int)); }
 	}
 
@@ -76,19 +80,19 @@ public:
 		return _contiguousArray;
 	}
 
-	T oldest() { return get(std::min(_addCalls - 1, _size - 1)); }
+	T oldest() { return get(_entries - 1); }
 	T newest() { return get(0); }
 	T previous() { return get(1); }
 	T get(int recency) { 
-		if (_addCalls == 0) { Vengine::warning("Get called on unitialised entry"); }
+		if (_entries == 0) { Vengine::warning("Get called on history that has no entries"); }
 		return _data[(_start + recency) % _size]; 
 	}
 	
-	int oldestSample() { return getSample(std::min(_addCalls - 1, _size - 1)); };
+	int oldestSample() { return getSample(_entries - 1); };
 	int newestSample() { return getSample(0); }
 	int previousSample() { return getSample(1); }
 	int getSample(int recency) {
-		if (_addCalls == 0) { Vengine::fatalError("No entries in history"); }
+		if (_entries == 0) { Vengine::warning("Get sample called on history that has no entries"); }
 		return _assocSampleData[(_start + recency) % _size];
 	}
 
@@ -103,10 +107,10 @@ public:
 	int firstPartOffset() { return _start; } //also same as second part size
 
 	int totalSize() { return _size; }
-	int added() { return _addCalls; }
-	int entries() { return std::min(_addCalls, _size); }
-	bool full() { return _addCalls >= _size; }
-	bool empty() { return _addCalls == 0; }
+	int added() { return _entries; }
+	int entries() { return _entries; }
+	bool full() { return _entries >= _size; }
+	bool empty() { return _entries == 0; }
 protected:
 	T* _data;
 	int* _assocSampleData;
@@ -117,5 +121,5 @@ protected:
 	int _start;
 	int _size;
 
-	int _addCalls;
+	int _entries;
 };

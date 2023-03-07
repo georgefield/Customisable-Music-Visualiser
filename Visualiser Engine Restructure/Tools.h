@@ -71,7 +71,7 @@ public:
 		float ret = 0;
 		for (int i = 0; i < dim; i++) {
 			if (v1[i] - v2[i] > 0) {
-				ret += (i + 10) * (v1[i] - v2[i]) * (v1[i] - v2[i]);
+				ret += (i + 20) * (v1[i] - v2[i]) * (v1[i] - v2[i]);
 			}
 		}
 		return sqrt(ret);

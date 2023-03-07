@@ -117,7 +117,7 @@ void TempoDetection::calculateNext() {
 
 
 		//predictions calc
-		int samplesSinceLastBeat = (_m->_currentSample - _agents->_highestScoringAgent->_lastEvent.onset) % _agents->_highestScoringAgent->_beatInterval;
+		int samplesSinceLastBeat = (_m->_currentSample - _agents->_highestScoringAgent->_peakHistory->newestSample()) % _agents->_highestScoringAgent->_beatInterval;
 		float timeSinceLastBeat = float(samplesSinceLastBeat) / float(_m->_sampleRate);
 		_timeSinceLastBeat = timeSinceLastBeat;
 
@@ -130,8 +130,7 @@ void TempoDetection::calculateNext() {
 //*** dixon algorithm ***
 
 //relationship function
-const float MIN_TEMPO = 40;
-const float MAX_TEMPO = 230;
+
 const int TEST_RATIOS_UP_TO = 8;
 int f(int d) {
 	if (d > 8)
@@ -141,24 +140,14 @@ int f(int d) {
 	if (d == 4)
 		return 4;
 	if (d == 3)
-		return 3;
+		return 4;
 	if (d == 2)
 		return 5;
 	if (d == 1)
-		return 6;
+		return 8;
 	Vengine::warning("negative d value for relationship function");
 	return 0;
 }
-
-//returns false if interval too big too small (implies tempo out of range)
-bool intervalImpliesValidTempo(int interval, int sampleRate) {
-	if (interval >= (60.0f / MAX_TEMPO) * sampleRate &&
-		interval <= (60.0f / MIN_TEMPO) * sampleRate) {
-		return true;
-	}
-	return false;
-}
-
 
 
 void TempoDetection::initialDixonAlg() {
@@ -176,7 +165,7 @@ void TempoDetection::initialDixonAlg() {
 
 	for (auto rit = _clusters->set.rbegin(); rit != _clusters->set.rend(); ++rit) {
 		for (auto& peak : _peaks) {
-			if (intervalImpliesValidTempo((*rit)._avgInterval, _m->_sampleRate)) {
+			if (DixonAlgFunc::intervalImpliesValidTempo((*rit)._avgInterval, _m->_sampleRate)) {
 				_agents->add((*rit)._avgInterval, peak);
 			}
 		}
@@ -204,7 +193,7 @@ void TempoDetection::continuousDixonAlg()
 	single.push_back(_peaks.back());
 
 	for (auto rit = _clusters->set.rbegin(); rit != _clusters->set.rend(); ++rit) {
-		if (intervalImpliesValidTempo((*rit)._avgInterval, _m->_sampleRate)) {
+		if (DixonAlgFunc::intervalImpliesValidTempo((*rit)._avgInterval, _m->_sampleRate)) {
 			_agents->add((*rit)._avgInterval, single.back());
 		}
 	}
@@ -220,7 +209,7 @@ void TempoDetection::computeClusters(ClusterSet* clusters, std::vector<Peak>& pe
 			if (E1.onset == E2.onset) { break; }
 
 			int ioi = fabsf(E1.onset - E2.onset);
-
+		
 			clusters->add(ioi); //handles which cluster its added to
 		}
 	}
@@ -232,19 +221,20 @@ void TempoDetection::computeClusters(ClusterSet* clusters, std::vector<Peak>& pe
 	clusters->mergeNearbyClusters();
 
 	//score clusters
-	for (auto rit = clusters->set.rbegin(); rit != clusters->set.rend(); ++rit) {
+	for (auto larger = clusters->set.rbegin(); larger != clusters->set.rend(); ++larger) {
 		//set base score depends on how many intervals in cluster
-		(*rit)._score += f(1) * (*rit)._IOIs.size();
+		(*larger)._score += f(1) * (*larger)._IOIs.size();
 
-		for (auto it = clusters->set.begin(); std::next(it) != rit.base(); ++it) {
+		for (auto smaller = clusters->set.begin(); std::next(smaller) != larger.base(); ++smaller) {
 			//test if itBelow interval factor of it
 			for (int k = 2; k <= TEST_RATIOS_UP_TO; k++) {
 				//= it.interval - (k * itBelow.interval)
-				float difference = (*rit)._avgInterval - (k * ((*it)._avgInterval));
+				float difference = (k * ((*smaller)._avgInterval)) - (*larger)._avgInterval;
 
 				//if |it.interval - k*itBelow.interval| < clusterRadius
 				if (fabsf(difference) <= clusters->_clusterRadius) {
-					(*it)._score += f(k) * (*rit)._IOIs.size();
+					(*smaller)._score += f(k) * (*larger)._IOIs.size();
+					(*larger)._score += f(k) * (*smaller)._IOIs.size();
 				}
 			}
 		}
@@ -254,37 +244,27 @@ void TempoDetection::computeClusters(ClusterSet* clusters, std::vector<Peak>& pe
 
 void TempoDetection::computeAgents(AgentSet* agents, std::vector<Peak>& peaks)
 {
-	agents->sortAgentsByPrediction(); //agents sorted by score so need to be fully resorted. lots of errors so dont use insertion
+	agents->prepareForCompute(); //resort agents by prediction if required
 
 	float tolPrePercentage = 0.2; //20%
 	float tolPostPercentage = 0.4; //40%
 
-	int maxTolPre = tolPrePercentage * (60 / MIN_TEMPO) * _m->_sampleRate; //used for optimisation
+	int maxTolPre = tolPrePercentage * (60.0f / SPvars::UI::MIN_TEMPO) * _m->_sampleRate; //used for optimisation
 
 	int tolInner = 0.05 * _m->_sampleRate; // 50 ms
 
-	int timeOut = 8 * (60 / MIN_TEMPO) * _m->_sampleRate; //how long after last peak that aligns with beat hypothesis before deleteing that agent, 
-
-	float correctionFactor = DixonAlgVars::ERROR_CORRECTION_AMOUNT; //how fast tempo changes to incorporate new beat information, 0->1, 1 instant, 0 not at all
 	int tolPre, tolPost;
 
 	//loop through peaks. must be sorted by increasing event time to stop agent predictions being increased too much immediantly
 	for (auto& peak : peaks) {
 		//std::cout << "peak: " << peak.onset << std::endl;
-		for (auto A = agents->set.begin(); A != agents->set.end(); ) {
-			tolPre = tolPrePercentage * (*A)._beatInterval;
-			tolPost = tolPostPercentage * (*A)._beatInterval;
+		for (auto A = agents->set.begin(); A != agents->set.end(); ++A) {
+
+			tolPre = tolPrePercentage * (*A)->_beatInterval;
+			tolPost = tolPostPercentage * (*A)->_beatInterval;
 			//std::cout << "tol pre " << tolPre << " post " << tolPost << std::endl;
 
-
-			if (peak.onset - (*A)._lastEvent.onset > timeOut) {
-				//after specified time passes since last matching beat then discontinue this agent
-				//std::cout << (*A)._lastEvent.onset << " <- last event TIMEOUT" << std::endl;
-				auto nextA = std::next(A);
-				agents->set.erase(A);
-				A = nextA;
-			}
-			else if ((*A)._prediction - maxTolPre > peak.onset) {
+			if ((*A)->_prediction - maxTolPre > peak.onset) {
 				//since agents are in order of prediction & tolPre < maxTolPre we know every agent after this will also have a prediction - tolPre that ignores this event
 				//std::cout << "ignore all past this" << std::endl;
 
@@ -292,39 +272,39 @@ void TempoDetection::computeAgents(AgentSet* agents, std::vector<Peak>& peaks)
 			}
 			else {
 
-				while ((*A)._prediction + tolPost < peak.onset) {
-					(*A)._prediction += (*A)._beatInterval;
+				while ((*A)->_prediction + tolPost < peak.onset) {
+					(*A)->_prediction += (*A)->_beatInterval;
 				}
 				//std::cout << "agent pred " << (*A)._prediction << " peak " << peak.onset << " interval " << (*A)._beatInterval;
 
-				if ((*A)._prediction - tolPre <= peak.onset && (*A)._prediction + tolPost >= peak.onset) {
-					if (SDL_abs((*A)._prediction - peak.onset) > tolInner) { //outside in tolerance but inside outer tolerance
-						agents->storeUnmodifiedVersionOfAgent(A); //create new agent that does not count this peak as beat time to protect against wrong decision
+				if ((*A)->_prediction - tolPre <= peak.onset && (*A)->_prediction + tolPost >= peak.onset) {
+					if (SDL_abs((*A)->_prediction - peak.onset) > tolInner) { //outside in tolerance but inside outer tolerance
+						agents->storeUnmodifiedVersionOfAgent((*A)); //create new agent that does not count this peak as beat time to protect against wrong decision
 					}
 					//std::cout << " in outer";
 
 					//count this peak as a beat time
-					int error = peak.onset - (*A)._prediction;
+					int error = peak.onset - (*A)->_prediction;
 					float relativeError = (error > 0 ? float(error) / float(tolPost) : -float(error) / float(tolPre)); //error from 0 -> 1 depending on how close to tolerance limits on either side
 
 					//std::cout << " ,relative error: " << relativeError;
 
-					(*A)._beatInterval += error * correctionFactor;
-					(*A)._prediction = peak.onset + (*A)._beatInterval;
-					(*A)._lastEvent = peak;
-					(*A)._score += (1.0f - (relativeError * 0.5f)) * peak.salience;
-
+					(*A)->add(peak, error, relativeError);
 				}
 				else {
 					//std::cout << " ignored";
 				}
-				++A; //increment
 			}
 		}
+
 		agents->addBackTheUnmodifiedAgents();
-		agents->insertionSortAgentsByPrediction(); //fix any small change in order due to error correction, insertion sort O(n) for minor errors
+		agents->sortAgentsByPrediction();
 		agents->removeDuplicateAgents();
 	}
+
+	agents->removeTimedOutAgents(peaks.back());
+	agents->removeAgentsWithBadTempo();
+	agents->removeOldPeaksFromAgents(_m->_currentSample);
 }
 
 void TempoDetection::initSetters()

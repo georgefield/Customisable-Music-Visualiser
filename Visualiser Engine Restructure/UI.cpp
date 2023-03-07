@@ -573,17 +573,25 @@ void UI::noteOnsetUi()
 	ImGui::Checkbox("Compute note onset", &SPvars::UI::_computeNoteOnset);
 
 	ImGui::Text("Onset detection function:");
-	ImGui::RadioButton("Derivative of log energy", &SPvars::UI::_onsetDetectionFunctionEnum, 0);
-	ImGui::RadioButton("Banded derivative of log energy", &SPvars::UI::_onsetDetectionFunctionEnum, 1);
-	ImGui::RadioButton("Spectral distance", &SPvars::UI::_onsetDetectionFunctionEnum, 2);
-	ImGui::RadioButton("Similarity matrix", &SPvars::UI::_onsetDetectionFunctionEnum, 3);
-	ImGui::RadioButton("Combination", &SPvars::UI::_onsetDetectionFunctionEnum, 4);
-
+	ImGui::RadioButton("Energy", &SPvars::UI::_onsetDetectionFunctionEnum, 0);
+	ImGui::RadioButton("Derivative of log energy", &SPvars::UI::_onsetDetectionFunctionEnum, 1);
+	ImGui::RadioButton("Banded derivative of log energy", &SPvars::UI::_onsetDetectionFunctionEnum, 2);
+	ImGui::RadioButton("Spectral distance", &SPvars::UI::_onsetDetectionFunctionEnum, 3);
+	ImGui::RadioButton("Spectral distance high freq. weighted", &SPvars::UI::_onsetDetectionFunctionEnum, 4);
+	ImGui::RadioButton("Similarity matrix", &SPvars::UI::_onsetDetectionFunctionEnum, 5);
+	ImGui::RadioButton("Combination", &SPvars::UI::_onsetDetectionFunctionEnum, 6);
 
 	ImGui::Checkbox("Convolve onset detection", &SPvars::UI::_convolveOnsetDetection);
+	if (SPvars::UI::_convolveOnsetDetection) {
+		ImGui::SliderInt("Convolve window size", &SPvars::UI::_convolveWindowSize, 1, 100);
+	}
 
+	ImGui::Text("Onset detection function:");
 	imguiHistoryPlotter(SignalProcessingManager::_noteOnset->getOnsetHistory(SPvars::UI::_convolveOnsetDetection));
+	ImGui::Text("Inferred peaks (passed to tempo):");
 	imguiHistoryPlotter(SignalProcessingManager::_noteOnset->getDisplayPeaks());
+
+	ImGui::SliderFloat("Peak threshold (top X%)", &SPvars::UI::_thresholdPercentForPeak, 1.0f, 25.0f);
 
 	ImGui::End();
 }
@@ -617,6 +625,16 @@ void UI::tempoDetectionUi()
 	ImGui::Text(timeToNextBeat.c_str());
 	std::string timeSinceLastBeat = "Time since last beat: " + std::to_string(SignalProcessingManager::_tempoDetection->getTimeSinceLastBeat());
 	ImGui::Text(timeSinceLastBeat.c_str());
+
+	ImGui::SliderFloat("Max Tempo", &SPvars::UI::MAX_TEMPO, 30, 250, "%.1f");
+	if (ImGui::IsItemEdited() && SPvars::UI::MAX_TEMPO < SPvars::UI::MIN_TEMPO) {
+		SPvars::UI::MIN_TEMPO = SPvars::UI::MAX_TEMPO;
+	}
+	ImGui::SliderFloat("Min Tempo", &SPvars::UI::MIN_TEMPO, 30, 250, "%.1f");
+	if (ImGui::IsItemEdited() && SPvars::UI::MAX_TEMPO < SPvars::UI::MIN_TEMPO) {
+		SPvars::UI::MAX_TEMPO = SPvars::UI::MIN_TEMPO;
+	}
+
 
 	static bool showDebug = false;
 	ImGui::Checkbox("Debug", &showDebug);
@@ -879,7 +897,7 @@ bool UI::textInputPrompt(const std::string& message, char* buf, int bufSize, boo
 
 void UI::imguiHistoryPlotter(History<float>* history)
 {
-	ImGui::PlotLines("##", history->dataStartPtr(), history->totalSize(), history->firstPartOffset());
+	ImGui::PlotLines("##", history->dataStartPtr(), history->totalSize(), history->firstPartOffset(), 0, 3.4028235E38F, 3.4028235E38F, ImVec2(320, 40));
 }
 
 std::string UI::ImGuiComboStringMaker(std::vector<std::string>& options)

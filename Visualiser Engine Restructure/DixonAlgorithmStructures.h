@@ -17,7 +17,23 @@ struct DixonAlgVars {
 	static float ACCOUNT_FOR_CLUSTER_SCORE; //between 0 and 1, 1 is fully and 0 is none
 	static float ERROR_CORRECTION_AMOUNT;
 	static int NUM_PEAKS_NEEDED_BEFORE_START;
+	static int MAX_AGENT_HISTORY_LENGTH;
+	static float SECONDS_UNTIL_TIMEOUT;
+	static float MAX_TIME_PEAKS_SCORED;
 };
+
+
+//returns false if interval too big too small (implies tempo out of range), used in structures and tempoDetection.cpp
+struct DixonAlgFunc {
+	static bool intervalImpliesValidTempo(int interval, int sampleRate) {
+		if (interval >= (60.0f / SPvars::UI::MAX_TEMPO) * sampleRate &&
+			interval <= (60.0f / SPvars::UI::MIN_TEMPO) * sampleRate) {
+			return true;
+		}
+		return false;
+	}
+};
+
 
 //*** Cluster struct and container
 
@@ -205,22 +221,49 @@ struct ClusterSet {
 //*** Agent struct and container ***
 
 struct Agent {
-	Agent(int interval, Peak firstEventToAdd) :
+	Agent(int interval) :
 		_beatInterval(interval),
-		_prediction(firstEventToAdd.onset + _beatInterval),
-		_lastEvent(firstEventToAdd),
-		_score(firstEventToAdd.salience),
-		_accountingForIntervalScore(0.0f)
+
+		_accountingForIntervalScore(0.0f),
+
+		_score(0),
+		_prediction(0)
 	{
+		_peakHistory = new History<float>(DixonAlgVars::MAX_AGENT_HISTORY_LENGTH);
 		id = rand();
 	}
 
-	int id;
+	~Agent() {
+		delete _peakHistory;
+	}
+
+	void add(Peak peak, int timingError, float relativeError) {
+
+		_beatInterval += timingError * DixonAlgVars::ERROR_CORRECTION_AMOUNT;
+		_prediction = peak.onset + _beatInterval;
+
+		peak.salience *= (1.0f - relativeError);
+
+		_score += peak.salience;
+
+		_peakHistory->add(peak.salience, peak.onset);
+	}
+
+	void updatePeaks(int sampleRate, int currentSample) {
+		while (_peakHistory->entries() > 0 && currentSample - _peakHistory->oldestSample() > sampleRate * DixonAlgVars::MAX_TIME_PEAKS_SCORED) {
+			_score -= _peakHistory->oldest();
+			std::cout << _peakHistory->oldest() << ", " << _peakHistory->oldestSample() << " before, after ";
+			_peakHistory->removeOldest();
+			std::cout << _peakHistory->oldest() << ", " << _peakHistory->oldestSample() << std::endl;
+		}
+	}
+
+	int id; //helps with debug
 	int _beatInterval;
 	int _prediction;
 	float _score;
 	float _accountingForIntervalScore;
-	Peak _lastEvent;
+	History<float>* _peakHistory;
 };
 
 
@@ -229,16 +272,25 @@ struct AgentSet {
 	AgentSet(int sampleRate) :
 		_sampleRate(sampleRate),
 		_highestScoringAgent(nullptr),
-		_confidenceInBestAgent(0.0f)
+		_confidenceInBestAgent(0.0f),
+		_sortedBy(UNSORTED)
 	{
 		_tempoMinDifference = 0.01 * _sampleRate; //20ms
 		_phaseMinDifference = 0.02 * _sampleRate; //40ms
 	}
 
+	enum SortedBy {
+		UNSORTED,
+		PREDICTION,
+		COMPOUND_SCORE
+	};
+
 	Agent* _highestScoringAgent;
 	float _confidenceInBestAgent;
-	std::list<Agent> set;
+	std::list<Agent*> set;
+	SortedBy _sortedBy;
 
+	/*
 	void debug() {
 		for (auto& it : set) {
 			std::cout << it._score << std::endl;
@@ -251,66 +303,99 @@ struct AgentSet {
 			std::cout << "bi, prd, sc" << it->_beatInterval << ", " << it->_prediction << ", " << it->_accountingForIntervalScore << std::endl;
 		}
 	}
-
+	*/
 	void debug3(std::vector<std::string>& debugInfo, int sampleRate) {
 		sortAgentsByScoresAccountingForIntervalScores();
 
 		int count = 1;
 		for (auto it = set.rbegin(); it != set.rend(); it++) {
-			std::string info = "Rank " + std::to_string(count) + ": tempo = " + std::to_string(float(60 * sampleRate) / float((*it)._beatInterval)) + ", score = " + std::to_string((*it)._accountingForIntervalScore) + ", id = " + std::to_string((*it).id);
+			std::string info = "Rank " + std::to_string(count) + ": tempo = " + std::to_string(float(60 * sampleRate) / float((*it)->_beatInterval)) + ", score = " + std::to_string((*it)->_accountingForIntervalScore) + ", id = " + std::to_string((*it)->id);
 			debugInfo.push_back(info);
 			count++;
 		}
 	}
 
-	void add(int beatInterval, Peak firstEventToAdd) {
-
-		//not perfect like clusters add method but doesnt need to be because agents are sorted every loop anyway
-		auto it = std::lower_bound(set.begin(), set.end(), Agent(beatInterval, firstEventToAdd), [](const Agent& a, const Agent& b) { return a._prediction < b._prediction; });
-		set.emplace(it, beatInterval, firstEventToAdd);
+	void prepareForCompute() {
+		if (_sortedBy != PREDICTION) {
+			sortAgentsByPrediction();
+		}
 	}
 
-	void storeUnmodifiedVersionOfAgent(std::list<Agent>::iterator agent) {
+	void removeOldPeaksFromAgents(int currentSample) {
+		for (auto& it : set) {
+			it->updatePeaks(_sampleRate, currentSample);
+		}
+	}
+
+	void add(int beatInterval, Peak firstEventToAdd) {
+
+		set.push_back(new Agent(beatInterval));
+		set.back()->add(firstEventToAdd, 0, 0);
+
+		//std::cout << "added " << set.back()->id << std::endl;
+
+		_sortedBy = UNSORTED;
+	}
+
+	void storeUnmodifiedVersionOfAgent(Agent* agent) {
+
 		//copy to temporary array
-		pushToSetOnEnd.emplace_back((*agent)._beatInterval, (*agent)._lastEvent);
-		pushToSetOnEnd.back()._score = (*agent)._score;
+		pushToSetOnEnd.push_back(new Agent(agent->_beatInterval));
+		for (int i = 0; i < agent->_peakHistory->entries(); i++) {
+			pushToSetOnEnd.back()->_peakHistory->add(agent->_peakHistory->get(i));
+		}
+		pushToSetOnEnd.back()->_score = agent->_score;
+
+		//std::cout << agent->id << " stored unmod. as " << pushToSetOnEnd.back()->id <<  std::endl;
 	}
 
 	void addBackTheUnmodifiedAgents() {
-		//add all agents stored in temporary array
-		for (const auto& A : pushToSetOnEnd) {
-			auto it = std::lower_bound(set.begin(), set.end(), A, [](const Agent& a, const Agent& b) { return a._prediction < b._prediction; });
-			set.insert(it, A);
+		for (auto& it : pushToSetOnEnd) {
+			//std::cout << it->id << " added back" << std::endl;
+			set.push_back(it);
 		}
+		_sortedBy = UNSORTED;
+
 		pushToSetOnEnd.clear();
 	}
 
 	void removeDuplicateAgents() {
+
+		if (_sortedBy != PREDICTION) {
+			sortAgentsByPrediction();
+		}
+
+
 		//prevent errors caused by set being too small
 		if (set.size() <= 1) {
 			Vengine::warning("1 or 0 agents in set");
 			return;
 		}
 
-		for (auto A1 = set.begin(); A1 != set.end() && std::next(A1) != set.end(); ++A1) {
+
+		for (auto A1 = set.begin(); A1 != set.end(); A1++) {
 			auto A2 = std::next(A1);
+
 			//we know A2.prediction > A1.prediction, and if A2.prediction > A1.prediction, no point incrementing A2 as difference will be more (because agents sorted by prediction)
-			while (A2 != set.end() && ((*A2)._prediction - (*A1)._prediction) < _phaseMinDifference) {
+			while (A2 != set.end() && ((*A2)->_prediction - (*A1)->_prediction) < _phaseMinDifference) {
 				//for every pair of agents
 
 				//erase every agent with phase difference & tempo difference both too similar
-				if (fabsf((*A1)._beatInterval - (*A2)._beatInterval) < _tempoMinDifference) {
+				//std::cout << (*A1)->id << "<A1 A2>" << (*A2)->id << std::endl;
+				if (fabsf((*A1)->_beatInterval - (*A2)->_beatInterval) < _tempoMinDifference) {
 
 					//std::cout << "agent removed " << (*A1)._beatInterval << " = " << (*A2)._beatInterval << ", " << (*A1)._prediction << "=" << (*A2)._prediction << "," << set.size() << " agents left" << std::endl;
 
 					//keep agent with highest score
-					if ((*A1)._score < (*A2)._score) {
+					if ((*A1)->_score < (*A2)->_score) {
+						//std::cout << "swapped then ";
+						auto tmp = (*A1);
 						(*A1) = (*A2);
+						(*A2) = tmp;
 					}
+					//std::cout << (*A2)->id << " removed duplicate. keeping " << (*A1)->id << std::endl;
 
-					auto nextA = std::next(A2);
-					set.erase(A2);
-					A2 = nextA;
+					A2 = erase(A2);
 				}
 				else {
 					A2++;
@@ -319,8 +404,26 @@ struct AgentSet {
 		}
 	}
 
-	void sortAgentsByScoresAccountingForIntervalScores() {
-		set.sort([](const Agent& a, const Agent& b) { return a._accountingForIntervalScore < b._accountingForIntervalScore; });
+	void removeTimedOutAgents(Peak lastPeak) {
+		for (auto A = set.begin(); A != set.end(); ) {
+			if (lastPeak.onset - (*A)->_peakHistory->newestSample() > DixonAlgVars::SECONDS_UNTIL_TIMEOUT * _sampleRate) {
+				A = erase(A);
+			}
+			else {
+				A++;
+			}
+		}
+	}
+
+	void removeAgentsWithBadTempo() {
+		for (auto A = set.begin(); A != set.end(); ) {
+			if(!DixonAlgFunc::intervalImpliesValidTempo((*A)->_beatInterval, _sampleRate) ){
+				A = erase(A);
+			}
+			else {
+				A++;
+			}
+		}
 	}
 
 	void calculateScoresAccountingForClusterIntervalScores(ClusterSet* clusters) {
@@ -335,44 +438,52 @@ struct AgentSet {
 		bool isNearestAbove;
 		int distanceToNearest;
 		for (auto it = set.begin(); it != set.end(); it++) {
-			clusters->getClusterWithClosestInterval((*it)._beatInterval, nearest, isNearestAbove, distanceToNearest);
+			clusters->getClusterWithClosestInterval((*it)->_beatInterval, nearest, isNearestAbove, distanceToNearest);
 			float relativeErrorFromClosest;
 			if (isNearestAbove) {
-				relativeErrorFromClosest = 1.0f - (float(distanceToNearest) / float((*it)._beatInterval));
+				relativeErrorFromClosest = 1.0f - (float(distanceToNearest) / float((*it)->_beatInterval));
 			}
 			else {
 				relativeErrorFromClosest = 1.0f - (float(distanceToNearest) / float((*nearest)._avgInterval));
 			}
 			float clusterScore = (relativeErrorFromClosest * (*nearest)._score);
-			float score = (*it)._score;
-			(*it)._accountingForIntervalScore = 
+			float score = (*it)->_score;
+			(*it)->_accountingForIntervalScore =
 				(1.0f - DixonAlgVars::ACCOUNT_FOR_CLUSTER_SCORE) * bestClusterScore * score +
 				DixonAlgVars::ACCOUNT_FOR_CLUSTER_SCORE * score * clusterScore;
 
 			//set highest scoring agent variable
-			if (_highestScoringAgent == nullptr || (*it)._accountingForIntervalScore > _highestScoringAgent->_accountingForIntervalScore) {
-				_highestScoringAgent = &(*it);
+			if (_highestScoringAgent == nullptr || (*it)->_accountingForIntervalScore > _highestScoringAgent->_accountingForIntervalScore) {
+				_highestScoringAgent = (*it);
 			}
 		}
 	}
 
+	void sortAgentsByScoresAccountingForIntervalScores() {
+		set.sort([](const Agent* a, const Agent* b) { return a->_accountingForIntervalScore < b->_accountingForIntervalScore; });
+		_sortedBy = COMPOUND_SCORE;
+	}
+
 	void sortAgentsByPrediction() {
-		set.sort([](const Agent& a, const Agent& b) { return a._prediction < b._prediction; });
+		set.sort([](const Agent* a, const Agent* b) { return a->_prediction < b->_prediction; });
+		_sortedBy = PREDICTION;
 	}
 
 	void insertionSortAgentsByPrediction() { //error correction might change a few values but list will still be almost sorted so use insertion sort
 		for (auto i = set.begin(); i != set.end(); ++i) {
 			auto j = i;
-			while (j != set.begin() && (*std::prev(j))._prediction > (*j)._prediction) {
+			while (j != set.begin() && (*std::prev(j))->_prediction > (*j)->_prediction) {
 				std::swap(*j, *std::prev(j));
 				--j;
 			}
 		}
+		_sortedBy = PREDICTION;
 	}
 
 	void calculateConfidenceInBestAgent(int clusterRadius) { //increase cluster radius bruh bruh bruh
 		if (set.size() <= 1) {
-			_confidenceInBestAgent = 1.0f;
+			_confidenceInBestAgent = set.size();
+			return;
 		}
 		auto it = set.end();
 		it--;
@@ -385,18 +496,21 @@ struct AgentSet {
 				return;
 			}
 			it--;
-			if (fabsf((*it)._beatInterval - bestInterval) < (2 * clusterRadius)) {
+			if (fabsf((*it)->_beatInterval - bestInterval) < (2 * clusterRadius)) {
 				skips++;
 			}
-		} while (fabsf((*it)._beatInterval - bestInterval) < (2*clusterRadius)); //2* garuntees that agents accounting for same cluster inteval score skipped to first thats not
+		} while (fabsf((*it)->_beatInterval - bestInterval) < (2 * clusterRadius)); //2* garuntees that agents accounting for same cluster inteval score skipped to first thats not
 
-		float secondBestScore = (*it)._accountingForIntervalScore; //first agent with interval not near best agent interval
+		float secondBestScore = (*it)->_accountingForIntervalScore; //first agent with interval not near best agent interval
 
-		_confidenceInBestAgent = 1.0f - (secondBestScore / _highestScoringAgent->_accountingForIntervalScore); //squared because better
+		_confidenceInBestAgent = (1.0f - (secondBestScore / _highestScoringAgent->_accountingForIntervalScore)) * std::min(_highestScoringAgent->_accountingForIntervalScore / 2000.0f, 1.0f); //vs 2nd best thats very different & also making sure good minimum score
+		//_confidenceInBestAgent *= 1.5f; //even in best case not better than 2/3 because half tempo always
 	}
 
 	void shrinkSetToSize(int size) {
-		//have to be in this order
+		if (_sortedBy != COMPOUND_SCORE) {
+			sortAgentsByScoresAccountingForIntervalScores();
+		}
 
 		if (set.size() <= size) {
 			return;
@@ -404,13 +518,13 @@ struct AgentSet {
 
 		int howManyToErase = (set.size() - size);
 		for (int i = 0; i < howManyToErase; i++) {
-			set.erase(set.begin()); //erase lowest scores
+			erase(set.begin()); //erase lowest scores
 		}
 	}
 
 	void devalueScores(float factor) {
 		for (auto it = set.begin(); it != set.end(); it++) {
-			(*it)._score *= factor;
+			(*it)->_score *= factor;
 		}
 	}
 private:
@@ -420,5 +534,11 @@ private:
 
 	int _sampleRate;
 
-	std::vector<Agent> pushToSetOnEnd;
-}; 
+	std::vector<Agent*> pushToSetOnEnd;
+
+	std::list<Agent*>::iterator erase(std::list<Agent*>::iterator A) {
+		//std::cout << "Erasing id: " << (*A)->id << std::endl;
+		delete (*A);
+		return set.erase(A);
+	}
+};

@@ -16,11 +16,13 @@
 class NoteOnset {
 public:
 	static enum DataExtractionAlg {
-		DER_OF_LOG_ENERGY = 0,
-		BANDED_DER_OF_LOG_ENERGY = 1,
-		SPECTRAL_DISTANCE = 2,
-		SIM_MATRIX_MEL_SPEC = 3,
-		COMBINATION = 4
+		ENERGY = 0,
+		DER_OF_LOG_ENERGY = 1,
+		BANDED_DER_OF_LOG_ENERGY = 2,
+		SPECTRAL_DISTANCE = 3,
+		SPECTRAL_DISTANCE_HFC_WEIGHTED = 4,
+		SIM_MATRIX_MEL_SPEC = 5,
+		COMBINATION = 6
 	};
 
 	NoteOnset(int historySize) :
@@ -116,9 +118,10 @@ private:
 
 	int _sampleLastCalculated;
 	
+	float energy();
 	float derivativeOfLogEnergy();
 	float bandedDerOfLogEnergy();
-	float spectralDistanceOfHarmonics();
+	float spectralDistanceOfHarmonics(bool HFC);
 	float similarityMatrixMelSpectrogram();
 	float combination();
 

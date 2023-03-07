@@ -80,7 +80,7 @@ void SelfSimilarityMatrix::calculateSimilarityMeasure()
 		}
 		sum += getSelfSimilarityMatrixValue(i, i) * checkerboardKernel(i, i);
 	}
-	sum /= _similarityMatrix->entries() * _similarityMatrix->entries();
+	sum /= _similarityMatrix->matrixSize() * _similarityMatrix->matrixSize();
 	_similarityMeasureHistory.add(sum);
 }
 
@@ -103,7 +103,7 @@ void SelfSimilarityMatrix::calculatePrecussionMeasure()
 		sum += getSelfSimilarityMatrixValue(i, i) * inverseCrossKernel(i, i);
 	}
 	sum += float(getMatrixSize() * getMatrixSize())/3.0f; //correct integral to 0
-	sum /= _similarityMatrix->entries() * _similarityMatrix->entries();
+	sum /= _similarityMatrix->matrixSize() * _similarityMatrix->matrixSize();
 	_similarityMeasureHistory.add(sum);
 }
 
