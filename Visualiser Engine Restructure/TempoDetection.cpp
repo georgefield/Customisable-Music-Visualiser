@@ -69,9 +69,6 @@ void TempoDetection::calculateNext() {
 	}
 	_sampleLastCalculated = _m->_currentSample;
 
-	//dependencies
-	_noteOnset->calculateNext(); //use default methods
-
 	//no peaks to work with yet
 	if (_noteOnset->getPeakHistory()->entries() == 0) {
 		return;

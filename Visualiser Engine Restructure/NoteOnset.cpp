@@ -1,7 +1,7 @@
 #include "NoteOnset.h"
 
 
-void NoteOnset::calculateNext(DataExtractionAlg dataAlg, PeakPickingAlg peakAlg) {
+void NoteOnset::calculateNext(DataExtractionAlg dataAlg, bool convolve) {
 
 	//make sure not called twice on same frame
 	if (_sampleLastCalculated == _m->_currentSample) {
@@ -9,7 +9,7 @@ void NoteOnset::calculateNext(DataExtractionAlg dataAlg, PeakPickingAlg peakAlg)
 	}
 	_sampleLastCalculated = _m->_currentSample;
 
-	//onset detection
+	//onset detection--
 	float onsetValue = 0;
 	if (dataAlg == DataExtractionAlg::DER_OF_LOG_ENERGY) {
 		onsetValue = derivativeOfLogEnergy();
@@ -20,24 +20,28 @@ void NoteOnset::calculateNext(DataExtractionAlg dataAlg, PeakPickingAlg peakAlg)
 	if (dataAlg == DataExtractionAlg::SPECTRAL_DISTANCE) {
 		onsetValue = spectralDistanceOfHarmonics();
 	}
-	if (dataAlg == DataExtractionAlg::SIM_MATRIX) {
+	if (dataAlg == DataExtractionAlg::SIM_MATRIX_MEL_SPEC) {
 		onsetValue = similarityMatrixMelSpectrogram();
+	}
+	if (dataAlg == COMBINATION) {
+		onsetValue = combination();
 	}
 
 	_onsetDetectionHistory.add(onsetValue, _m->_currentSample);
 
-	_CONVonsetDetectionHistory.add(
-		_m->sumOfConvolutionOfHistory(&_onsetDetectionHistory, 15, LINEAR_PYRAMID),
-		_m->_currentSample
-	);
+	if (convolve) {
+		_CONVonsetDetectionHistory.add(
+			_m->sumOfConvolutionOfHistory(&_onsetDetectionHistory, 15, LINEAR_PYRAMID),
+			_m->_currentSample
+		);
+	}
+	//--
 
-	//peak detection
-	if (peakAlg == PeakPickingAlg::THRESHOLD) {
-		_thresholder.addValue(onsetValue, _m->_currentSample);
-	}
-	if (peakAlg == PeakPickingAlg::CONVOLVE_THEN_THRESHOLD) {
+	//peak detection--
+	if (convolve)
 		_thresholder.addValue(_CONVonsetDetectionHistory.newest(), _m->_currentSample);
-	}
+	else
+		_thresholder.addValue(onsetValue, _m->_currentSample);
 
 	Peak lastPeak;
 	if (_thresholder.getLastPeak(10, lastPeak)) {
@@ -48,20 +52,21 @@ void NoteOnset::calculateNext(DataExtractionAlg dataAlg, PeakPickingAlg peakAlg)
 	else {
 		_displayPeaks.add(std::max(0.0f, 2 * _displayPeaks.newest() - 1.0f));
 	}
+	//--
 }
 
 //*** onset algorithms ***
 
 float NoteOnset::derivativeOfLogEnergy() {
 
-	_energy->calculateNext(_m->_fftHistory.newest(), _m->_fftHistory.numHarmonics()); //depends on energy
+	_energy.calculateNext(_m->_fftHistory.newest(), _m->_fftHistory.numHarmonics()); //depends on energy
 
 	float one_over_dt = ((float)_m->_sampleRate / (float)(_m->_currentSample - _m->_previousSample)) * 0.001; //do dt in ms as otherwise numbers too big
 
 	//--change of energy per second, using log scale as human ear is log scale
 	//good for detecting beats of music with 4 to floor drum pattern
 
-	float derOfLogEnergy = (logf(_energy->getEnergy()) - logf(_energy->getHistory()->previous())); // d(log(E))
+	float derOfLogEnergy = (logf(_energy.getEnergy()) - logf(_energy.getHistory()->previous())); // d(log(E))
 	derOfLogEnergy *= one_over_dt; // *= 1/dt
 	if (isnan(derOfLogEnergy) || isinf(derOfLogEnergy)) { derOfLogEnergy = 0; } //if an energy is 0, log is -inf, stops cascade of nan/inf
 
@@ -124,8 +129,16 @@ float NoteOnset::spectralDistanceOfHarmonics() {
 
 float NoteOnset::similarityMatrixMelSpectrogram()
 {
-	_simMatrix.calculateNext(PRECUSSION);
-	return _simMatrix.getSimilarityMeasure();
+	_simMatrix.calculateNext(SIMILARITY);
+	return std::max(_simMatrix.getSimilarityMeasure(), 0.0f);
+}
+
+float NoteOnset::combination()
+{
+	float dole = derivativeOfLogEnergy();
+	float sdh = spectralDistanceOfHarmonics();
+	float smms = similarityMatrixMelSpectrogram();
+	return 5 * dole + 200 * sdh + (0.02f * smms);
 }
 
 //***

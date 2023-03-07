@@ -85,10 +85,12 @@ void SelfSimilarityMatrix::calculateSimilarityMeasure()
 }
 
 float SelfSimilarityMatrix::inverseCrossKernel(int i, int j) {
-	float middle = (_similarityMatrix->entries() - 1) / 2.0f;
-	float minDist = std::min(fabs(i - middle), fabs(j - middle));
+	float u = float(i) / float(getMatrixSize());
+	float v = float(j) / float(getMatrixSize());
 
-	return -middle + (2*minDist);
+	float minDist = std::min(fabs(u - 0.5f), fabs(v - 0.5f));
+
+	return (2.0f*minDist) - 1.0f;
 }
 
 void SelfSimilarityMatrix::calculatePrecussionMeasure()
@@ -100,6 +102,7 @@ void SelfSimilarityMatrix::calculatePrecussionMeasure()
 		}
 		sum += getSelfSimilarityMatrixValue(i, i) * inverseCrossKernel(i, i);
 	}
+	sum += float(getMatrixSize() * getMatrixSize())/3.0f; //correct integral to 0
 	sum /= _similarityMatrix->entries() * _similarityMatrix->entries();
 	_similarityMeasureHistory.add(sum);
 }

@@ -13,6 +13,7 @@ struct SPvars {
 		//modifyable properties of algorithms--
 		//note onset
 		static int _onsetDetectionFunctionEnum;
+		static bool _convolveOnsetDetection;
 
 		//similarity matrix
 		static int _nextSimilarityMatrixSize;

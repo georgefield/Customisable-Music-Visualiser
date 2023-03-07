@@ -57,6 +57,13 @@ public:
 		}
 	}
 
+	void setCorrelationWindow(int size) {
+		if (size < 2) {
+			return;
+		}
+		_similarityMatrix->setCorrelationWindowSize(size);
+	}
+
 	void setCorrelationWindowSize(int windowSize) { //reduces noise (smooths matrix), computationally expensive
 		_similarityMatrix->setCorrelationWindowSize(windowSize);
 	}

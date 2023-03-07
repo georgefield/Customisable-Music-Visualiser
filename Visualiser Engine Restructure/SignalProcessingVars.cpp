@@ -12,6 +12,10 @@ bool SPvars::UI::_computeSimilarityMatrix = true;
 //--
 
 //modifying properties of algorithms--
+int SPvars::UI::_onsetDetectionFunctionEnum = 0;
+bool SPvars::UI::_convolveOnsetDetection = true;
+
+
 int SPvars::UI::_nextSimilarityMatrixSize = 100;
 bool SPvars::UI::_fastSimilarityMatrixTexture = true;
 float SPvars::UI::_similarityMatrixTextureContrastFactor = 20.0f;

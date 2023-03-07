@@ -572,7 +572,17 @@ void UI::noteOnsetUi()
 
 	ImGui::Checkbox("Compute note onset", &SPvars::UI::_computeNoteOnset);
 
-	imguiHistoryPlotter(SignalProcessingManager::_noteOnset->getCONVonsetHistory());
+	ImGui::Text("Onset detection function:");
+	ImGui::RadioButton("Derivative of log energy", &SPvars::UI::_onsetDetectionFunctionEnum, 0);
+	ImGui::RadioButton("Banded derivative of log energy", &SPvars::UI::_onsetDetectionFunctionEnum, 1);
+	ImGui::RadioButton("Spectral distance", &SPvars::UI::_onsetDetectionFunctionEnum, 2);
+	ImGui::RadioButton("Similarity matrix", &SPvars::UI::_onsetDetectionFunctionEnum, 3);
+	ImGui::RadioButton("Combination", &SPvars::UI::_onsetDetectionFunctionEnum, 4);
+
+
+	ImGui::Checkbox("Convolve onset detection", &SPvars::UI::_convolveOnsetDetection);
+
+	imguiHistoryPlotter(SignalProcessingManager::_noteOnset->getOnsetHistory(SPvars::UI::_convolveOnsetDetection));
 	imguiHistoryPlotter(SignalProcessingManager::_noteOnset->getDisplayPeaks());
 
 	ImGui::End();
@@ -691,18 +701,6 @@ void UI::selfSimilarityMatrixUi()
 	}
 	//--
 
-	//measure type of similarity matrix--
-	static int measureTypeEnum = SPvars::UI::_matrixMeasureEnum;
-	ImGui::Text("Matrix measure type:");
-	ImGui::RadioButton("Similarity", &measureTypeEnum, 0); ImGui::SameLine();
-	ImGui::RadioButton("Percussion", &measureTypeEnum, 1);
-
-	if (measureTypeEnum != SPvars::UI::_matrixMeasureEnum) {
-		SPvars::UI::_matrixMeasureEnum = measureTypeEnum;
-		changedMatrixSettings = true;
-	}
-	//--
-
 	//link to options--
 	static int linkTo = 0;
 	ImGui::Text("Link to:");
@@ -763,6 +761,16 @@ void UI::selfSimilarityMatrixUi()
 		}
 	}
 
+	//measure type of similarity matrix--
+	static int measureTypeEnum = SPvars::UI::_matrixMeasureEnum;
+	ImGui::Text("Matrix measure type:");
+	ImGui::RadioButton("Similarity", &measureTypeEnum, 0); ImGui::SameLine();
+	ImGui::RadioButton("Percussion", &measureTypeEnum, 1);
+
+	if (measureTypeEnum != SPvars::UI::_matrixMeasureEnum) {
+		SPvars::UI::_matrixMeasureEnum = measureTypeEnum;
+	}
+	//--
 	ImGui::SliderFloat("Texture contrast", &SPvars::UI::_similarityMatrixTextureContrastFactor, 1, 100, "%.3f", ImGuiSliderFlags_Logarithmic);
 
 	if (changedMatrixSettings && ImGui::Button("Confirm", ImVec2(80, 25))) {

@@ -96,7 +96,7 @@ void SignalProcessingManager::calculate()
 		_rms->calculateNext(4096, LINEAR_PYRAMID);
 	}
 	if (SPvars::UI::_computeNoteOnset) {
-		_noteOnset->calculateNext();
+		_noteOnset->calculateNext(NoteOnset::DataExtractionAlg(SPvars::UI::_onsetDetectionFunctionEnum), SPvars::UI::_convolveOnsetDetection);
 	}
 	if (SPvars::UI::_computeTempoDetection) {
 		_tempoDetection->calculateNext();
@@ -132,6 +132,17 @@ void SignalProcessingManager::initAlgorithmObjects(bool rms, bool noteOnset, boo
 		}
 	}
 
+	//MFCCs
+	if (mfccs) {
+		if (_mfccs != nullptr) {
+			_mfccs->reInit();
+		}
+		else {
+			_mfccs = new MFCCs();
+			_mfccs->init(_master, SPvars::Const::_numMelBands, 0, 20000);
+		}
+	}
+
 	//Note onset
 	if (noteOnset) {
 		if (_noteOnset != nullptr) {
@@ -151,17 +162,6 @@ void SignalProcessingManager::initAlgorithmObjects(bool rms, bool noteOnset, boo
 		else {
 			_tempoDetection = new TempoDetection();
 			_tempoDetection->init(_master, _noteOnset);
-		}
-	}
-
-	//MFCCs
-	if (mfccs) {
-		if (_mfccs != nullptr) {
-			_mfccs->reInit();
-		}
-		else {
-			_mfccs = new MFCCs();
-			_mfccs->init(_master, SPvars::Const::_numMelBands, 0, 20000);
 		}
 	}
 

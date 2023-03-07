@@ -16,15 +16,11 @@
 class NoteOnset {
 public:
 	static enum DataExtractionAlg {
-		SPECTRAL_DISTANCE,
-		DER_OF_LOG_ENERGY,
-		BANDED_DER_OF_LOG_ENERGY,
-		SIM_MATRIX
-	};
-
-	static enum PeakPickingAlg {
-		CONVOLVE_THEN_THRESHOLD,
-		THRESHOLD
+		DER_OF_LOG_ENERGY = 0,
+		BANDED_DER_OF_LOG_ENERGY = 1,
+		SPECTRAL_DISTANCE = 2,
+		SIM_MATRIX_MEL_SPEC = 3,
+		COMBINATION = 4
 	};
 
 	NoteOnset(int historySize) :
@@ -33,12 +29,13 @@ public:
 		_CONVonsetDetectionHistory(historySize),
 		_displayPeaks(historySize),
 
-		_generalLimiter(1.0, 0.5, 10.0, 0.2),
 
 		_thresholder(2500), //approx 5 seconds
 
 		_ftForSpectralDistance(2),
-		_simMatrix(historySize)
+		_simMatrix(historySize),
+
+		_energy(2)
 	{}
 
 	~NoteOnset() {
@@ -57,6 +54,8 @@ public:
 		initSetters();
 
 		//init onset detection function class dependencies
+		_energy.init(_m, "");
+
 		_ftForSpectralDistance.init(_m, "");
 
 		_derOfLogEnergyBands.init(_m);
@@ -71,39 +70,46 @@ public:
 		_derOfLogEnergyBands.add(15000, 22050, 1.0f);
 
 		_simMatrix.init(50);
+		_simMatrix.linkToMelBandEnergies(_mfcc);
 	}
 
 	void reInit() {
 		_sampleLastCalculated = -1;
 
+		_onsetPeaks.clear();
+
 		//thresholding vars
 		_lastAboveThreshold = false;
+
+		//reinit 
+		_energy.reInit();
 
 		_ftForSpectralDistance.reInit();
 
 		_derOfLogEnergyBands.reInit();
 
 		_simMatrix.reInit(50);
-
-		_onsetPeaks.clear();
+		_simMatrix.linkToMelBandEnergies(_mfcc);
 	}
 
 	void calculateNext(
-		DataExtractionAlg dataAlg = DataExtractionAlg::SPECTRAL_DISTANCE,
-		PeakPickingAlg peakAlg = PeakPickingAlg::CONVOLVE_THEN_THRESHOLD
+		DataExtractionAlg dataAlg,
+		bool convolve
 	);
 
 	float getOnset() { return _onsetDetectionHistory.newest(); }
-	History<float>* getOnsetHistory() { return &_onsetDetectionHistory; }
-	History<float>* getCONVonsetHistory() { return &_CONVonsetDetectionHistory; }
+	History<float>* getOnsetHistory(bool convolved) {
+		if (convolved) return &_CONVonsetDetectionHistory;
+		else return &_onsetDetectionHistory;
+	}
 
 	History<Peak>* getPeakHistory() { return &_onsetPeaks; }
 	History<float>* getDisplayPeaks() { return &_displayPeaks; }
 private:
 	Master* _m;
-	Energy* _energy;
-
 	MFCCs* _mfcc;
+	Energy _energy;
+
 	SelfSimilarityMatrix _simMatrix;
 
 	FourierTransform _ftForSpectralDistance;
@@ -111,16 +117,16 @@ private:
 	int _sampleLastCalculated;
 	
 	float derivativeOfLogEnergy();
+	float bandedDerOfLogEnergy();
 	float spectralDistanceOfHarmonics();
 	float similarityMatrixMelSpectrogram();
+	float combination();
 
-	float bandedDerOfLogEnergy();
 	FilterBank _derOfLogEnergyBands;
 
 	History<float> _onsetDetectionHistory;
 	History<float> _CONVonsetDetectionHistory;
 
-	Limiter _generalLimiter;
 	Threshold _thresholder;
 
 	History<float> _displayPeaks;
