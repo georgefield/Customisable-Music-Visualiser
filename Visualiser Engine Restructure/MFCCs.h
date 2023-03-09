@@ -6,14 +6,15 @@
 #include "FFTWapi.h"
 #include "FilterBank.h"
 
-
 class MFCCs
 {
 public:
 	MFCCs() :
 		_bandEnergies(nullptr),
 		_melSpectrogram(nullptr),
-		_mfccs(nullptr)
+		_mfccs(nullptr),
+
+		_sampleLastCalculated(-1)
 	{
 	}
 
@@ -78,6 +79,8 @@ private:
 	FFTWdct _dct;
 
 	bool _useSetters;
+
+	int _sampleLastCalculated;
 
 	float mel(float hz);
 	float melInverse(float mel);

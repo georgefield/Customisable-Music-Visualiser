@@ -53,7 +53,7 @@ public:
 	void reInit() { //reinit of same size, just clear
 		clear();
 	}
-
+	
 	void clear() {
 		for (int i = 0; i < _history.totalSize(); i++) {
 			memset(_history.get(i), 0.0f, (_vectorDim * sizeof(float)));

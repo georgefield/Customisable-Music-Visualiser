@@ -6,42 +6,42 @@ class FourierTransformHistory {
 
 public:
 	FourierTransformHistory(int historySize) :
-		_history(historySize)
+		_vecHistory(historySize)
 	{}
 
 	void init(int numHarmonics) {
 
-		_history.init(numHarmonics);
+		_vecHistory.init(numHarmonics);
 	}
 
-	void reInit() {
-		_history.reInit();
+	void changeNumHarmonics(int newNumHarmonics) {
+		_vecHistory.reInit(newNumHarmonics);
 	}
 
 	float* workingArray()
 	{
-		return _history.workingArray();
+		return _vecHistory.workingArray();
 	}
 
 	void addWorkingArrayToHistory(int currentSample = -1)
 	{
-		_history.addWorkingArrayToHistory(currentSample);
+		_vecHistory.addWorkingArrayToHistory(currentSample);
 	}
 
 	int numHarmonics() {
-		return _history.vectorDim();
+		return _vecHistory.vectorDim();
 	}
 
 	//same functionality as history required
-	float* get(int index) { return _history.get(index); }
+	float* get(int index) { return _vecHistory.get(index); }
 
-	float* newest() { return _history.get(0); }
+	float* newest() { return _vecHistory.get(0); }
 
-	float* previous() { return _history.get(1); }
+	float* previous() { return _vecHistory.get(1); }
 
-	int totalSize() { return _history.totalSize(); }
+	int totalSize() { return _vecHistory.totalSize(); }
 
-	int entries() { return _history.entries(); }
+	int entries() { return _vecHistory.entries(); }
 private:
-	VectorHistory _history;
+	VectorHistory _vecHistory;
 };

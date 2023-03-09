@@ -103,8 +103,10 @@ void TempoDetection::calculateNext() {
 
 
 		//add to rolling avgs
-		float tempo = 60.0f * float(_m->_sampleRate) / float(_agents->_highestScoringAgent->_beatInterval);
-		_tempoRollingAvg.add(tempo);
+		if (_agents->_highestScoringAgent != nullptr) {
+			float tempo = 60.0f * float(_m->_sampleRate) / float(_agents->_highestScoringAgent->_beatInterval);
+			_tempoRollingAvg.add(tempo);
+		}
 
 		_confidenceRollingAvg.add(_agents->_confidenceInBestAgent);
 	}
@@ -116,14 +118,15 @@ void TempoDetection::calculateNext() {
 		_tempoConfidence = _confidenceRollingAvg.get();
 
 
-		//predictions calc
-		int samplesSinceLastBeat = (_m->_currentSample - _agents->_highestScoringAgent->_peakHistory->newestSample()) % _agents->_highestScoringAgent->_beatInterval;
-		float timeSinceLastBeat = float(samplesSinceLastBeat) / float(_m->_sampleRate);
-		_timeSinceLastBeat = timeSinceLastBeat;
+		//predictions cal
+		if (_agents->_highestScoringAgent != nullptr) {
+			int samplesSinceLastBeat = (_m->_currentSample - _agents->_highestScoringAgent->_peakHistory->newestSample()) % _agents->_highestScoringAgent->_beatInterval;
+			float timeSinceLastBeat = float(samplesSinceLastBeat) / float(_m->_sampleRate);
+			_timeSinceLastBeat = timeSinceLastBeat;
 
-		float timeToNextBeat = float(_agents->_highestScoringAgent->_beatInterval - samplesSinceLastBeat) / float(_m->_sampleRate);
-		_timeToNextBeat = timeToNextBeat;
-
+			float timeToNextBeat = float(_agents->_highestScoringAgent->_beatInterval - samplesSinceLastBeat) / float(_m->_sampleRate);
+			_timeToNextBeat = timeToNextBeat;
+		}
 	}
 }
 
@@ -154,7 +157,7 @@ void TempoDetection::initialDixonAlg() {
 
 	_peaks.clear();
 	for (int i = _noteOnset->getPeakHistory()->entries() - 1; i >= 0; i--) {
-		_peaks.push_back( _noteOnset->getPeakHistory()->get(i) ); //oldest first, important for agent alg
+		_peaks.push_back(_noteOnset->getPeakHistory()->get(i)); //oldest first, important for agent alg
 	}
 
 	//*** tempo induction ***
@@ -180,7 +183,7 @@ void TempoDetection::continuousDixonAlg()
 	if (_peaks.size() >= DixonAlgVars::MAX_PEAKS_STORED) {
 		_peaks.erase(_peaks.begin());
 	}
-	_peaks.push_back( _noteOnset->getPeakHistory()->newest() ); //time and salience
+	_peaks.push_back(_noteOnset->getPeakHistory()->newest()); //time and salience
 
 	//*** tempo induction ***
 	_clusters->reset(); //delete old clusters
@@ -209,7 +212,7 @@ void TempoDetection::computeClusters(ClusterSet* clusters, std::vector<Peak>& pe
 			if (E1.onset == E2.onset) { break; }
 
 			int ioi = fabsf(E1.onset - E2.onset);
-		
+
 			clusters->add(ioi); //handles which cluster its added to
 		}
 	}

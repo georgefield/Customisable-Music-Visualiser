@@ -5,6 +5,11 @@
 
 void MFCCs::calculateNext()
 {
+	if (_sampleLastCalculated == _m->_currentSample) {
+		return;
+	}
+	_sampleLastCalculated = _m->_currentSample;
+
 	calculateBandEnergy();
 	calculateMelSpectrogram();
 	calculateMfccs();

@@ -1,7 +1,8 @@
 #include "PFDapi.h"
 #include <portable-file-dialogs.h>
 #include <Vengine/MyErrors.h>
-#include "UI.h"
+
+#include "UIglobalFeatures.h"
 
 bool PFDapi::folderChooser(std::string message, std::string startPath, std::string& out, bool loadFromOutsideStartPath)
 {
@@ -17,7 +18,7 @@ bool PFDapi::folderChooser(std::string message, std::string startPath, std::stri
 	std::string folderPath = pfd::select_folder(message, startPath, pfd::opt::force_path).result();
 
 	if (!loadFromOutsideStartPath && folderPath.size() >= startPath.size() && folderPath.substr(0, startPath.size()) != startPath) {
-		UI::_errorQueue.push_back("Cannot load from outside " + startPath);
+		UIglobalFeatures::queueError("Cannot load from outside " + startPath);
 		return false;
 	}
 
@@ -49,7 +50,7 @@ bool PFDapi::fileChooser(std::string message, std::string startPath, std::string
 	std::string filePath = chosen.front();
 
 	if (!loadFromOutsideStartPath && filePath.size() >= startPath.size() && filePath.substr(0, startPath.size()) != startPath) {
-		UI::_errorQueue.push_back("Cannot load from outside " + startPath);
+		UIglobalFeatures::queueError("Cannot load from outside " + startPath);
 		return false;
 	}
 

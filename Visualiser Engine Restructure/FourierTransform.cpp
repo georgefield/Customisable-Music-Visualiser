@@ -6,6 +6,9 @@ FourierTransform::FourierTransform(int historySize, float cutOffLow, float cutOf
 
 	_cutOffLow(cutOffLow),
 	_cutOffHigh(cutOffHigh),
+	_minCutoffLow(cutOffLow < 0),
+	_maxCutoffHigh(cutOffHigh < 0),
+
 	_cutoffSmoothFrac(cutoffSmoothFrac),
 
 	_working1(historySize),
@@ -49,11 +52,16 @@ void FourierTransform::init(Master* master, std::string name)
 	_useSetters = (name != ""); //empty name => not a front facing ft, so dont init setters for uniforms & ssbos
 	_m = master;
 
-	if (_cutOffLow == -1)
+	//sanitise and set cutoffs--
+	if (_cutOffHigh > _m->nyquist())
+		_maxCutoffHigh = true;
+
+	if (_minCutoffLow)
 		_cutOffLow = 0.0f;
 
-	if (_cutOffHigh == -1)
+	if (_maxCutoffHigh)
 		_cutOffHigh = _m->nyquist();
+	//--
 
 	initDefaultVars();
 
@@ -92,15 +100,35 @@ void FourierTransform::reInit()
 		Vengine::fatalError("Cannot re-init unitialised fourier transform");
 	}
 
+	//make sure max cutoffs are adjusted for possible changed sample rate--
+	if (_minCutoffLow)
+		_cutOffLow = 0.0f;
+
+	if (_maxCutoffHigh)
+		_cutOffHigh = _m->nyquist();
+	//--
+
 	setFourierTransformFrequencyInfo();
 
-	//memset all the arrays for calculation
+	//delete all arrays with size _numHarmonics (as might have changed size if STFT window changed)
+	delete[] _smoothedFt;
+	delete[] _smoothedFtDot;
+	delete[] _lowResOutputLogScale;
+
+	//recreate and initialise arrays
+	_smoothedFt = new float[_numHarmonics];
 	memset(_smoothedFt, 0.0f, sizeof(float) * _numHarmonics);
+
+	_smoothedFtDot = new float[_numHarmonics];
 	memset(_smoothedFtDot, 0.0f, sizeof(float) * _numHarmonics);
+
+	_lowResOutputSize = std::min(_maxLowResOutputSize, _numHarmonics);
+	_lowResOutputLogScale = new float[_lowResOutputSize];
 	memset(_lowResOutputLogScale, 0.0f, _lowResOutputSize * sizeof(float));
 
-	_working1.reInit();
-	_working2.reInit();
+	//reinit fourier transform history to have correct # harmonics
+	_working1.changeNumHarmonics(_numHarmonics);
+	_working2.changeNumHarmonics(_numHarmonics);
 
 	_current = &(_working1);
 	_next = &(_working2);
@@ -255,12 +283,20 @@ void FourierTransform::applyTimeConvolving(FourierTransformHistory* in, float* o
 
 void FourierTransform::setFourierTransformFrequencyInfo()
 {
-	//calculate cutoff points
+	//calculate cutoff points and sanitise input--
 	float fourierLowFrac = _cutOffLow / _m->nyquist(); //as nyquist max freq
 	float fourierHighFrac = _cutOffHigh / _m->nyquist();
 	if (fourierHighFrac > 1) {
+		Vengine::warning("Cutoff high > nyquist, setting equal to nyquist");
+		_cutOffHigh = _m->nyquist();
 		fourierHighFrac = 1;
 	}
+	if (fourierLowFrac < 0) {
+		Vengine::warning("Cutoff low < 0, setting equal to 0");
+		_cutOffLow = 0;
+		fourierLowFrac = 0;
+	}
+	//--
 
 	_harmonicLow = floorf(fourierLowFrac * float(_m->_fftHistory.numHarmonics()));
 	_harmonicHigh = ceilf(fourierHighFrac * float(_m->_fftHistory.numHarmonics()));

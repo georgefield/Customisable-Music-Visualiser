@@ -1,26 +1,38 @@
 #pragma once
-#include <Vengine/Audio.h>
+#include "miniaudio_api.h"
+#include <Vengine/MyTiming.h>
+
 class AudioManager
 {
 public:
-	static void createUniformSetterFunctions(); //call on program start
+	static void init();
 
-	static void loadAudio(std::string filePath);
+	static bool load(std::string filePath);
 	static void play();
-	static void pause() { _audio.pause(); }
-	static void restart();
+	static void pause();
 
-	static float* getAudioData() { return _audio.getNormalisedWavData(); }
-	static int getAudioDataSize() { return int(_audio.getWavLength()); }
-	static int getCurrentSample() { return std::min(Uint32(_audio.getCurrentSample()), _audio.getWavLength()); }
-	static int getSampleRate() { return _audio.getSampleRate(); }
-	static std::string getAudioFilepath() { return _audioFilepath; }
+	static float* getSampleData();
+	static int getNumSamples();
+	static int getCurrentSample();
+	static int getSampleRate();
 
-	static bool isAudioLoaded() { return _audio.isAudioLoaded() && _audio.isAudioQueued(); }
-	static bool isAudioFinished() { return _audio.getCurrentSample() >= int(_audio.getWavLength()); }
-	static bool isAudioPlaying() { return _audio.isAudioPlaying() && !isAudioFinished(); }
+	static bool isAudioPlaying();
+	static bool isAudioFinished();
+	static bool isAudioLoadedThisFrame();
+	static bool isAudioLoaded();
+
+	static void showImguiDebugWindow();
+
 private:
-	static Vengine::Audio _audio;
-	static std::string _audioFilepath;
+	static miniaudio_api miniaudio;
+	static std::string _audioFileName;
+
+	static bool _audioLoadedThisFrame;
+
+	static int _currentSampleExtraPrecisionTimerId; //for some reason mini audio current sample works in 
+	static int _stickySample;
+	static int _currentSample;
+
+	static void createUniformSetterFunctions(); //call on program start
 };
 

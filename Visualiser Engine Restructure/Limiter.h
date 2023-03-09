@@ -22,7 +22,7 @@ public:
 		_lastCallTime(0),
 		_currentGainAdjustment(1.0f)
 	{
-		Vengine::MyTiming::startTimer(_timerID);
+		Vengine::MyTiming::createTimer(_timerID);
 	}
 
 	float clampMedianThenLimit(float value) {

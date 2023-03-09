@@ -97,7 +97,7 @@ public:
 		_vectorDim = vectorDim;
 	}
 
-	void add(float* v) {
+	void add(float* v, float contrastFactor) {
 		if (!_initialised) {
 			Vengine::fatalError("Cannot add to uninitialised similarity matrix");
 		}
@@ -124,7 +124,7 @@ public:
 			measure /= (_vectorMagnitudeHistory.newest() * _vectorMagnitudeHistory.get(i));
 
 			//increase contrast
-			measure = 1.0f - (SPvars::UI::_similarityMatrixTextureContrastFactor * (1.0f - measure));
+			measure = 1.0f - (contrastFactor * (1.0f - measure));
 
 			setCoord(i, 0, false, measure);
 			setCoord(0, i, false, measure);

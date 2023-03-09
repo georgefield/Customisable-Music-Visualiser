@@ -19,13 +19,17 @@ namespace Vengine {
 		static int getFrameCount();
 		static void setFPSlimit(unsigned int limit);
 
-		static void startTimer(int& id);
+		static void createTimer(int& id);
+		static void eraseTimer(int id);
+
 		static float readTimer(int id);
-		static float stopTimer(int id);
+		static void startTimer(int id);
+		static void stopTimer(int id);
+		static void resetTimer(int id);
+
 		static bool timerReadLastFrame(int id);
 
-		static void pauseTimer(int id);
-		static void unpauseTimer(int id);
+
 	private:
 
 		static long long ticksSinceEpoch();

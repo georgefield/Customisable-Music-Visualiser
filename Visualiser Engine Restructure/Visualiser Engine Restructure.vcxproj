@@ -140,6 +140,7 @@
     <ClCompile Include="FourierTransform.cpp" />
     <ClCompile Include="FFTWapi.cpp" />
     <ClCompile Include="FourierTransformManager.cpp" />
+    <ClCompile Include="miniaudio_api.cpp" />
     <ClCompile Include="SimilarityMatrixHandler.cpp" />
     <ClCompile Include="MFCCs.cpp" />
     <ClCompile Include="NoteOnset.cpp" />
@@ -153,6 +154,7 @@
     <ClCompile Include="SpriteManager.cpp" />
     <ClCompile Include="TempoDetection.cpp" />
     <ClCompile Include="UI.cpp" />
+    <ClCompile Include="UIglobalFeatures.cpp" />
     <ClCompile Include="Visualiser.cpp" />
     <ClCompile Include="VisualiserShader.cpp" />
     <ClCompile Include="VisualiserManager.cpp" />
@@ -170,6 +172,7 @@
     <ClInclude Include="FFTWapi.h" />
     <ClInclude Include="FourierTransformHistory.h" />
     <ClInclude Include="FourierTransformManager.h" />
+    <ClInclude Include="miniaudio_api.h" />
     <ClInclude Include="SimilarityMatrixHandler.h" />
     <ClInclude Include="SignalProcessingVars.h" />
     <ClInclude Include="MFCCs.h" />
@@ -192,6 +195,7 @@
     <ClInclude Include="Threshold.h" />
     <ClInclude Include="Tools.h" />
     <ClInclude Include="UI.h" />
+    <ClInclude Include="UIglobalFeatures.h" />
     <ClInclude Include="UniformSetter.h" />
     <ClInclude Include="VectorHistory.h" />
     <ClInclude Include="Visualiser.h" />

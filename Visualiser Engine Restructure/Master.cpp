@@ -4,12 +4,13 @@
 #include <functional>
 
 #include "VisualiserShaderManager.h"
+#include "SignalProcessingVars.h"
 
 Master::Master() :
 	_audioData(nullptr),
 
-	_fftwAPI(4096), 
-	_fftHistory(17),//store 17 previous fourier transforms
+	_fftwAPI(SPvars::Const::_STFTsamples),
+	_fftHistory(1),//store 17 previous fourier transforms
 
 	_sampleFftLastCalculated(-1),
 	_sampleRate(0)
@@ -47,6 +48,8 @@ void Master::reInit(float* audioData, int sampleRate) {
 
 void Master::beginCalculations(int currentSample) {
 
+	assert(_sampleRate > 0);
+
 	if (currentSample == _previousSample) {
 		Vengine::warning("No change in sample between begin calculation calls");
 	}
@@ -59,6 +62,7 @@ float slidingWindowFunction(float frac){ //reduces noise
 }
 
 void Master::calculateFourierTransform() {
+
 	//make sure not called twice on same frame
 	if (_sampleFftLastCalculated == _currentSample) {
 		return;

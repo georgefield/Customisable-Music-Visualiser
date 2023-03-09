@@ -11,6 +11,10 @@ struct SPvars {
 		//--
 
 		//modifyable properties of algorithms--
+		//general
+		static bool _wasCPSautoDecreased;
+		static bool _wasSignalProcessingReset;
+
 		//note onset
 		static int _onsetDetectionFunctionEnum;
 		static bool _convolveOnsetDetection;
@@ -26,6 +30,11 @@ struct SPvars {
 		static bool _fastSimilarityMatrixTexture;
 		static float _similarityMatrixTextureContrastFactor;
 		static int _matrixMeasureEnum;
+		static bool _useFutureSimilarityMatrix;
+		//--
+
+		//other properties--
+		static float _desiredCPS; //desired calculations per second
 		//--
 	};
 
@@ -34,5 +43,10 @@ struct SPvars {
 
 		static const int _numMelBands;
 
+		static const int _STFTsamples;
+
+		static const float _lagTimeBeforeReducingCPS;
+
+		static const float _CPSreduceFactor;
 	};
 };

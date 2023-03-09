@@ -111,9 +111,6 @@
     <ClCompile Include="PFDapi.cpp">
       <Filter>Source Files\APIs for dependencies</Filter>
     </ClCompile>
-    <ClCompile Include="AudioManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="DixonAlgVariableDefinitions.cpp">
       <Filter>Source Files\Signal Processing Algorithms</Filter>
     </ClCompile>
@@ -128,6 +125,15 @@
     </ClCompile>
     <ClCompile Include="DataTextureCreator.cpp">
       <Filter>Source Files\Signal Processing Algorithms\Self Similarity Matrix</Filter>
+    </ClCompile>
+    <ClCompile Include="miniaudio_api.cpp">
+      <Filter>Source Files\APIs for dependencies</Filter>
+    </ClCompile>
+    <ClCompile Include="AudioManager.cpp">
+      <Filter>Source Files\Signal Processing Managing</Filter>
+    </ClCompile>
+    <ClCompile Include="UIglobalFeatures.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -218,9 +224,6 @@
     <ClInclude Include="CustomisableSprite.h">
       <Filter>Header Files\Sprite Managing</Filter>
     </ClInclude>
-    <ClInclude Include="AudioManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="FilterBank.h">
       <Filter>Header Files\Signal Processing Algorithms</Filter>
     </ClInclude>
@@ -247,6 +250,15 @@
     </ClInclude>
     <ClInclude Include="DataTextureCreator.h">
       <Filter>Header Files\Signal Processing Algorithms\Self Similarity Matrix</Filter>
+    </ClInclude>
+    <ClInclude Include="AudioManager.h">
+      <Filter>Header Files\Signal Processing Managing</Filter>
+    </ClInclude>
+    <ClInclude Include="miniaudio_api.h">
+      <Filter>Header Files\APIs for dependencies</Filter>
+    </ClInclude>
+    <ClInclude Include="UIglobalFeatures.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

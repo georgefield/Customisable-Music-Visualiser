@@ -17,11 +17,9 @@
 class SignalProcessingManager {
 public:
 
-	static void start();
-	static void restart();
-	static bool ready();
-
-	static void calculate();
+	static void calculate(); //call every frame
+	static void init();
+	static void reset();
 
 	static Master* getMasterPtr() { return _master; }
 
@@ -35,9 +33,10 @@ public:
 private:
 	static Master* _master;
 
-	static bool _started;
+	static bool _isFirstReset;
+	static float _nextCalculationSample;
+	static int _lagTimerId;
 
-	static std::string _currentAudioFilepath;
 
 	static void initAlgorithmObjects(bool rms, bool noteOnset, bool tempoDetection, bool mfccs, bool similarityMatrix);
 };

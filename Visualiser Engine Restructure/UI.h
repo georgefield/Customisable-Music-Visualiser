@@ -14,7 +14,7 @@ public:
 
 	void toolbar();
 	void sidebar();
-	void errorMessages();
+	void displayErrors();
 	void processInput();
 
 	//getters
@@ -22,10 +22,6 @@ public:
 
 	Vengine::Viewport getViewport();
 
-	//can push to error queue anywhere 'UI.h' is included
-	static std::vector<std::string> _errorQueue;
-
-	static std::string ImGuiComboStringMaker(std::vector<std::string>& options);
 private:
 
 	Vengine::Window* _window;
@@ -63,15 +59,15 @@ private:
 	//calculate
 	//--
 
-	int _errorMessageTimerId;
 
-	//ui functions
+	//ui sp functions
 	void generalSignalProcessingUi();
 	void fourierTransformsUi();
 	void noteOnsetUi();
 	void tempoDetectionUi();
 	void mfccUi();
 	void selfSimilarityMatrixUi();
+	void endSPui();
 
 	//process functions
 	void processFileMenuSelection();

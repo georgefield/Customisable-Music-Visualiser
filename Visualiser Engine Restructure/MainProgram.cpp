@@ -8,10 +8,9 @@
 #include "VisualiserShaderManager.h"
 #include "VisualiserManager.h"
 
+
 const int screenWidth = 1024;
 const int screenHeight = 768;
-
-const int N = 4096; //number of frequencies in the fourier transform (= half the number of samples included by nyquist)
 
 MainProgram::MainProgram() :
 	_gameState(ProgramState::RUNNING),
@@ -20,9 +19,8 @@ MainProgram::MainProgram() :
 {
 }
 
-//RESTRUCTURE ENTIRE ENGINE, CLONE THIS PROJECT AS BACKUP
 
-const std::string musicFilepath = "Music/bdrmm - Happy.wav";
+const std::string STARTUP_MUSIC_FILEPATH = "Resources/Audio/metronome.wav";
 
 
 void MainProgram::run() {
@@ -47,7 +45,7 @@ void MainProgram::initSystems() {
 	_UI.init(&_window, &_inputManager);
 
 	//time since load setter function
-	Vengine::MyTiming::startTimer(_timeSinceLoadTimerId);
+	Vengine::MyTiming::createTimer(_timeSinceLoadTimerId);
 	std::function<float()> timeSinceLoadSetterFunction = std::bind(&MainProgram::getTimeSinceLoad, this);
 	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Time since program start", timeSinceLoadSetterFunction);
 
@@ -56,6 +54,17 @@ void MainProgram::initSystems() {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //blend entirely based on alpha
 	glClearColor(0.1, 0.1, 0.1, 1.0); //slightly grey
+
+
+	//audio and signal processing
+	AudioManager::init();
+	AudioManager::load(STARTUP_MUSIC_FILEPATH);
+
+	SignalProcessingManager::init();
+
+	//timing and fps managing
+	Vengine::MyTiming::setNumSamplesForFPS(100);
+	Vengine::MyTiming::setFPSlimit(200);
 }
 
 void MainProgram::processInput() {
@@ -93,14 +102,6 @@ void MainProgram::processInput() {
 
 void MainProgram::gameLoop() {
 
-	Vengine::MyTiming::setNumSamplesForFPS(100);
-	Vengine::MyTiming::setFPSlimit(2500);
-
-	//_signalProc._selfSimilarityMatrix.linkToDebug();
-
-	AudioManager::loadAudio(musicFilepath);
-	SignalProcessingManager::start();
-
 	//main while loop
 	while (_gameState != ProgramState::EXIT) {
 
@@ -114,7 +115,7 @@ void MainProgram::gameLoop() {
 			if (_inputManager.isKeyPressed(SDL_BUTTON_LEFT)) {
 				printf("%f fps\n", Vengine::MyTiming::getFPS());
 			}
-			if (_inputManager.isKeyPressed(SDLK_ESCAPE)) {
+			if (_inputManager.isKeyPressed(SDLK_SPACE)) {
 				if (AudioManager::isAudioPlaying()) {
 					AudioManager::pause();
 				}
@@ -122,6 +123,7 @@ void MainProgram::gameLoop() {
 					AudioManager::play();
 				}
 			}
+		
 
 			drawVis(); //visualiser first to draw ui on top of visualiser
 			drawUi();
@@ -132,6 +134,7 @@ void MainProgram::gameLoop() {
 }
 
 void MainProgram::endFrame() {
+
 	//tell ImGui to render Ui (must do every frame)
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -154,8 +157,6 @@ void MainProgram::drawVis() {
 	//signal processing tmp
 	SignalProcessingManager::calculate();
 
-	//
-
 	//batch if not showing ui
 	SpriteManager::drawAll();
 
@@ -165,8 +166,8 @@ void MainProgram::drawVis() {
 
 void MainProgram::drawUi(){
 
-	_UI.errorMessages();
 	_UI.toolbar();
 	_UI.sidebar();
+	_UI.displayErrors();
 	_UI.processInput();
 }

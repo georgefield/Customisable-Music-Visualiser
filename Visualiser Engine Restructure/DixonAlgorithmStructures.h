@@ -252,9 +252,7 @@ struct Agent {
 	void updatePeaks(int sampleRate, int currentSample) {
 		while (_peakHistory->entries() > 0 && currentSample - _peakHistory->oldestSample() > sampleRate * DixonAlgVars::MAX_TIME_PEAKS_SCORED) {
 			_score -= _peakHistory->oldest();
-			std::cout << _peakHistory->oldest() << ", " << _peakHistory->oldestSample() << " before, after ";
 			_peakHistory->removeOldest();
-			std::cout << _peakHistory->oldest() << ", " << _peakHistory->oldestSample() << std::endl;
 		}
 	}
 
@@ -427,8 +425,8 @@ struct AgentSet {
 	}
 
 	void calculateScoresAccountingForClusterIntervalScores(ClusterSet* clusters) {
-		if (set.size() < 2) {
-			Vengine::warning("Set too small");
+		if (set.size() == 0) {
+			Vengine::warning("No agents in set");
 			return;
 		}
 
@@ -490,7 +488,7 @@ struct AgentSet {
 		int bestInterval = _highestScoringAgent->_beatInterval;
 		int skips = 0;
 		do {
-
+			
 			if (it == set.begin()) {
 				_confidenceInBestAgent = 1.0f;
 				return;

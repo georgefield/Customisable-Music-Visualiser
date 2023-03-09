@@ -9,7 +9,7 @@ SimilarityMatrixHandler::SimilarityMatrixHandler(int size)
 	:
 matrix(SPvars::Const::_generalHistorySize),
 _fourierTransform(nullptr),
-_samplesAhead(0)
+_samplesAheadForFutureMatrix(0)
 {
 }
 
@@ -26,9 +26,9 @@ void SimilarityMatrixHandler::init(Master* master, int matrixSize)
 	_master = master;
 	_matrixSize = matrixSize;
 
-	_samplesAhead = 0; //samples per frame * (matrixSize/2), means the middle of the matrix will be current sample
+	_samplesAheadForFutureMatrix = (float(matrixSize) / (2.0f * SPvars::UI::_desiredCPS)) * _master->_sampleRate;
 
-	_futureMaster.init(AudioManager::getAudioData(), AudioManager::getSampleRate(), false);
+	_futureMaster.init(AudioManager::getSampleData(), AudioManager::getSampleRate(), false);
 
 	_futureMFCCs.init(&_futureMaster, SPvars::Const::_numMelBands, 0, 20000, false);
 
@@ -42,9 +42,9 @@ void SimilarityMatrixHandler::init(Master* master, int matrixSize)
 void SimilarityMatrixHandler::reInit(int matrixSize)
 {
 	_matrixSize = matrixSize;
-	_samplesAhead = 0; //samples per frame * (matrixSize/2), means the middle of the matrix will be current sample
+	_samplesAheadForFutureMatrix = (float(matrixSize) / (2.0f * SPvars::UI::_desiredCPS)) * _master->_sampleRate;
 
-	_futureMaster.reInit(AudioManager::getAudioData(), AudioManager::getSampleRate());
+	_futureMaster.reInit(AudioManager::getSampleData(), AudioManager::getSampleRate());
 
 	_futureMFCCs.reInit();
 
@@ -57,7 +57,7 @@ void SimilarityMatrixHandler::reInit(int matrixSize)
 
 void SimilarityMatrixHandler::calculateNext()
 {
-	if (AudioManager::getCurrentSample() + _samplesAhead > AudioManager::getAudioDataSize()) {
+	if (AudioManager::getCurrentSample() + _samplesAheadForFutureMatrix > AudioManager::getNumSamples()) {
 		Vengine::warning("Cannot calculate future as samples ahead puts it above song size");
 		return;
 	}
@@ -66,10 +66,10 @@ void SimilarityMatrixHandler::calculateNext()
 		return; //dont bother doing anything if not linked
 	}
 	
-	if (_samplesAhead > 0) {
+	if (SPvars::UI::_useFutureSimilarityMatrix) {
 
 		//std::cout << "Samples ahead: " << _samplesAhead << std::endl;
-		_futureMaster.beginCalculations(AudioManager::getCurrentSample() + _samplesAhead);
+		_futureMaster.beginCalculations(AudioManager::getCurrentSample() + _samplesAheadForFutureMatrix);
 
 		//handling calculating future of audio features for similarity matrix--
 		_futureMaster.calculateFourierTransform(); //ft needed for both
@@ -83,7 +83,7 @@ void SimilarityMatrixHandler::calculateNext()
 		}
 		//--
 
-		matrix.calculateNext(MeasureType(SPvars::UI::_matrixMeasureEnum));
+		matrix.calculateNext(MeasureType(SPvars::UI::_matrixMeasureEnum), SPvars::UI::_similarityMatrixTextureContrastFactor);
 
 		_futureMaster.endCalculations();
 	}
@@ -94,7 +94,7 @@ void SimilarityMatrixHandler::calculateNext()
 			_fourierTransform->endCalculation();
 		}
 
-		matrix.calculateNext(MeasureType(SPvars::UI::_matrixMeasureEnum));
+		matrix.calculateNext(MeasureType(SPvars::UI::_matrixMeasureEnum), SPvars::UI::_similarityMatrixTextureContrastFactor);
 	}
 
 }
@@ -105,7 +105,7 @@ void SimilarityMatrixHandler::linkToMFCCs(int coeffLow, int coeffHigh)
 	_coeffHigh = coeffHigh;
 
 	_linkedTo = MFCC;
-	if (_samplesAhead > 0) {
+	if (SPvars::UI::_useFutureSimilarityMatrix) {
 		matrix.linkToMFCCs(&_futureMFCCs, coeffLow, coeffHigh);
 		return;
 	}
@@ -115,7 +115,7 @@ void SimilarityMatrixHandler::linkToMFCCs(int coeffLow, int coeffHigh)
 void SimilarityMatrixHandler::linkToMelBandEnergies()
 {
 	_linkedTo = MelBandEnergies;
-	if (_samplesAhead > 0) {
+	if (SPvars::UI::_useFutureSimilarityMatrix) {
 		matrix.linkToMelBandEnergies(&_futureMFCCs);
 		return;
 	}
@@ -125,7 +125,7 @@ void SimilarityMatrixHandler::linkToMelBandEnergies()
 void SimilarityMatrixHandler::linkToMelSpectrogram()
 {
 	_linkedTo = MelSpectrogram;
-	if (_samplesAhead > 0) {
+	if (SPvars::UI::_useFutureSimilarityMatrix) {
 		matrix.linkToMelSpectrogram(&_futureMFCCs);
 		return;
 	}
@@ -145,7 +145,7 @@ void SimilarityMatrixHandler::linkToFourierTransform(float cutoffLow, float cuto
 	//create new fourier transform
 	_fourierTransform = new FourierTransform(1, cutoffLow, cutoffHigh, smoothFactor);
 
-	if (_samplesAhead > 0) {
+	if (SPvars::UI::_useFutureSimilarityMatrix) {
 		_fourierTransform->init(&_futureMaster, "");
 	}
 	else {
@@ -155,11 +155,6 @@ void SimilarityMatrixHandler::linkToFourierTransform(float cutoffLow, float cuto
 	//link it
 	matrix.linkToFourierTransform(_fourierTransform);
 	_linkedTo = FT;
-}
-
-void SimilarityMatrixHandler::setLookAhead(int samples)
-{
-	_samplesAhead = samples;
 }
 
 

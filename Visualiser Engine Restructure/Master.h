@@ -9,6 +9,8 @@
 #include "FourierTransformHistory.h"
 #include "Kernels.h"
 
+#include <cassert>
+
 /// <summary>
 /// class that contains all basic calculation information used in many signal processing algorithms
 /// also contains helper functions that are used a lot with audio maths
@@ -40,7 +42,7 @@ public:
 	float* getBaseFftOutput();
 	int getBaseFftNumHarmonics();
 
-	int nyquist() const { if (_sampleRate == 0) { Vengine::fatalError("Used master before initialising"); } return _sampleRate / 2; }
+	int nyquist() const { assert(_sampleRate > 0); return _sampleRate / 2; }
 private:
 	int _sampleFftLastCalculated;
 	FFTWfft _fftwAPI;

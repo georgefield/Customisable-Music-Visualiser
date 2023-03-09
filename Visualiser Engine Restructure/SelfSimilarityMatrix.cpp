@@ -1,8 +1,9 @@
 #include "SelfSimilarityMatrix.h"
 #include <iomanip>
 
-void SelfSimilarityMatrix::calculateNext(MeasureType measureType)
+void SelfSimilarityMatrix::calculateNext(MeasureType measureType, float contrastFactor)
 {
+
 	if (_initialised == false) {
 		Vengine::fatalError("Cannot calculate similarity matrix without initialising");
 	}
@@ -16,16 +17,16 @@ void SelfSimilarityMatrix::calculateNext(MeasureType measureType)
 		if (_coeffLow < 1) {
 			Vengine::fatalError("MFCC coefficients start from 1");
 		}
-		_similarityMatrix->add(&(_mfccsPtr->getMfccs()[_coeffLow - 1]));
+		_similarityMatrix->add(&(_mfccsPtr->getMfccs()[_coeffLow - 1]), contrastFactor);
 	}
 	if (_linkedTo == MelBandEnergies) {
-		_similarityMatrix->add(_mfccsPtr->getBandEnergies());
+		_similarityMatrix->add(_mfccsPtr->getBandEnergies(), contrastFactor);
 	}
 	if (_linkedTo == MelSpectrogram) {
-		_similarityMatrix->add(_mfccsPtr->getMelSpectrogram());
+		_similarityMatrix->add(_mfccsPtr->getMelSpectrogram(), contrastFactor);
 	}
 	if (_linkedTo == FT) {
-		_similarityMatrix->add(_ftPtr->getOutput());
+		_similarityMatrix->add(_ftPtr->getOutput(), contrastFactor);
 	} 
 
 
@@ -50,12 +51,12 @@ void SelfSimilarityMatrix::calculateNext(MeasureType measureType)
 
 		std::cout << Vengine::MyTiming::readTimer(_debugTimerId) << std::endl;
 		if (Vengine::MyTiming::readTimer(_debugTimerId) > 1.0) {
-			Vengine::MyTiming::stopTimer(_debugTimerId);
+			Vengine::MyTiming::resetTimer(_debugTimerId);
 			Vengine::MyTiming::startTimer(_debugTimerId);
 			_switch = !_switch;
 		}
 
-		_similarityMatrix->add(&(debugVec[0]));
+		_similarityMatrix->add(&(debugVec[0]), contrastFactor);
 		return;
 	}
 }
@@ -84,13 +85,38 @@ void SelfSimilarityMatrix::calculateSimilarityMeasure()
 	_similarityMeasureHistory.add(sum);
 }
 
+const float FACTOR = 0.3333f;
+
+const float ON = FACTOR * FACTOR * 4;
+const float OFF = ON - 1;
 float SelfSimilarityMatrix::inverseCrossKernel(int i, int j) {
 	float u = float(i) / float(getMatrixSize());
 	float v = float(j) / float(getMatrixSize());
 
-	float minDist = std::min(fabs(u - 0.5f), fabs(v - 0.5f));
+	if (u < FACTOR || u > 1 - FACTOR){
+		if (v < FACTOR) {
+			return ON;
+		}
+		else if (v < 1 - FACTOR) {
+			return OFF;
+		}
+		else {
+			return ON;
+		}
+	}
+	else {
+		if (v < FACTOR) {
+			return OFF;
+		}
+		else if (v < 1 - FACTOR) {
+			return ON;
+		}
+		else {
+			return OFF;
+		}
+	}
 
-	return (2.0f*minDist) - 1.0f;
+	return 0.0f;
 }
 
 void SelfSimilarityMatrix::calculatePrecussionMeasure()
@@ -102,7 +128,7 @@ void SelfSimilarityMatrix::calculatePrecussionMeasure()
 		}
 		sum += getSelfSimilarityMatrixValue(i, i) * inverseCrossKernel(i, i);
 	}
-	sum += float(getMatrixSize() * getMatrixSize())/3.0f; //correct integral to 0
+
 	sum /= _similarityMatrix->matrixSize() * _similarityMatrix->matrixSize();
 	_similarityMeasureHistory.add(sum);
 }
@@ -141,7 +167,7 @@ void SelfSimilarityMatrix::linkToFourierTransform(FourierTransform* ft)
 void SelfSimilarityMatrix::linkToDebug()
 {
 	_linkedTo = DEBUG;
-	Vengine::MyTiming::startTimer(_debugTimerId);
+	Vengine::MyTiming::createTimer(_debugTimerId);
 	_switch = true;
 	_similarityMatrix->start(2);
 }

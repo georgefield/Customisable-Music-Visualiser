@@ -32,7 +32,7 @@ public:
 		_displayPeaks(historySize),
 
 
-		_thresholder(2500), //approx 5 seconds
+		_thresholder(1000), //approx 10 seconds
 
 		_ftForSpectralDistance(2),
 		_simMatrix(historySize),
@@ -71,8 +71,8 @@ public:
 		_derOfLogEnergyBands.add(10000, 20000, 1.0f);
 		_derOfLogEnergyBands.add(15000, 22050, 1.0f);
 
-		_simMatrix.init(50);
-		_simMatrix.linkToMelBandEnergies(_mfcc);
+		_simMatrix.init(2000 / SPvars::UI::_desiredCPS);
+		_simMatrix.linkToMelSpectrogram(_mfcc);
 	}
 
 	void reInit() {
@@ -90,8 +90,8 @@ public:
 
 		_derOfLogEnergyBands.reInit();
 
-		_simMatrix.reInit(50);
-		_simMatrix.linkToMelBandEnergies(_mfcc);
+		_simMatrix.reInit(2000 / SPvars::UI::_desiredCPS);
+		_simMatrix.linkToMelSpectrogram(_mfcc);
 	}
 
 	void calculateNext(

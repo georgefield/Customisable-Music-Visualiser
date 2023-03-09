@@ -21,7 +21,8 @@ public:
 	}
 
 	bool testThreshold(float value, float topXpercent) {
-		if ((value * getFractionFull()) > getTopXpercentValue(topXpercent)) {
+		//sqrt get fraction full to increase faster
+		if ((value * sqrt(getFractionFull())) > getTopXpercentValue(topXpercent)) {
 			return true;
 		}
 		return false;

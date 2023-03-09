@@ -81,6 +81,7 @@ private:
 	//fourier transform descriptors vars
 	int _numHarmonics;
 	float _cutOffLow, _cutOffHigh;
+	bool _minCutoffLow, _maxCutoffHigh;
 	int _harmonicLow, _harmonicHigh;
 	float _cutoffSmoothFrac;
 

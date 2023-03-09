@@ -11,6 +11,7 @@ void NoteOnset::calculateNext(DataExtractionAlg dataAlg, bool convolve) {
 
 	//onset detection--
 	float onsetValue = 0;
+	assert(dataAlg <= COMBINATION && dataAlg >= ENERGY);
 	if (dataAlg == DataExtractionAlg::ENERGY) {
 		onsetValue = energy();
 	}
@@ -172,12 +173,12 @@ float NoteOnset::spectralDistanceOfHarmonics(bool HFC) {
 
 float NoteOnset::similarityMatrixMelSpectrogram()
 {
-	_simMatrix.calculateNext(PRECUSSION);
+	_simMatrix.calculateNext(PRECUSSION, 10.0f);
 
 	float measure = _simMatrix.getSimilarityMeasure();
 	if (isnan(measure) || isinf(measure)) { return 0.0f; } //stop nan virus escaping the lab
 
-	knee(measure, 2.0f, 1.0f, 2.0f);
+	//knee(measure, 2.0f, 1.0f, 2.0f);
 	return std::max(measure, 0.0f);
 }
 

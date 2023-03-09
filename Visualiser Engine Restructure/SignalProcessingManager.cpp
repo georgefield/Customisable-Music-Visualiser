@@ -2,6 +2,8 @@
 #include "VisualiserShaderManager.h"
 #include "FourierTransformManager.h"
 
+#include "UIglobalFeatures.h"
+
 #include <functional>
 #include <Vengine/DrawFunctions.h>
 
@@ -12,79 +14,68 @@ TempoDetection* SignalProcessingManager::_tempoDetection = nullptr;
 MFCCs* SignalProcessingManager::_mfccs = nullptr;
 SimilarityMatrixHandler* SignalProcessingManager::_similarityMatrix = nullptr;
 
-std::string SignalProcessingManager::_currentAudioFilepath = "";
+bool SignalProcessingManager::_isFirstReset = true;
+float SignalProcessingManager::_nextCalculationSample = 0;
+int SignalProcessingManager::_lagTimerId = -1;
 
-bool SignalProcessingManager::_started = false;
+void SignalProcessingManager::init() {
 
-void SignalProcessingManager::start()
-{
-	if (_started) {
-		Vengine::warning("start already called for signal processing manager");
+	if (!AudioManager::isAudioLoaded()) {
+		Vengine::warning("Cannot init with no audio loaded");
 		return;
 	}
 
-	if (!ready()) {
-		Vengine::warning("Cannot start yet as no audio to play");
-		return;
-	}
+	Vengine::MyTiming::createTimer(_lagTimerId);
 
 	_master = new Master();
-	_master->init(AudioManager::getAudioData(), AudioManager::getSampleRate());
+	_master->init(AudioManager::getSampleData(), AudioManager::getSampleRate());
 
 	initAlgorithmObjects(true, true, true, true, true);
 
 	//set up general history size uniform setter
 	std::function<int()> generalHistorySizeSetterFunction = SignalProcessingManager::getGeneralHistorySize;
 	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("General history size", generalHistorySizeSetterFunction);
-
-	//set filepath
-	_currentAudioFilepath = AudioManager::getAudioFilepath();
-
-	_started = true;
 }
 
-void SignalProcessingManager::restart()
+void SignalProcessingManager::reset()
 {
-	if (!_started) {
-		Vengine::warning("SignalProcessing: Cannot call reset before calling start");
+	if (!AudioManager::isAudioLoaded()) {
+		Vengine::warning("Cannot reset as no audio loaded");
 		return;
 	}
 
-	_master->reInit(AudioManager::getAudioData(), AudioManager::getSampleRate()); //will tell all other algorithms to reinit
+	SPvars::UI::_wasSignalProcessingReset = true;
+
+	_nextCalculationSample = 0;
+
+	_master->reInit(AudioManager::getSampleData(), AudioManager::getSampleRate()); //will tell all other algorithms to reinit
 	FourierTransformManager::reInitAll();
 
 	initAlgorithmObjects(true, true, true, true, true);
-
-	//set filepath
-	_currentAudioFilepath = AudioManager::getAudioFilepath();
-}
-
-bool SignalProcessingManager::ready()
-{
-	return AudioManager::isAudioLoaded();
 }
 
 void SignalProcessingManager::calculate()
 {
-	if (!_started) {
-		Vengine::warning("Cannot calculate as signalProcessing not started");
-		return;
+	if (AudioManager::isAudioLoadedThisFrame()) { //change in song
+		Vengine::warning("Change in audio source, reseting signal processing");
+		reset(); //reset
 	}
 
-	if (_currentAudioFilepath != AudioManager::getAudioFilepath()) { //change in song
-		Vengine::warning("Change in audio source, reseting signal processing");
-		start(); //reset
+	if (!AudioManager::isAudioPlaying()) {
+		return;
 	}
 
 	//dependencies
 	if (SPvars::UI::_computeTempoDetection) { SPvars::UI::_computeNoteOnset = true; }
 	if (SPvars::UI::_computeSimilarityMatrix && _similarityMatrix->isRealTime()) { SPvars::UI::_computeMFCCs = true; }
+	if (SPvars::UI::_computeNoteOnset && SPvars::UI::_onsetDetectionFunctionEnum == NoteOnset::DataExtractionAlg::SIM_MATRIX_MEL_SPEC) { SPvars::UI::_computeMFCCs = true; }
 
-	if (!AudioManager::isAudioPlaying()) { //no calculations unless audio playing
+	if (_nextCalculationSample > AudioManager::getCurrentSample()) {
+		
 		return;
 	}
 
-	_master->beginCalculations(AudioManager::getCurrentSample());
+	_master->beginCalculations(int(_nextCalculationSample));
 
 	//all other signal processing done between begin and end--
 
@@ -110,10 +101,40 @@ void SignalProcessingManager::calculate()
 	//--
 
 	_master->endCalculations();
+
+	//increment sample
+	_nextCalculationSample += float(AudioManager::getSampleRate()) / SPvars::UI::_desiredCPS;
+
+	//time how long calculation lags behind frames--
+	if (_nextCalculationSample < AudioManager::getCurrentSample()) {
+		Vengine::MyTiming::startTimer(_lagTimerId);
+	}
+	if (_nextCalculationSample > AudioManager::getCurrentSample()) {
+		Vengine::MyTiming::resetTimer(_lagTimerId);
+	}
+	//--
+
+
+	//if lag for too long reduce cps--
+	if (Vengine::MyTiming::readTimer(_lagTimerId) > SPvars::Const::_lagTimeBeforeReducingCPS) {
+		SPvars::UI::_desiredCPS *= SPvars::Const::_CPSreduceFactor; //decrease desired cps
+		UIglobalFeatures::queueError("Cannot reach desired audio calculations per second (CPS), reducing CPS to " + std::to_string(SPvars::UI::_desiredCPS)); //show error
+
+		reset(); //sets it to _nextCalculationSample to 0
+
+		//so need to catch up
+		while (_nextCalculationSample < AudioManager::getCurrentSample()) {
+			_nextCalculationSample += float(AudioManager::getSampleRate()) / SPvars::UI::_desiredCPS;
+		}
+
+		SPvars::UI::_wasCPSautoDecreased = true;
+		Vengine::MyTiming::resetTimer(_lagTimerId);
+	}
+	//--
 }
 
 
-//private
+//private------------
 
 void SignalProcessingManager::initAlgorithmObjects(bool rms, bool noteOnset, bool tempoDetection, bool mfccs, bool similarityMatrix)
 {
@@ -132,6 +153,8 @@ void SignalProcessingManager::initAlgorithmObjects(bool rms, bool noteOnset, boo
 		}
 	}
 
+	std::cout << "RMS tick" << std::endl;
+
 	//MFCCs
 	if (mfccs) {
 		if (_mfccs != nullptr) {
@@ -142,6 +165,8 @@ void SignalProcessingManager::initAlgorithmObjects(bool rms, bool noteOnset, boo
 			_mfccs->init(_master, SPvars::Const::_numMelBands, 0, 20000);
 		}
 	}
+
+	std::cout << "MFCCs tick" << std::endl;
 
 	//Note onset
 	if (noteOnset) {
@@ -154,6 +179,8 @@ void SignalProcessingManager::initAlgorithmObjects(bool rms, bool noteOnset, boo
 		}
 	}
 
+	std::cout << "Note onset tick" << std::endl;
+
 	//Tempo detection
 	if (tempoDetection) {
 		if (_tempoDetection != nullptr) {
@@ -165,6 +192,9 @@ void SignalProcessingManager::initAlgorithmObjects(bool rms, bool noteOnset, boo
 		}
 	}
 
+	std::cout << "tempo tick" << std::endl;
+
+
 	//Similarity matrix
 	if (similarityMatrix) {
 		if (_similarityMatrix != nullptr) {
@@ -175,4 +205,7 @@ void SignalProcessingManager::initAlgorithmObjects(bool rms, bool noteOnset, boo
 			_similarityMatrix->init(_master, SPvars::UI::_nextSimilarityMatrixSize);
 		}
 	}
+
+	std::cout << "Sim mat tick" << std::endl;
+
 }

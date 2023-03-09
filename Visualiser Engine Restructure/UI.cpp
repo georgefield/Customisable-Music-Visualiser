@@ -5,13 +5,14 @@
 #include "FourierTransformManager.h"
 #include "Tools.h"
 #include <algorithm>
+#include "UIglobalFeatures.h"
 
 #include "PFDapi.h"
 
-std::vector<std::string> UI::_errorQueue;
+#define FLOAT_MAX 3.4028235E38F
 
-UI::UI() :
-	_errorMessageTimerId(-1)
+
+UI::UI()
 {}
 
 
@@ -26,34 +27,7 @@ void UI::init(Vengine::Window* window, Vengine::InputManager* inputManager) {
 }
 
 
-const float ERROR_MESSAGE_DISPLAY_TIME = 3.0f;
-void UI::errorMessages() {
-	if (_errorQueue.size() == 0) { return; }
 
-	//display oldest queued error for 1 second then pop from vector front
-	if (_errorMessageTimerId == -1) {
-		Vengine::MyTiming::startTimer(_errorMessageTimerId);
-	}
-	else if (Vengine::MyTiming::readTimer(_errorMessageTimerId) > ERROR_MESSAGE_DISPLAY_TIME) {
-		Vengine::MyTiming::stopTimer(_errorMessageTimerId);
-		_errorMessageTimerId = -1;
-		_errorQueue.erase(_errorQueue.begin());
-		return;
-	}
-
-	//create window that only displays error text
-	ImGui::SetNextWindowPos(ImVec2(0, _window->getScreenHeight() - 30));
-
-	ImGui::Begin("Message", (bool*)0,
-		ImGuiWindowFlags_NoMove |
-		ImGuiWindowFlags_NoTitleBar |
-		ImGuiWindowFlags_AlwaysAutoResize
-	);
-
-	ImGui::Text(("Error: " + _errorQueue[0]).c_str());
-
-	ImGui::End();
-}
 
 
 void UI::toolbar() {
@@ -145,9 +119,14 @@ void UI::toolbar() {
 		selfSimilarityMatrixUi();
 	}
 
+	endSPui();
+
 	ImGui::EndMenuBar();
 
-	if (ImGui::Button("Add")) {
+	//add sprite--
+	ImGui::BeginChild("add button child", ImVec2(ImGui::GetContentRegionAvail().y, ImGui::GetContentRegionAvail().y), false);
+
+	if (ImGui::Button("Add", ImVec2(ImGui::GetContentRegionAvail().y, ImGui::GetContentRegionAvail().y))) {
 		ImGui::OpenPopup("add menu");
 	}
 	if (ImGui::BeginPopup("add menu")) {
@@ -160,14 +139,41 @@ void UI::toolbar() {
 		ImGui::EndPopup();
 	}
 
+	ImGui::EndChild();
+	//--
 
-	//background colour picker
+	ImGui::SameLine();
+
+	//audio playback ui--
+	ImGui::BeginChild("playback child", ImVec2(150, ImGui::GetContentRegionAvail().y), false);
+
+	//load song
+	if (ImGui::Button("Load song")) {
+		std::string chosenAudio;
+		PFDapi::fileChooser("Choose audio", Vengine::IOManager::getProjectDirectory(), chosenAudio, { "Audio files", "*.wav *.mp3 *.flac" }, true);
+		AudioManager::load(chosenAudio);
+	}
+
+	//audio play/pause
+	if (!AudioManager::isAudioPlaying() && ImGui::Button("Play")) {
+		AudioManager::play();
+	}
+	else if (AudioManager::isAudioPlaying() && ImGui::Button("Pause")) {
+		AudioManager::pause();
+	}
+
+	ImGui::EndChild();
+	//--
+
+	ImGui::SameLine();
+
+	//background colour picker--
 	static float pickedClearColour[3] = { 0.1, 0.1, 0.1 };
 	ImGui::ColorEdit3("Background colour", pickedClearColour, ImGuiColorEditFlags_NoInputs);
 	if (ImGui::IsItemEdited()) {
 		glClearColor(pickedClearColour[0], pickedClearColour[1], pickedClearColour[2], 1.0f);
 	}
-
+	//--
 
 	ImGui::End();
 }
@@ -237,6 +243,11 @@ void UI::sidebar() {
 	ImGui::End();
 }
 
+void UI::displayErrors()
+{
+	UIglobalFeatures::displayErrors();
+}
+
 void UI::processInput()
 {
 	if (_inputManager->isKeyPressed(SDLK_TAB)) {
@@ -289,7 +300,7 @@ void UI::ssboManagerUi()
 	std::vector<std::string> possibleSSBOsetterNames;
 	VisualiserShaderManager::SSBOs::getSSBOsetterNames(possibleSSBOsetterNames);
 
-	std::string settersComboStr = UI::ImGuiComboStringMaker(possibleSSBOsetterNames);
+	std::string settersComboStr = UIglobalFeatures::ImGuiComboStringMaker(possibleSSBOsetterNames);
 
 	const char* setterItems = settersComboStr.c_str();
 	static int currentSetter = 0;
@@ -309,7 +320,7 @@ void UI::ssboManagerUi()
 		strAvailiableBindings.push_back(std::to_string(it));
 	}
 
-	std::string bindingsComboStr = UI::ImGuiComboStringMaker(strAvailiableBindings);
+	std::string bindingsComboStr = UIglobalFeatures::ImGuiComboStringMaker(strAvailiableBindings);
 
 	const char* bindingItems = bindingsComboStr.c_str();
 	static int currentBindingItemIndex = 0;
@@ -348,7 +359,7 @@ void UI::uniformManagerUi()
 
 	ImGui::Text("Select shader: ");
 
-	std::string shaderComboStr = UI::ImGuiComboStringMaker(shaderFileNames);
+	std::string shaderComboStr = UIglobalFeatures::ImGuiComboStringMaker(shaderFileNames);
 
 	const char* shaderItems = shaderComboStr.c_str();
 	static int currentShader = 0;
@@ -396,7 +407,7 @@ void UI::uniformManagerUi()
 	if (unsetUniformNames.size() + setUniformNames.size() > 0) {
 
 		//choose from uniforms to set--
-		std::string uniformComboStr = UI::ImGuiComboStringMaker(unsetUniformNames);
+		std::string uniformComboStr = UIglobalFeatures::ImGuiComboStringMaker(unsetUniformNames);
 
 		const char* uniformItems = uniformComboStr.c_str();
 		static int currentUniform = 0;
@@ -417,7 +428,7 @@ void UI::uniformManagerUi()
 			VisualiserShaderManager::Uniforms::getFloatUniformSetterNames(possibleUniformSetterFunctionNames);
 		}
 
-		std::string uniformSetterComboStr = UI::ImGuiComboStringMaker(possibleUniformSetterFunctionNames);
+		std::string uniformSetterComboStr = UIglobalFeatures::ImGuiComboStringMaker(possibleUniformSetterFunctionNames);
 
 		const char* uniformSetterItems = uniformSetterComboStr.c_str();
 		static int currentUniformSetter = 0;
@@ -453,7 +464,7 @@ void UI::importShaderUi()
 		VisualiserShaderManager::getShader(chosenFile);
 	}
 	else {
-		_errorQueue.push_back("Could not import shader " + chosenFile);
+		UIglobalFeatures::queueError("Could not import shader " + chosenFile);
 	}
 
 	_showImportShaderUi = false;
@@ -475,12 +486,43 @@ void UI::generalSignalProcessingUi()
 	ImGui::Checkbox("Compute MFCCs", &SPvars::UI::_computeMFCCs);
 	ImGui::Checkbox("Compute Self Similarity Matrix", &SPvars::UI::_computeSimilarityMatrix);
 
+	ImGui::Separator();
+
 	std::string fpsInfo = "FPS: " + std::to_string(int(Vengine::MyTiming::getFPS()));
 	ImGui::Text(fpsInfo.c_str());
 
-	if (ImGui::Button("Restart signal processing")) {
-		SignalProcessingManager::restart();
+	std::string cpsInfo = "Audio calculations per second (CPS): " + std::to_string(int(SPvars::UI::_desiredCPS));
+	ImGui::Text(cpsInfo.c_str());
+	ImGui::Text("Can auto decrease if calculations fall behind");
+
+	static float CPS = SPvars::UI::_desiredCPS;
+	if (SPvars::UI::_wasCPSautoDecreased) {
+		CPS = SPvars::UI::_desiredCPS;
 	}
+
+	ImGui::SliderFloat("CPS", &CPS, 10, 120, "%.1f");
+	if (CPS != SPvars::UI::_desiredCPS && ImGui::Button("Set CPS")) {
+		SPvars::UI::_desiredCPS = CPS;
+		SignalProcessingManager::reset();
+	}
+
+	//add ability to change fourier transform window size; use combo to choose from 1024 samples to 16192
+
+	if (ImGui::Button("Reset signal processing")) {
+		SignalProcessingManager::reset();
+	}
+
+	ImGui::Separator();
+
+	if (AudioManager::isAudioLoaded()) {
+		std::string info = "Sample rate: " + std::to_string(AudioManager::getSampleRate()) + ", Current sample: " + std::to_string(AudioManager::getCurrentSample()) + " / " + std::to_string(AudioManager::getNumSamples());
+		ImGui::Text(info.c_str());
+		ImGui::PlotLines("data", &(AudioManager::getSampleData()[std::max(0, AudioManager::getCurrentSample() - AudioManager::getSampleRate())]), AudioManager::getSampleRate(), 0, 0, -1, 1, ImVec2(350, 40));
+	}
+	else {
+		ImGui::Text("No audio loaded");
+	}
+
 	ImGui::End();
 }
 
@@ -552,7 +594,7 @@ void UI::fourierTransformsUi()
 
 	if (ImGui::Button("Create new")) {
 		if (nextCutoffHigh < nextCutoffLow) {
-			_errorQueue.push_back("Cutoff low cannot be above cutoff high");
+			UIglobalFeatures::queueError("Cutoff low cannot be above cutoff high");
 		}
 		else {
 			int id;
@@ -657,9 +699,15 @@ void UI::mfccUi()
 
 	ImGui::Checkbox("Compute MFCCs", &SPvars::UI::_computeMFCCs);
 
-	ImGui::PlotHistogram("Mel band energies", SignalProcessingManager::_mfccs->getBandEnergies(), SignalProcessingManager::_mfccs->getNumMelBands());
-	ImGui::PlotHistogram("Mel spectrogram", SignalProcessingManager::_mfccs->getMelSpectrogram(), SignalProcessingManager::_mfccs->getNumMelBands());
-	ImGui::PlotHistogram("MFCCs", SignalProcessingManager::_mfccs->getMfccs(), SignalProcessingManager::_mfccs->getNumMelBands());
+	ImGui::Separator();
+
+	static bool show0thMFCC = true;
+
+	ImGui::PlotHistogram("Mel band energies", SignalProcessingManager::_mfccs->getBandEnergies(), SignalProcessingManager::_mfccs->getNumMelBands(), 0, 0, 0, 1, ImVec2(320,40) );
+	ImGui::PlotHistogram("Mel spectrogram", SignalProcessingManager::_mfccs->getMelSpectrogram(), SignalProcessingManager::_mfccs->getNumMelBands(), 0, 0, FLOAT_MAX, FLOAT_MAX, ImVec2(320, 40));
+	ImGui::PlotHistogram("MFCCs", &(SignalProcessingManager::_mfccs->getMfccs()[!show0thMFCC]), SignalProcessingManager::_mfccs->getNumMelBands() - !show0thMFCC, 0, 0, FLOAT_MAX, FLOAT_MAX, ImVec2(320, 40));
+
+	ImGui::Checkbox("Show 1st MFCC coeff (tracks loudness)", &show0thMFCC);
 
 	ImGui::End();
 }
@@ -668,17 +716,8 @@ void UI::selfSimilarityMatrixUi()
 {
 	ImGui::Begin("Self Similarity Matrix", &_showSelfSimilarityMatrixUi, ImGuiWindowFlags_AlwaysAutoResize);
 
-	//whether to calculate & which one to calculate (future or real time)--
-	static int realTimeOrFuture = 0;
-	ImGui::Text("Link to:");
-	ImGui::RadioButton("Real time", &realTimeOrFuture, 0); ImGui::SameLine();
-	ImGui::RadioButton("Future (recommended)", &realTimeOrFuture, 1);
-
-	bool isRealTime = (realTimeOrFuture == 0);
-	bool isFuture = (realTimeOrFuture == 1);
-
 	ImGui::Checkbox("Compute Self Similarity Matrix", &SPvars::UI::_computeSimilarityMatrix);
-	//--
+
 
 	//track if settings changed, linking function called if confirm pressed and reset similarity matrix--
 	static bool changedMatrixSettings = false;
@@ -692,14 +731,30 @@ void UI::selfSimilarityMatrixUi()
 		ImGui::TextColored(ImVec4(0, 1, 0, 1), "--Confirmed, is calculating--");
 	}
 
-
 	//*** matrix settings***
 
-	ImGui::BeginChild("Matrix settings", ImVec2(350, 400), true);
+	ImGui::BeginChild("Matrix settings", ImVec2(350, 415), true);
+
+	//which one to calculate (future or real time)--
+	static int realTimeOrFuture = 0;
+	ImGui::Text("Link to:");
+	ImGui::RadioButton("Real time", &realTimeOrFuture, 0); ImGui::SameLine();
+	ImGui::RadioButton("Future (recommended)", &realTimeOrFuture, 1);
+
+	if (SPvars::UI::_useFutureSimilarityMatrix != (realTimeOrFuture == 1)) {
+		changedMatrixSettings = true;
+	}
+	//--
 
 	//matrix size--
 	static int matrixSizeTmp = SPvars::UI::_nextSimilarityMatrixSize;
-	ImGui::SliderInt("Matrix Size", &matrixSizeTmp, 0, 1000);
+	if (SPvars::UI::_wasCPSautoDecreased) {
+		SPvars::UI::_nextSimilarityMatrixSize *= SPvars::Const::_CPSreduceFactor;
+		matrixSizeTmp = SPvars::UI::_nextSimilarityMatrixSize;
+	}
+	ImGui::SliderInt("Matrix Size", &matrixSizeTmp, 1, 1000);
+	std::string timeOverInfo = "covers " + std::to_string((float(matrixSizeTmp) / SPvars::UI::_desiredCPS)).substr(0, 4) + "s";
+	ImGui::Text(timeOverInfo.c_str());
 
 	if (matrixSizeTmp != SPvars::UI::_nextSimilarityMatrixSize) {
 		SPvars::UI::_nextSimilarityMatrixSize = matrixSizeTmp;
@@ -727,8 +782,6 @@ void UI::selfSimilarityMatrixUi()
 	ImGui::RadioButton("Mel spectrogram", &linkTo, 2);
 	ImGui::RadioButton("Fourier transform", &linkTo, 3);
 	//--
-
-
 
 	if (linkTo == 0) { // link to mfccs vv
 		ImGui::Separator();
@@ -793,8 +846,19 @@ void UI::selfSimilarityMatrixUi()
 
 	if (changedMatrixSettings && ImGui::Button("Confirm", ImVec2(80, 25))) {
 		SignalProcessingManager::_similarityMatrix->reInit(SPvars::UI::_nextSimilarityMatrixSize);
+
+		SPvars::UI::_useFutureSimilarityMatrix = (realTimeOrFuture == 1); //must call before linking function to link to right thing
 		linkingFunction(); //even if no change in linking function must relink after resize. Because this is static will remember last function linked to
 		changedMatrixSettings = false;
+	}
+
+	if (SPvars::UI::_wasSignalProcessingReset) {
+		linkingFunction();
+	}
+
+	if (SPvars::UI::_wasCPSautoDecreased) {
+		SignalProcessingManager::_similarityMatrix->reInit(SPvars::UI::_nextSimilarityMatrixSize);
+		linkingFunction();
 	}
 
 	ImGui::EndChild();
@@ -805,13 +869,17 @@ void UI::selfSimilarityMatrixUi()
 	ImGui::End();
 }
 
+void UI::endSPui() {
+	SPvars::UI::_wasSignalProcessingReset = false;
+	SPvars::UI::_wasCPSautoDecreased = false;
+}
 //***
 
 void UI::processFileMenuSelection()
 {
 	//stop common problem
 	if ((_save || _saveAs) && !VisualiserManager::isVisualiserLoaded()) {
-		_errorQueue.push_back("Cannot save, no visualiser loaded");
+		UIglobalFeatures::queueError("Cannot save, no visualiser loaded");
 		_save = false;
 		_saveAs = false;
 	}
@@ -821,7 +889,7 @@ void UI::processFileMenuSelection()
 		bool confirmedName = false;
 		if (textInputPrompt("Name of visualiser", nameBuf, 25, confirmedName)) {
 			if (confirmedName && !VisualiserManager::createNewVisualiser(nameBuf)) {
-				_errorQueue.push_back("Failed to create new visualiser " + std::string(nameBuf));
+				UIglobalFeatures::queueError("Failed to create new visualiser " + std::string(nameBuf));
 			}
 			nameBuf[0] = NULL; //reset
 			_new = false;
@@ -830,7 +898,7 @@ void UI::processFileMenuSelection()
 
 	if (_save) {
 		if (!VisualiserManager::save()) {
-			_errorQueue.push_back("Failed to save");
+			UIglobalFeatures::queueError("Failed to save");
 		}
 		_save = false;
 		return;
@@ -841,7 +909,7 @@ void UI::processFileMenuSelection()
 		bool confirmedName = false;
 		if (textInputPrompt("Save as", nameBuf, 25, confirmedName)) {
 			if (confirmedName && !VisualiserManager::saveAsNew(nameBuf)) {
-				_errorQueue.push_back("Failed to save as " + std::string(nameBuf));
+				UIglobalFeatures::queueError("Failed to save as " + std::string(nameBuf));
 			}
 			nameBuf[0] = NULL; //reset
 			_saveAs = false;
@@ -858,7 +926,7 @@ void UI::processFileMenuSelection()
 			visualiserPath = visualiserPath.substr(Vengine::IOManager::getProjectDirectory().size() + 1); //+1 to remove '/' at start
 
 			if (!VisualiserManager::loadVisualiser(visualiserPath)) {
-				_errorQueue.push_back("Failed to save, likely no visualiser loaded");
+				UIglobalFeatures::queueError("Failed to save, likely no visualiser loaded");
 			}
 		}
 
@@ -899,15 +967,3 @@ void UI::imguiHistoryPlotter(History<float>* history)
 {
 	ImGui::PlotLines("##", history->dataStartPtr(), history->totalSize(), history->firstPartOffset(), 0, 3.4028235E38F, 3.4028235E38F, ImVec2(320, 40));
 }
-
-std::string UI::ImGuiComboStringMaker(std::vector<std::string>& options)
-{
-	std::string retVal = "";
-	for (int i = 0; i < options.size(); i++) {
-		retVal += options.at(i).c_str();
-		retVal += char(NULL); //null character between options
-	}
-
-	return retVal;
-}
-

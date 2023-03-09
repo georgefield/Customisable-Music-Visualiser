@@ -27,7 +27,6 @@ public:
 
 
 	SelfSimilarityMatrix(int historySize) :
-
 		_linkedTo(NONE),
 		_mfccsPtr(nullptr),
 		_ftPtr(nullptr),
@@ -35,6 +34,7 @@ public:
 		_similarityMeasureHistory(historySize),
 		_initialised(false)
 	{
+		Vengine::MyTiming::createTimer(_debugTimerId);
 	}
 
 	void init(int matrixSize) {
@@ -46,7 +46,7 @@ public:
 
 	void reInit(int matrixSize) {
 		_linkedTo = NONE;
-		std::cout << matrixSize << " " << _similarityMatrix->matrixSize() << std::endl;
+
 		if (matrixSize != _similarityMatrix->matrixSize()) {
 			delete _similarityMatrix;
 			_similarityMatrix = new SimilarityMatrixStructure(matrixSize);
@@ -69,7 +69,7 @@ public:
 	}
 
 
-	void calculateNext(MeasureType measureType = SIMILARITY); 
+	void calculateNext(MeasureType measureType, float contrastFactor);
 
 	void linkToMFCCs(MFCCs* mfcc, int coeffLow, int coeffHigh);
 	void linkToMelBandEnergies(MFCCs* mfcc);
@@ -111,6 +111,7 @@ public:
 	LinkedTo islinkedTo() { return _linkedTo; }
 
 private:
+
 	void calculateSimilarityMeasure();
 	void calculatePrecussionMeasure();
 

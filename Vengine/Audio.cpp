@@ -38,8 +38,11 @@ void Audio::queueLoadedWav() {
 		return;
 	}
 
-	if (_audioTimerId != -1) {
-		MyTiming::stopTimer(_audioTimerId);
+	if (_audioTimerId == -1) {
+		MyTiming::createTimer(_audioTimerId);
+	}
+	else {
+		MyTiming::resetTimer(_audioTimerId);
 	}
 
 	if (SDL_QueueAudio(_soundID, _waveBuf, _waveLength) < 0) {
@@ -60,8 +63,9 @@ void Vengine::Audio::pause()
 		return;
 	}
 
+	MyTiming::stopTimer(_audioTimerId);
+
 	_audioPlaying = false;
-	MyTiming::pauseTimer(_audioTimerId);
 	SDL_PauseAudioDevice(_soundID, 1); //1 is pause
 }
 
@@ -77,12 +81,8 @@ void Vengine::Audio::play()
 		return;
 	}
 
-	if (_audioTimerId == -1) { //start timer if first time play called
-		MyTiming::startTimer(_audioTimerId);
-	}
-	else {
-		MyTiming::unpauseTimer(_audioTimerId);
-	}
+
+	MyTiming::startTimer(_audioTimerId);
 
 	_audioPlaying = true;
 	SDL_PauseAudioDevice(_soundID, 0); //0 is play

@@ -18,12 +18,10 @@ public:
 	void linkToMelSpectrogram();
 	void linkToFourierTransform(float cutoffLow = -1.0f, float cutoffHigh = -1.0f, float smoothFactor = 0.0f);
 
-	void setLookAhead(int samples);
-
 	SelfSimilarityMatrix matrix;
 
 	//getters
-	bool isRealTime() { return _samplesAhead == 0; }
+	bool isRealTime() { return _samplesAheadForFutureMatrix == 0; }
 	LinkedTo isLinkedTo() { return _linkedTo; }
 	bool isLinkInfoTheSame(int coeffLow, int coeffHigh) { return _linkedTo == MFCC && coeffLow == _coeffLow && coeffHigh == _coeffHigh; }	
 	bool isLinkInfoTheSame(float cutoffLow, float cutoffHigh, float cutoffSmoothFactor) { return _linkedTo == FT && cutoffLow == _cutoffLow && cutoffHigh == _cutoffHigh && _cutoffSmoothFactor == cutoffSmoothFactor; }
@@ -37,7 +35,7 @@ private:
 	LinkedTo _linkedTo;
 	FourierTransform* _fourierTransform;
 
-	int _samplesAhead;
+	int _samplesAheadForFutureMatrix;
 	int _matrixSize;
 
 	//link info--

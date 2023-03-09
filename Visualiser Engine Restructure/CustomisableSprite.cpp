@@ -269,7 +269,7 @@ void CustomisableSprite::processInput(Vengine::InputManager* inputManager){
 	if (!_justCreated) {
 		if (inputManager->isKeyPressed(SDL_BUTTON_LEFT)) {
 			if (Tools::posWithinRect(mousePos, getModelBoundingBox())) { //pos within sprite bounding box
-				Vengine::MyTiming::startTimer(_timerID);
+				Vengine::MyTiming::createTimer(_timerID);
 				_posOfMouseAtClick = mousePos;
 				_posOfSpriteAtClick = getModelPos();
 			}

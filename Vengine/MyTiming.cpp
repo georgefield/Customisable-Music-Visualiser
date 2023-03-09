@@ -5,6 +5,7 @@
 #include "MyErrors.h"
 
 #include <iostream>
+#include <cassert>
 
 
 using namespace Vengine;
@@ -33,6 +34,7 @@ void MyTiming::frameDone() {
 	_frameCount++;
 	_frameTimings.at(_frameCount % _numFPSsamples) = MyTiming::ticksSinceEpoch();
 }
+
 
 float MyTiming::getFPS() {
 
@@ -65,17 +67,35 @@ void MyTiming::setFPSlimit(unsigned int limit) {
 std::map<int, long long> MyTiming::_timerStartTicks;
 std::map<int, long long> MyTiming::_timerPauseTicks;
 
-void MyTiming::startTimer(int& id) {
+void MyTiming::createTimer(int& id) {
 
-	id = _timerStartTicks.size(); //cannot be id overlap
+	//id generation
+	id = _timerStartTicks.size();
+	while (_timerStartTicks.find(id) != _timerStartTicks.end()) {
+		id++;
+	}
 
 	//timers work by recording the start time and then are later calculated by checking the current time - start time
 	_timerStartTicks[id] = MyTiming::ticksSinceEpoch();
+	_timerPauseTicks[id] = MyTiming::ticksSinceEpoch(); //always start paused
+
 	_whenTimerRead[id] = { false, false }; //0 for no
 }
 
+void MyTiming::eraseTimer(int id) {
+	assert(_timerStartTicks.find(id) != _timerStartTicks.end());
+
+	_timerStartTicks.erase(id);
+	_whenTimerRead.erase(id);
+
+	if (_timerPauseTicks.find(id) != _timerPauseTicks.end()) { //if paused then return time when paused by taking away time since paused
+		_timerPauseTicks.erase(id);
+	}
+}
 
 float MyTiming::readTimer(int id) { //returns seconds elapsed
+
+	assert(_timerStartTicks.find(id) != _timerStartTicks.end());
 
 	_whenTimerRead[id].readThisFrame = true;
 
@@ -91,39 +111,43 @@ float MyTiming::readTimer(int id) { //returns seconds elapsed
 	return ticksToSeconds(ticks);
 }
 
-float Vengine::MyTiming::stopTimer(int id)
-{
-	float ret = readTimer(id);
-	_timerStartTicks.erase(id);
-	return ret;
+void Vengine::MyTiming::startTimer(int id) {
+
+	assert(_timerStartTicks.find(id) != _timerStartTicks.end());
+
+	if (_timerPauseTicks.find(id) == _timerPauseTicks.end()) {
+		return; //timer already going
+	}
+
+	long long timePaused = (MyTiming::ticksSinceEpoch() - _timerPauseTicks[id]);
+	_timerStartTicks[id] += timePaused;
+
+	_timerPauseTicks.erase(id);
 }
+
+void Vengine::MyTiming::stopTimer(int id)
+{
+	assert(_timerStartTicks.find(id) != _timerStartTicks.end());
+
+	if (_timerPauseTicks.find(id) != _timerPauseTicks.end()) {
+		return; //timer already stopped
+	}
+	_timerPauseTicks[id] = MyTiming::ticksSinceEpoch();
+}
+
+void Vengine::MyTiming::resetTimer(int id)
+{
+	assert(_timerStartTicks.find(id) != _timerStartTicks.end());
+
+	_timerStartTicks[id] = MyTiming::ticksSinceEpoch();
+	_timerPauseTicks[id] = MyTiming::ticksSinceEpoch();
+}
+
 
 bool Vengine::MyTiming::timerReadLastFrame(int id)
 {
 	return _whenTimerRead[id].readLastFrame;
 }
-
-void Vengine::MyTiming::pauseTimer(int id)
-{
-	if (_timerPauseTicks.find(id) != _timerPauseTicks.end()) {
-		warning("timer already paused");
-		return;
-	}
-	_timerPauseTicks[id] = MyTiming::ticksSinceEpoch();
-}
-
-void Vengine::MyTiming::unpauseTimer(int id)
-{
-	if (_timerPauseTicks.find(id) == _timerPauseTicks.end()) {
-		warning("timer not paused");
-		return;
-	}
-
-	long long timePaused = (MyTiming::ticksSinceEpoch() - _timerPauseTicks[id]);
-	_timerStartTicks[id] += timePaused;
-	_timerPauseTicks.erase(id);
-}
-
 
 //helper functions
 
