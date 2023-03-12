@@ -27,6 +27,9 @@ void NoteOnset::calculateNext(DataExtractionAlg dataAlg, bool convolve) {
 	if (dataAlg == DataExtractionAlg::SIM_MATRIX_MEL_SPEC) {
 		onsetValue = similarityMatrixMelSpectrogram();
 	}
+	if (dataAlg == DataExtractionAlg::COMBINATION_FAST) {
+		onsetValue = combinationFast();
+	}
 	if (dataAlg == DataExtractionAlg::COMBINATION) {
 		onsetValue = combination();
 	}
@@ -48,6 +51,7 @@ void NoteOnset::calculateNext(DataExtractionAlg dataAlg, bool convolve) {
 		_thresholder.addValue(onsetValue, _m->_currentSample);
 
 	Peak lastPeak;
+	bool aboveThreshold;
 	if (_thresholder.getLastPeak(SPvars::UI::_thresholdPercentForPeak, lastPeak)) {
 		_onsetPeaks.add(lastPeak);
 		std::cout << lastPeak.salience << std::endl;
@@ -178,18 +182,27 @@ float NoteOnset::similarityMatrixMelSpectrogram()
 	float measure = _simMatrix.getSimilarityMeasure();
 	if (isnan(measure) || isinf(measure)) { return 0.0f; } //stop nan virus escaping the lab
 
-	//knee(measure, 2.0f, 1.0f, 2.0f);
+	knee(measure, 12.0f, 1.0f, 2.0f);
 	return std::max(measure, 0.0f);
+}
+
+float NoteOnset::combinationFast()
+{
+	//all normalised to be ~1 at peak
+	float dole = derivativeOfLogEnergy();
+	float sdh = spectralDistanceOfHarmonics(false);
+	float e = energy();
+	return (dole + 0.5) * (sdh + 0.2) * (e + 0.3) - 0.03;
 }
 
 float NoteOnset::combination()
 {
-
 	//all normalised to be ~1 at peak
 	float bdole = bandedDerOfLogEnergy();
 	float sdh = spectralDistanceOfHarmonics(false);
 	float e = energy();
-	return (bdole + 0.2) * (sdh + 0.2) * (e + 0.4);	
+	float smms = similarityMatrixMelSpectrogram();
+	return (bdole + 0.7) * (sdh + 0.4) * (smms + 0.4) * (e + 0.2) - 0.0224;
 }
 
 //***

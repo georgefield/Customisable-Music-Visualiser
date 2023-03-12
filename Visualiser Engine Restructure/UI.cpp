@@ -130,12 +130,15 @@ void UI::toolbar() {
 		ImGui::OpenPopup("add menu");
 	}
 	if (ImGui::BeginPopup("add menu")) {
-		if (ImGui::Selectable("Quad")) {
-			SpriteManager::addSprite(glm::vec2(-0.5), glm::vec2(1));
-		}
-		if (ImGui::Selectable("Circle")) {
-			SpriteManager::addSprite(glm::vec2(-0.25), glm::vec2(0.5));
-		}
+		if (ImGui::Selectable("Quad"))
+			SpriteManager::addSprite(Vengine::Mod_Quad, glm::vec2(-0.5), glm::vec2(1));
+		if (ImGui::Selectable("Triangle"))
+			SpriteManager::addSprite(Vengine::Mod_Triangle, glm::vec2(-0.5), glm::vec2(1));
+		if (ImGui::Selectable("Circle"))
+			SpriteManager::addSprite(Vengine::Mod_Circle, glm::vec2(-0.5), glm::vec2(1));
+		if (ImGui::Selectable("Ring"))
+			SpriteManager::addSprite(Vengine::Mod_Ring, glm::vec2(-0.5), glm::vec2(1));
+
 		ImGui::EndPopup();
 	}
 
@@ -145,7 +148,7 @@ void UI::toolbar() {
 	ImGui::SameLine();
 
 	//audio playback ui--
-	ImGui::BeginChild("playback child", ImVec2(150, ImGui::GetContentRegionAvail().y), false);
+	ImGui::BeginChild("playback child", ImVec2(250, ImGui::GetContentRegionAvail().y), false);
 
 	//load song
 	if (ImGui::Button("Load song")) {
@@ -154,18 +157,60 @@ void UI::toolbar() {
 		AudioManager::load(chosenAudio);
 	}
 
+	//music name
+	std::string audioInfo = "\"" + AudioManager::getAudioFileName() + "\"";
+	ImGui::Text(audioInfo.c_str());
+
+	//audio scrubbing
+	ImGui::SetNextItemWidth(100);
+
+	static int scrubber = 0;
+	ImGui::DragInt("##", &scrubber, 5000.0f, 0, AudioManager::getNumSamples(), "%d", ImGuiSliderFlags_AlwaysClamp);
+	if (ImGui::IsItemEdited()) {
+		AudioManager::seekToSample(scrubber);
+		SPvars::UI::_nextCalculationSample = scrubber;
+	}
+	if (!ImGui::IsItemActive() && AudioManager::isAudioPlaying()) {
+		scrubber = AudioManager::getCurrentSample();
+	}
+
+	ImGui::SameLine();
+
 	//audio play/pause
-	if (!AudioManager::isAudioPlaying() && ImGui::Button("Play")) {
+	if (!AudioManager::isAudioPlaying() && ImGui::ArrowButton("Play", ImGuiDir_Right)) {
 		AudioManager::play();
 	}
-	else if (AudioManager::isAudioPlaying() && ImGui::Button("Pause")) {
+	else if (AudioManager::isAudioPlaying() && ImGui::ArrowButton("Pause", ImGuiDir_Square)) {
 		AudioManager::pause();
 	}
+
+	ImGui::SameLine();
+
+	//music info
+	ImGui::Text(AudioManager::getAudioTimeInfoStr(scrubber).c_str());
+
+
+	ImGui::EndChild();
+
+	ImGui::SameLine();
+
+	ImGui::BeginChild("db meter", ImVec2(150, ImGui::GetContentRegionAvail().y));
+
+	float logAmplitude = logf(SignalProcessingManager::getMasterPtr()->_peakAmplitude) + 12;
+	ImGui::PlotHistogram("0 db\n-3 db\n-6 db\n-9 db", &logAmplitude, 1, 0, 0, 0, 13, ImVec2(20, 65));
+
+	ImGui::SameLine();
+
+	static float volume = 1; 
+	ImGui::VSliderFloat("Volume", ImVec2(30, 65), &volume, 0, 1, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+	AudioManager::setVolume(volume);
 
 	ImGui::EndChild();
 	//--
 
 	ImGui::SameLine();
+
+
 
 	//background colour picker--
 	static float pickedClearColour[3] = { 0.1, 0.1, 0.1 };
@@ -214,15 +259,17 @@ void UI::sidebar() {
 		}
 
 		//show in editor
-		ImGui::Checkbox("Show (editor)", it->getShowPtr()); ImGui::SameLine();
+		ImGui::Checkbox("Show (editor)", it->getShowInEditorPtr()); ImGui::SameLine();
 		//select sprite
 		if (ImGui::Button("Select")) {
-			spritesByDepthOrder[i]->setSpriteState(SELECTED);
+			SpriteManager::deselectCurrent();
+			spritesByDepthOrder[it->id]->setIfSelected(true);
 		}
 
 		//delete
 		if (ImGui::Button("Delete")) {
-			spritesByDepthOrder[i]->setSpriteState(DELETE_SELF);
+			SpriteManager::deselectCurrent();
+			SpriteManager::deleteSprite(it->id);
 		}
 
 		ImGui::PopID();
@@ -621,7 +668,8 @@ void UI::noteOnsetUi()
 	ImGui::RadioButton("Spectral distance", &SPvars::UI::_onsetDetectionFunctionEnum, 3);
 	ImGui::RadioButton("Spectral distance high freq. weighted", &SPvars::UI::_onsetDetectionFunctionEnum, 4);
 	ImGui::RadioButton("Similarity matrix", &SPvars::UI::_onsetDetectionFunctionEnum, 5);
-	ImGui::RadioButton("Combination", &SPvars::UI::_onsetDetectionFunctionEnum, 6);
+	ImGui::RadioButton("Combination (fast)", &SPvars::UI::_onsetDetectionFunctionEnum, 6);
+	ImGui::RadioButton("Combination", &SPvars::UI::_onsetDetectionFunctionEnum, 7);
 
 	ImGui::Checkbox("Convolve onset detection", &SPvars::UI::_convolveOnsetDetection);
 	if (SPvars::UI::_convolveOnsetDetection) {
@@ -965,5 +1013,5 @@ bool UI::textInputPrompt(const std::string& message, char* buf, int bufSize, boo
 
 void UI::imguiHistoryPlotter(History<float>* history)
 {
-	ImGui::PlotLines("##", history->dataStartPtr(), history->totalSize(), history->firstPartOffset(), 0, 3.4028235E38F, 3.4028235E38F, ImVec2(320, 40));
+	ImGui::PlotLines("##", history->dataStartPtr(), history->totalSize(), history->firstPartOffset(), 0, 3.4028235E38F, 3.4028235E38F, ImVec2(360, 60));
 }

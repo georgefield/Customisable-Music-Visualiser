@@ -4,6 +4,8 @@
 
 #include <iostream>
 
+#include "miniaudio_api.h"
+
 
 int main(int argc, char** argv) {
 

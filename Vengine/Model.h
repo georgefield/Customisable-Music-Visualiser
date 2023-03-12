@@ -6,6 +6,13 @@
 
 namespace Vengine {
 
+	enum ModelType {
+		Mod_Quad,
+		Mod_Triangle,
+		Mod_Circle,
+		Mod_Ring
+	};
+
 	//abstract model class
 	class Model {
 	public:
@@ -18,6 +25,9 @@ namespace Vengine {
 		glm::vec2 pos;
 		glm::vec2 dim;
 		ColourRGBA8 colour;
+
+		ModelType modelType;
+		GLenum drawMode;
 
 		//function to write for each
 		virtual void init() = 0; //init to a default setting
@@ -36,7 +46,48 @@ namespace Vengine {
 	class Quad : public Model {
 	public:
 		void init() override {
+			modelType = Mod_Quad;
+			drawMode = GL_TRIANGLES;
 			numVertices = 6;
+			vertices = new Vertex[numVertices];
+
+			setBoundingBox(glm::vec2(-0.5), glm::vec2(1));
+		}
+
+		void setBoundingBox(glm::vec2 Pos, glm::vec2 Dim) override;
+	};
+
+	class Triangle : public Model {
+		void init() override {
+			modelType = Mod_Triangle;
+			drawMode = GL_TRIANGLES;
+			numVertices = 3;
+			vertices = new Vertex[numVertices];
+
+			setBoundingBox(glm::vec2(-0.5), glm::vec2(1));
+		}
+
+		void setBoundingBox(glm::vec2 Pos, glm::vec2 Dim) override;
+	};
+
+	class Circle120side : public Model { //MAYBE FIX?
+		void init() override {
+			modelType = Mod_Circle;
+			drawMode = GL_TRIANGLE_STRIP;
+			numVertices = 181;
+			vertices = new Vertex[numVertices];
+
+			setBoundingBox(glm::vec2(-0.5), glm::vec2(1));
+		}
+
+		void setBoundingBox(glm::vec2 Pos, glm::vec2 Dim) override;
+	};
+
+	class Ring45side : public Model { //MAYBE FIX?
+		void init() override {
+			modelType = Mod_Ring;
+			drawMode = GL_TRIANGLE_STRIP;
+			numVertices = 180;
 			vertices = new Vertex[numVertices];
 
 			setBoundingBox(glm::vec2(-0.5), glm::vec2(1));

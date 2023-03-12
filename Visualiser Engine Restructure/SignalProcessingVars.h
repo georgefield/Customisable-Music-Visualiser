@@ -14,6 +14,7 @@ struct SPvars {
 		//general
 		static bool _wasCPSautoDecreased;
 		static bool _wasSignalProcessingReset;
+		static int _nextCalculationSample;
 
 		//note onset
 		static int _onsetDetectionFunctionEnum;

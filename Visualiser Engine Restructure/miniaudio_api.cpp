@@ -115,6 +115,15 @@ void miniaudio_api::pauseAudio()
     ma_sound_stop(&_sound);
 }
 
+void miniaudio_api::seekToSample(int sample)
+{
+    assert(_fileLoaded);
+    assert(sample >= 0);
+    assert(sample < _audioDataLength);
+
+    ma_sound_seek_to_pcm_frame(&_sound, sample);
+}
+
 bool miniaudio_api::isPlaying()
 {
     assert(_fileLoaded);
@@ -173,6 +182,57 @@ int miniaudio_api::getSampleRate() {
     assert(_fileLoaded);
 
     return _decoder.outputSampleRate;
+}
+
+void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
+{
+    ma_device_handle_backend_data_callback(pDevice, pOutput, pInput, frameCount);
+}
+
+void miniaudio_api::getDevices()
+{
+    ma_context context;
+    if (ma_context_init(NULL, 0, NULL, &context) != MA_SUCCESS) {
+        // Error.
+        printf("ERRRR");
+    }
+
+    ma_device_info* pPlaybackInfos;
+    ma_uint32 playbackCount;
+    ma_device_info* pCaptureInfos;
+    ma_uint32 captureCount;
+    if (ma_context_get_devices(&context, &pPlaybackInfos, &playbackCount, &pCaptureInfos, &captureCount) != MA_SUCCESS) {
+        // Error.
+        printf("EROOR");
+    }
+
+    // Loop over each device info and do something with it. Here we just print the name with their index. You may want
+    // to give the user the opportunity to choose which device they'd prefer.
+    for (ma_uint32 iDevice = 0; iDevice < playbackCount; iDevice += 1) {
+        printf("playback: %d - %s\n", iDevice, pPlaybackInfos[iDevice].name);
+    }
+
+    for (ma_uint32 iDevice = 0; iDevice < captureCount; iDevice += 1) {
+        printf("capture: %d - %s\n", iDevice, pCaptureInfos[iDevice].name);
+    }
+
+    ma_device_config config = ma_device_config_init(ma_device_type_capture);
+    config.capture.pDeviceID = &pPlaybackInfos[0].id;
+    config.capture.channelMixMode = ma_channel_mix_mode_default;
+    config.capture.format = ma_format_f32;
+    config.dataCallback = data_callback;
+    config.sampleRate = 44100;
+    config.pUserData = NULL;
+
+    ma_device device;
+    if (ma_device_init(&context, &config, &device) != MA_SUCCESS) {
+        // Error
+        printf("EOROR");
+    }
+
+    ma_device_start(&device);
+
+    
 }
 
 //private-----------

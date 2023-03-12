@@ -32,9 +32,12 @@ public:
 	int _sampleRate;
 	int _previousSample;
 	int _currentSample;
+	float _peakAmplitude;
 	FourierTransformHistory _fftHistory;
 
 	void calculateFourierTransform();
+	void calculatePeakAmplitude();
+	void audioIsPaused();
 
 	//helper functions
 	float sumOfConvolutionOfHistory(History<float>* history, int entries = 0, Kernel kernel = LINEAR_PYRAMID);
@@ -46,6 +49,8 @@ public:
 private:
 	int _sampleFftLastCalculated;
 	FFTWfft _fftwAPI;
+
+	int _sampleOfLastPeak;
 
 	bool _useSetters;
 

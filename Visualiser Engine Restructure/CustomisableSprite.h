@@ -4,11 +4,6 @@
 #include "VisualiserShader.h"
 #include <Vengine/Vengine.h>
 
-enum SpriteState {
-	NOT_SELECTED,
-	SELECTED,
-	DELETE_SELF
-};
 
 class CustomisableSprite : public Vengine::Sprite
 {
@@ -24,23 +19,28 @@ public:
 	//simple setters
 	void setDepth(float depth) { _depth = depth; }
 
-	void setSpriteState(SpriteState state) { _spriteState = state; }
+	void setIfSelected(bool isSelected) { _selected = isSelected; }
+	void setIfDeleted() { _deleted = true; }
 
 	//getters
 	VisualiserShader* getVisualiserShader() const { return _visualiserShader; };
 
-	SpriteState getSpriteState() const { return _spriteState; }
+	bool isSelected() { return _selected; }
+	bool isDeleted() { return _deleted; }
+	bool isShowInEditor() { return _showInEditor; }
+
+	bool* getShowInEditorPtr() { return &_showInEditor; }
+	float* getDepthPtr() { return &_depth; }
 
 	std::string getName() const { return _name; }
 
-	bool* getShowPtr() { return &_show; }
-
-	float* getDepthPtr() { return &_depth; }
 
 private:
+
 	VisualiserShader* _visualiserShader;
 
 	void drawUi();
+
 	//called in draw ui
 	void textureChooser();
 	void shaderChooser();
@@ -53,9 +53,10 @@ private:
 
 	//important information describing sprite--
 	std::string _name;	
-	SpriteState _spriteState;
-	bool _show;
 	bool _justCreated;
+	bool _selected;
+	bool _deleted;
+	bool _showInEditor;
 
 	//imgui vars--
 	glm::vec4 _optionsRect; //in opengl coords

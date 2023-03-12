@@ -15,7 +15,6 @@ MFCCs* SignalProcessingManager::_mfccs = nullptr;
 SimilarityMatrixHandler* SignalProcessingManager::_similarityMatrix = nullptr;
 
 bool SignalProcessingManager::_isFirstReset = true;
-float SignalProcessingManager::_nextCalculationSample = 0;
 int SignalProcessingManager::_lagTimerId = -1;
 
 void SignalProcessingManager::init() {
@@ -46,8 +45,6 @@ void SignalProcessingManager::reset()
 
 	SPvars::UI::_wasSignalProcessingReset = true;
 
-	_nextCalculationSample = 0;
-
 	_master->reInit(AudioManager::getSampleData(), AudioManager::getSampleRate()); //will tell all other algorithms to reinit
 	FourierTransformManager::reInitAll();
 
@@ -58,10 +55,12 @@ void SignalProcessingManager::calculate()
 {
 	if (AudioManager::isAudioLoadedThisFrame()) { //change in song
 		Vengine::warning("Change in audio source, reseting signal processing");
+		SPvars::UI::_nextCalculationSample = 0;
 		reset(); //reset
 	}
 
 	if (!AudioManager::isAudioPlaying()) {
+		_master->audioIsPaused();
 		return;
 	}
 
@@ -70,12 +69,13 @@ void SignalProcessingManager::calculate()
 	if (SPvars::UI::_computeSimilarityMatrix && _similarityMatrix->isRealTime()) { SPvars::UI::_computeMFCCs = true; }
 	if (SPvars::UI::_computeNoteOnset && SPvars::UI::_onsetDetectionFunctionEnum == NoteOnset::DataExtractionAlg::SIM_MATRIX_MEL_SPEC) { SPvars::UI::_computeMFCCs = true; }
 
-	if (_nextCalculationSample > AudioManager::getCurrentSample()) {
+	if (SPvars::UI::_nextCalculationSample > AudioManager::getCurrentSample()) {
 		
 		return;
 	}
 
-	_master->beginCalculations(int(_nextCalculationSample));
+	_master->beginCalculations(int(SPvars::UI::_nextCalculationSample));
+	_master->calculatePeakAmplitude();
 
 	//all other signal processing done between begin and end--
 
@@ -103,13 +103,13 @@ void SignalProcessingManager::calculate()
 	_master->endCalculations();
 
 	//increment sample
-	_nextCalculationSample += float(AudioManager::getSampleRate()) / SPvars::UI::_desiredCPS;
+	SPvars::UI::_nextCalculationSample += float(AudioManager::getSampleRate()) / SPvars::UI::_desiredCPS;
 
 	//time how long calculation lags behind frames--
-	if (_nextCalculationSample < AudioManager::getCurrentSample()) {
+	if (SPvars::UI::_nextCalculationSample < AudioManager::getCurrentSample()) {
 		Vengine::MyTiming::startTimer(_lagTimerId);
 	}
-	if (_nextCalculationSample > AudioManager::getCurrentSample()) {
+	if (SPvars::UI::_nextCalculationSample > AudioManager::getCurrentSample()) {
 		Vengine::MyTiming::resetTimer(_lagTimerId);
 	}
 	//--
@@ -120,11 +120,10 @@ void SignalProcessingManager::calculate()
 		SPvars::UI::_desiredCPS *= SPvars::Const::_CPSreduceFactor; //decrease desired cps
 		UIglobalFeatures::queueError("Cannot reach desired audio calculations per second (CPS), reducing CPS to " + std::to_string(SPvars::UI::_desiredCPS)); //show error
 
-		reset(); //sets it to _nextCalculationSample to 0
+		reset(); 
 
-		//so need to catch up
-		while (_nextCalculationSample < AudioManager::getCurrentSample()) {
-			_nextCalculationSample += float(AudioManager::getSampleRate()) / SPvars::UI::_desiredCPS;
+		while (SPvars::UI::_nextCalculationSample < AudioManager::getCurrentSample()) {
+			SPvars::UI::_nextCalculationSample += float(AudioManager::getSampleRate()) / SPvars::UI::_desiredCPS;
 		}
 
 		SPvars::UI::_wasCPSautoDecreased = true;

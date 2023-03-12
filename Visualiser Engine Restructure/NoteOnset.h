@@ -22,7 +22,8 @@ public:
 		SPECTRAL_DISTANCE = 3,
 		SPECTRAL_DISTANCE_HFC_WEIGHTED = 4,
 		SIM_MATRIX_MEL_SPEC = 5,
-		COMBINATION = 6
+		COMBINATION_FAST = 6,
+		COMBINATION = 7
 	};
 
 	NoteOnset(int historySize) :
@@ -123,6 +124,7 @@ private:
 	float bandedDerOfLogEnergy();
 	float spectralDistanceOfHarmonics(bool HFC);
 	float similarityMatrixMelSpectrogram();
+	float combinationFast();
 	float combination();
 
 	FilterBank _derOfLogEnergyBands;

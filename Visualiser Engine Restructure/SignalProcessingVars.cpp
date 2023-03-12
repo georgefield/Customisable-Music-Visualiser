@@ -15,6 +15,7 @@ bool SPvars::UI::_computeSimilarityMatrix = true;
 // general
 bool SPvars::UI::_wasCPSautoDecreased = false;
 bool SPvars::UI::_wasSignalProcessingReset = false;
+int SPvars::UI::_nextCalculationSample = 0;
 
 //onset
 int SPvars::UI::_onsetDetectionFunctionEnum = 6;

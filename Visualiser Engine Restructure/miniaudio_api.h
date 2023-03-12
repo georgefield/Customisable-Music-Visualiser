@@ -14,6 +14,8 @@ public:
 	void playAudio();
 	void pauseAudio();
 
+	void seekToSample(int sample);
+
 	void setVolume(float volume = 1.0f);
 
 	bool isPlaying();
@@ -24,6 +26,8 @@ public:
 	int getAudioDataLength();
 	int getSampleRate();
 	//--
+
+	void getDevices();
 private:
 	std::string _filePath;
 	bool _initialised;

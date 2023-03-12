@@ -24,7 +24,7 @@ void FFTWfft::calculate(float* audioData, int currentSample, float* storage, flo
 		//if not copy to new array applying window function
 		memset(_samplesAfterWindowFunction, 0.0f, sizeof(float) * _windowSize);
 		for (int i = 0; i < _windowSize; i++) {
-			_samplesAfterWindowFunction[i] = slidingWindowFunction(float(i) / float(_windowSize)) * audioData[currentSample + i];
+ 			_samplesAfterWindowFunction[i] = slidingWindowFunction(float(i) / float(_windowSize)) * audioData[currentSample + i];
 		}
 		arrayToUse = _samplesAfterWindowFunction;
 	}

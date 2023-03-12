@@ -1336,6 +1336,7 @@ enum ImGuiDir_
     ImGuiDir_Right   = 1,
     ImGuiDir_Up      = 2,
     ImGuiDir_Down    = 3,
+    ImGuiDir_Square  = 4,
     ImGuiDir_COUNT
 };
 

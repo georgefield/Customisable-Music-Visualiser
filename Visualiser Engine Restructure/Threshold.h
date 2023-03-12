@@ -46,12 +46,14 @@ public:
 		else if (aboveThreshold && !testThreshold(_valuesAddedInTimeOrder.newest() * 2, topXpercent)){
 			float integral = 0;
 			float weightedSum = 0;
+			float max = 0;
 			for (int i = 0; i < valuesOfPointsAboveThreshold.size(); i++) {
+				max = std::max(max, valuesOfPointsAboveThreshold.at(i));
 				integral += valuesOfPointsAboveThreshold.at(i);
 				weightedSum += valuesOfPointsAboveThreshold.at(i) * samplesOfPointsAboveThreshold.at(i);
 			}
 			out.onset = int(weightedSum / integral);
-			out.salience = integral / valuesOfPointsAboveThreshold.size();
+			out.salience = max;
 
 			aboveThreshold = false;
 			return true;

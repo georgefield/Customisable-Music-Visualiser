@@ -1,2 +1,10 @@
-﻿  MyTiming.cpp
+﻿  Model.cpp
+C:\Users\George\Documents\3rd year project\Project\Vengine\Model.cpp(53,28): warning C4305: 'initializing': truncation from 'double' to 'float'
+C:\Users\George\Documents\3rd year project\Project\Vengine\Model.cpp(94,28): warning C4305: 'initializing': truncation from 'double' to 'float'
+  Sprite.cpp
+  SpriteBatch.cpp
+C:\Users\George\Documents\3rd year project\Project\Vengine\SpriteBatch.cpp(52,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\George\Documents\3rd year project\Project\Vengine\SpriteBatch.cpp(57,21): warning C4018: '<': signed/unsigned mismatch
+C:\Users\George\Documents\3rd year project\Project\Vengine\SpriteBatch.cpp(104,12): warning C4018: '<': signed/unsigned mismatch
+  Generating Code...
   Vengine.vcxproj -> C:\Users\George\Documents\3rd year project\Project\Debug\Vengine.lib

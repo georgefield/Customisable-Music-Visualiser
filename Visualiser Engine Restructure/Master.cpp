@@ -13,7 +13,10 @@ Master::Master() :
 	_fftHistory(1),//store 17 previous fourier transforms
 
 	_sampleFftLastCalculated(-1),
-	_sampleRate(0)
+	_sampleRate(0),
+
+	_peakAmplitude(0),
+	_sampleOfLastPeak(0)
 {
 }
 
@@ -72,6 +75,27 @@ void Master::calculateFourierTransform() {
 	_fftwAPI.calculate(_audioData, _currentSample, _fftHistory.workingArray(), 8.0f, slidingWindowFunction); //use fftw api to calculate fft
 	_fftHistory.addWorkingArrayToHistory();
 	//updates _fftHistory ^^^
+}
+
+void Master::calculatePeakAmplitude()
+{
+	if (_currentSample - _sampleOfLastPeak > _sampleRate * 0.1f) { //after waiting 0.1 seconds at peak
+		_peakAmplitude *= expf(-30.0f / SPvars::UI::_desiredCPS); //0->-30db in 1 second
+	}
+	
+	_peakAmplitude = std::max(0.0f, _peakAmplitude);
+	_peakAmplitude = std::min(1.0f, _peakAmplitude);
+	for (int i = _previousSample; i < _currentSample; i++) {
+		if (fabsf(_audioData[i]) > _peakAmplitude) {
+			_peakAmplitude = fabsf(_audioData[i]);
+			_sampleOfLastPeak = i;
+		}
+	}
+}
+
+void Master::audioIsPaused()
+{
+	_peakAmplitude *= expf(-30.0f / SPvars::UI::_desiredCPS); //0->-30db in 1 second
 }
 
 

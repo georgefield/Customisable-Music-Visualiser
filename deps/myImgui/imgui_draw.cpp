@@ -3757,6 +3757,7 @@ void ImGui::RenderArrow(ImDrawList* draw_list, ImVec2 pos, ImU32 col, ImGuiDir d
     ImVec2 center = pos + ImVec2(h * 0.50f, h * 0.50f * scale);
 
     ImVec2 a, b, c;
+    ImVec2 d, e, f;
     switch (dir)
     {
     case ImGuiDir_Up:
@@ -3773,12 +3774,30 @@ void ImGui::RenderArrow(ImDrawList* draw_list, ImVec2 pos, ImU32 col, ImGuiDir d
         b = ImVec2(-0.750f, +0.866f) * r;
         c = ImVec2(-0.750f, -0.866f) * r;
         break;
+        //ADDED IN BY GEORGE--
+    case ImGuiDir_Square:
+        a = ImVec2(+0.85f, +0.85f) * r;
+        b = ImVec2(-0.85f, +0.85f) * r;
+        c = ImVec2(+0.85f, -0.85f) * r;
+
+        d = ImVec2(-0.85f, +0.85f) * r;
+        e = ImVec2(+0.85f, -0.85f) * r;
+        f = ImVec2(-0.85f, -0.85f) * r;
+        break;
+        //---------------------
     case ImGuiDir_None:
     case ImGuiDir_COUNT:
         IM_ASSERT(0);
         break;
     }
+    
     draw_list->AddTriangleFilled(center + a, center + b, center + c, col);
+
+    //ADDED BY GEORGE--
+    if (dir == ImGuiDir_Square) {
+        draw_list->AddTriangleFilled(center + d, center + e, center + f, col);
+    }
+    //-----------------
 }
 
 void ImGui::RenderBullet(ImDrawList* draw_list, ImVec2 pos, ImU32 col)

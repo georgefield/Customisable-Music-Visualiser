@@ -34,7 +34,6 @@ private:
 	static Master* _master;
 
 	static bool _isFirstReset;
-	static float _nextCalculationSample;
 	static int _lagTimerId;
 
 

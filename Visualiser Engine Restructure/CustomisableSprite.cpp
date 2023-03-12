@@ -14,9 +14,10 @@ CustomisableSprite::CustomisableSprite(int id, const std::string& name, Vengine:
 	_window(window),
 
 	_name(name),
-	_spriteState(SELECTED),
+	_selected(true),
+	_deleted(false),
 	_justCreated(true),
-	_show(true),
+	_showInEditor(true),
 	id(id),
 
 
@@ -38,19 +39,16 @@ void CustomisableSprite::init(Vengine::Model* model, glm::vec2 pos, glm::vec2 di
 
 	Vengine::IOManager::getFilesInDir(VisualiserManager::texturesFolder(), _textureFileNames);
 	Vengine::IOManager::getFilesInDir(VisualiserManager::shadersFolder(), _shaderFileNames, true, ".frag");
+
+	Vengine::MyTiming::createTimer(_timerID); //timer for selection ui
 }
 
 
 void CustomisableSprite::draw(){
 
 	//draw imgui
-	if (_spriteState == SELECTED) {
+	if (_selected) {
 		drawUi();
-	}
-
-	//dont draw sprite if not show
-	if (!_show) {
-		return;
 	}
 
 	if (_useSimilarityMatrixTexture) {
@@ -110,13 +108,19 @@ void CustomisableSprite::drawUi() {
 	//convert to pixel coords
 	glm::vec2 pixelPos;
 	pixelPos = Tools::openGLposToPx(glm::vec2(modelRect.x, modelRect.y), _window, _viewport, true);
-	int posX = pixelPos.x;
-	int posY = pixelPos.y;
-	ImGui::InputInt("Pos X", &posX);
-	ImGui::InputInt("Pos Y", &posY);
+	static int pos[2];
+	pos[0] = pixelPos.x;
+	pos[1] = pixelPos.y;
+	ImGui::InputInt2("Pos", pos);
+	if (!ImGui::IsItemFocused()) {
+		pos[0] = pixelPos.x;
+		pos[1] = pixelPos.y;
+	}
 	//convert to opengl coords
-	glm::vec2 openGLpos = Tools::pxPosToOpenGL(glm::vec2(posX, posY), _window, _viewport, true); 
-	setModelPos(openGLpos);
+	if (ImGui::IsItemDeactivatedAfterEdit()) {
+		glm::vec2 openGLpos = Tools::pxPosToOpenGL(glm::vec2(pos[0], pos[1]), _window, _viewport, true);
+		setModelPos(openGLpos);
+	}
 	//--
 
 	ImGui::Separator();
@@ -125,13 +129,19 @@ void CustomisableSprite::drawUi() {
 	//convert to pixel coords
 	glm::vec2 pixelSize;
 	pixelSize = Tools::openGLdimToPx(glm::vec2(modelRect.z, modelRect.w), _window, _viewport, true);
-	int sizeX = pixelSize.x;
-	int sizeY = pixelSize.y;
-	ImGui::InputInt("Size X", &sizeX);
-	ImGui::InputInt("Size Y", &sizeY);
+	static int dim[2];
+	dim[0] = pixelSize.x;
+	dim[1] = pixelSize.y;
+	ImGui::InputInt2("Size", dim);
+	if (!ImGui::IsItemFocused()) {
+		dim[0] = pixelSize.x;
+		dim[1] = pixelSize.y;
+	}
 	//convert to opengl coords
-	glm::vec2 openGLsize = Tools::pxDimToOpenGL(glm::vec2(sizeX, sizeY), _window, _viewport, true);
-	setModelDim(openGLsize);
+	if (ImGui::IsItemDeactivatedAfterEdit()) {
+		glm::vec2 openGLsize = Tools::pxDimToOpenGL(glm::vec2(dim[0], dim[1]), _window, _viewport, true);
+		setModelDim(openGLsize);
+	}
 	//--
 
 	ImGui::Separator();
@@ -173,7 +183,7 @@ void CustomisableSprite::drawUi() {
 
 	//delete self--
 	if (ImGui::Button("Delete")) {
-		_spriteState = DELETE_SELF;
+		setIfDeleted();
 	}
 	//--
 
@@ -269,27 +279,28 @@ void CustomisableSprite::processInput(Vengine::InputManager* inputManager){
 	if (!_justCreated) {
 		if (inputManager->isKeyPressed(SDL_BUTTON_LEFT)) {
 			if (Tools::posWithinRect(mousePos, getModelBoundingBox())) { //pos within sprite bounding box
-				Vengine::MyTiming::createTimer(_timerID);
+				Vengine::MyTiming::resetTimer(_timerID);
+				Vengine::MyTiming::startTimer(_timerID);
 				_posOfMouseAtClick = mousePos;
 				_posOfSpriteAtClick = getModelPos();
 			}
-			else if (Tools::posWithinRect(mousePos, _optionsRect) && _spriteState == SELECTED) {
-				//do nothing
+			else if (Tools::posWithinRect(mousePos, _optionsRect) && _selected) {
+				//do nothing if pos within settings rect
 			}
 			else { 
-				_spriteState = NOT_SELECTED;
+				_selected = false;
 			}
 		}
 
 		//dragging while held down, selected
-		if (_spriteState == SELECTED && inputManager->isKeyDown(SDL_BUTTON_LEFT) && Tools::posWithinRect(mousePos, getModelBoundingBox())) {
+		if (_selected && inputManager->isKeyDown(SDL_BUTTON_LEFT) && Tools::posWithinRect(mousePos, getModelBoundingBox())) {
 
 			setModelPos(_posOfSpriteAtClick + (mousePos - _posOfMouseAtClick));
 		}
 
 		if (inputManager->isKeyReleased(SDL_BUTTON_LEFT) && Tools::posWithinRect(mousePos, getModelBoundingBox())) {
 			if (Vengine::MyTiming::readTimer(_timerID) < 0.3) {
-				_spriteState = (_spriteState == SELECTED ? NOT_SELECTED : SELECTED); //flip state
+				_selected = !_selected;
 			}
 		}
 	}

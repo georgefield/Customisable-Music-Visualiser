@@ -75,7 +75,7 @@ void Sprite::draw() {
 	//uv attribute pointer
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
 
-	glDrawArrays(GL_TRIANGLES, 0, 6); //triangles, start at 0th index, 6 vertices
+	glDrawArrays(_model->drawMode, 0, _model->numVertices); //triangles, start at 0th index, given num vertices
 
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);

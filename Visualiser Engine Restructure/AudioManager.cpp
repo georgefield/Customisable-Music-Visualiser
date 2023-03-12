@@ -2,6 +2,7 @@
 #include "VisualiserShaderManager.h"
 #include <functional>
 #include <Vengine/IOManager.h>
+#include <assert.h>
 
 #include "imgui.h"
 
@@ -13,6 +14,8 @@ bool AudioManager::_audioLoadedThisFrame = false;
 int AudioManager::_currentSampleExtraPrecisionTimerId;
 int AudioManager::_stickySample = 0;
 int AudioManager::_currentSample = 0;
+
+float AudioManager::_volume = 1.0f;
 
 void AudioManager::init()
 {
@@ -56,6 +59,20 @@ void AudioManager::pause()
 		miniaudio.pauseAudio();
 	}
 }
+
+void AudioManager::seekToSample(int sample) {
+
+	if (miniaudio.isLoaded()){
+		if (sample < 0)
+			sample = 0;
+		if (sample >= getNumSamples())
+			sample = getNumSamples() - 1;
+
+		miniaudio.seekToSample(sample);
+		
+	}
+}
+
 
 float* AudioManager::getSampleData()
 {
@@ -116,6 +133,67 @@ int AudioManager::getSampleRate()
 
 	return 0;
 }
+
+std::string AudioManager::getAudioFileName() {
+	if (!miniaudio.isLoaded()) {
+		return "No file loaded";
+	}
+	return _audioFileName;
+}
+
+std::string AudioManager::getAudioTimeInfoStr(int overrideSample) {
+	if (!miniaudio.isLoaded()) {
+		return "n/a";
+	}
+	if (overrideSample == -1) {
+		overrideSample = getCurrentSample();
+	}
+	
+	std::string ret = "";
+	float seconds = float(overrideSample) / float(miniaudio.getSampleRate());
+	int minutes = floor(seconds / 60.0f);
+	seconds = fmodf(seconds, 60.0f);
+
+	std::string secondsStr = "";
+	if (seconds < 10)
+		secondsStr += "0" + std::to_string(seconds).substr(0, 3);
+	else
+		secondsStr += std::to_string(seconds).substr(0, 4);
+	
+
+	ret += std::to_string(minutes) + ":" + secondsStr;
+	ret += "/";
+
+	float totalSeconds = float(miniaudio.getAudioDataLength()) / float(miniaudio.getSampleRate());
+	int totalMinutes = floor(totalSeconds / 60.0f);
+	totalSeconds = fmodf(totalSeconds, 60.0f);
+
+	std::string totalSecondsStr = "";
+	if (totalSeconds < 10)
+		totalSecondsStr += "0" + std::to_string(totalSeconds).substr(0, 1);
+	else
+		totalSecondsStr += std::to_string(totalSeconds).substr(0, 2);
+
+	ret += std::to_string(totalMinutes) + ":" + totalSecondsStr;
+
+	return ret;
+}
+
+
+
+void AudioManager::setVolume(float volume) {
+	if (!miniaudio.isLoaded()) {
+		return;
+	}
+
+	assert(volume >= 0.0f && volume <= 1.0f);
+
+	if (volume != _volume) {
+		_volume = volume;
+		miniaudio.setVolume(_volume);
+	}
+}
+
 
 bool AudioManager::isAudioPlaying()
 {
