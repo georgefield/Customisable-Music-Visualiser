@@ -5,7 +5,9 @@
 #include "VisualiserManager.h"
 #include "VisualiserShaderManager.h"
 #include "PFDapi.h"
-#include "UI.h" //for the static functions
+#include "VisVars.h"
+#include "SignalProcessingManager.h"
+#include "UIglobalFeatures.h"
 
 //#include <imgui_stdlib.h> //for input text functions
 
@@ -34,13 +36,16 @@ void CustomisableSprite::init(Vengine::Model* model, glm::vec2 pos, glm::vec2 di
 	Sprite::init(model, pos, dim, depth, textureFilepath, glDrawType);
 	_justCreated = true;
 
-	_visualiserShader = VisualiserShaderManager::getShader(VisualiserShaderManager::getDefaultFragmentShaderPath());
+	_visualiserShader = VisualiserShaderManager::getShader(VisVars::_defaultFragShaderPath);
 	_texture = Vengine::ResourceManager::getTexture("Resources/NO_TEXTURE.png");
 
 	Vengine::IOManager::getFilesInDir(VisualiserManager::texturesFolder(), _textureFileNames);
-	Vengine::IOManager::getFilesInDir(VisualiserManager::shadersFolder(), _shaderFileNames, true, ".frag");
+	Vengine::IOManager::getFilesInDir(VisualiserManager::shadersFolder(), _shaderFileNames, true, VisVars::_visShaderExtension);
 
 	Vengine::MyTiming::createTimer(_timerID); //timer for selection ui
+
+	_colour = getModelColour();
+	setModelColour(_colour); //for some reason its not set straight away
 }
 
 
@@ -89,17 +94,12 @@ void CustomisableSprite::drawUi() {
 	ImGui::Separator();
 
 	//choose shader for sprite
-	shaderChooser();
+	if (ImGui::CollapsingHeader("Sprite shader"))
+		shaderChooser();
 
 	//if shader contains texture uniform then
-	if (_visualiserShader->containsTextureUniform()) {
-		ImGui::Separator();
+	if (ImGui::CollapsingHeader("Sprite texture"))
 		textureChooser();
-	}
-	else {
-		ImGui::Text("No texture uniform in shader");
-	}
-
 
 	ImGui::Separator();
 
@@ -156,27 +156,20 @@ void CustomisableSprite::drawUi() {
 	ImGui::Text("Colour");
 
 	//choose colour--
-	Vengine::ColourRGBA8 colour = getModelColour();
+	static float pickedColour[4] = { static_cast<float>(_colour.r) / 255.0f, static_cast<float>(_colour.g) / 255.0f,static_cast<float>(_colour.b) / 255.0f, static_cast<float>(_colour.a) / 255.0f };
+	ImGui::ColorEdit4("Background colour", pickedColour);
+	if (ImGui::IsItemEdited()) { 
+		_colour.r = static_cast<GLubyte>(pickedColour[0] * 255.0f);
+		_colour.g = static_cast<GLubyte>(pickedColour[1] * 255.0f);
+		_colour.b = static_cast<GLubyte>(pickedColour[2] * 255.0f);
+		_colour.a = static_cast<GLubyte>(pickedColour[3] * 255.0f);
+
+		setModelColour(_colour);
+	}
+	//--
 
 	//choose rbg
-	static int r = colour.r;
-	ImGui::SliderInt("red", &r, 0, 255);
-	colour.r = GLubyte(r);
 
-	static int g = colour.g;
-	ImGui::SliderInt("green", &g, 0, 255);
-	colour.g = GLubyte(g);
-
-	static int b = colour.b;
-	ImGui::SliderInt("blue", &b, 0, 255);
-	colour.b = GLubyte(b);
-
-	//choose alpha
-	static int alpha = colour.a;
-	ImGui::SliderInt("alpha", &alpha, 0, 255);
-	colour.a = GLubyte(alpha); 
-
-	setModelColour(colour);
 	//--
 
 	ImGui::Separator();
@@ -204,12 +197,13 @@ void CustomisableSprite::textureChooser()
 
 	if (applyTexture) {
 
-		ImGui::Checkbox("Use similarity matrix texture", &_useSimilarityMatrixTexture);
-		if (_useSimilarityMatrixTexture) {
-			return; //break from texture chooser here if using it
+		if (ImGui::Button("Refresh")) {
+			Vengine::IOManager::getFilesInDir(VisualiserManager::texturesFolder(), _textureFileNames, true, ".png");
 		}
 
-		if (ImGui::Button("Add external texture")) {
+		ImGui::SameLine();
+
+		if (ImGui::Button("Add another texture")) {
 			std::string chosenFile = "";
 			if (PFDapi::fileChooser("Choose texture", Vengine::IOManager::getProjectDirectory(), chosenFile, { "PNG images (.png)", "*.png" }, true)) {
 				std::cout << chosenFile << " < chosen" << std::endl;
@@ -220,20 +214,22 @@ void CustomisableSprite::textureChooser()
 			}
 		}
 
-		//choose texture--
-		ImGui::BeginChild("Texture options", ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 130), true, ImGuiWindowFlags_HorizontalScrollbar);
-		if (ImGui::Button("Refresh")) {
-			Vengine::IOManager::getFilesInDir(VisualiserManager::texturesFolder(), _textureFileNames, true, ".png");
-		}
+		//choose between file or similarity matrix texture
+		static int textureType = 0;
+		ImGui::RadioButton("Texture file", &textureType, 0);
+		ImGui::RadioButton("Similarity matrix texture", &textureType, 1);
 
-		for (int i = 0; i < _textureFileNames.size(); i++) {
-			if (ImGui::SmallButton(_textureFileNames[i].c_str())) { //<- explore arrow button option, might be included directory chooser?, slows down program, maybe get user to type filename (still show list)
-				_texture = Vengine::ResourceManager::getTexture(VisualiserManager::texturesFolder() + "/" + _textureFileNames[i]);
+		if (textureType == 0) {
+			static int textureIndex = 0;
+
+			if (UIglobalFeatures::ImGuiBetterCombo(_textureFileNames, textureIndex, 0)) {
+				_texture = Vengine::ResourceManager::getTexture(VisualiserManager::texturesFolder() + "/" + _textureFileNames[textureIndex]);
 			}
 		}
 
-
-		ImGui::EndChild();
+		if (ImGui::IsItemEdited()) {
+			_useSimilarityMatrixTexture = (textureType == 1);
+		}
 		//--
 	}
 
@@ -245,27 +241,34 @@ void CustomisableSprite::shaderChooser()
 
 	//select shader folder
 	if (ImGui::Button("Refresh")) {
-		Vengine::IOManager::getFilesInDir(VisualiserManager::shadersFolder(), _shaderFileNames, true, ".frag");
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("Use external shader")) {
-		std::string chosenFile = "";
-		if (PFDapi::fileChooser("Choose shader to add", Vengine::IOManager::getProjectDirectory(), chosenFile, { "Fragment Files (.frag)", "*.frag" }, true)) {
-			_visualiserShader = VisualiserShaderManager::getShader(chosenFile);
-			Vengine::IOManager::getFilesInDir(VisualiserManager::shadersFolder(), _shaderFileNames, true, ".frag"); //refresh
-		}
+		Vengine::IOManager::getFilesInDir(VisualiserManager::shadersFolder(), _shaderFileNames, true, VisVars::_visShaderExtension);
 	}
 
+	ImGui::SameLine();
+
+	if (ImGui::Button("Add another shader")) {
+		std::string chosenFile = "";
+		if (PFDapi::fileChooser("Choose shader to add", Vengine::IOManager::getProjectDirectory(), chosenFile, { "Visualiser frag ( "+ VisVars::_visShaderExtension + ")", " * " + VisVars::_visShaderExtension }, true)) {
+			_visualiserShader = VisualiserShaderManager::getShader(chosenFile);
+			Vengine::IOManager::getFilesInDir(VisualiserManager::shadersFolder(), _shaderFileNames, true, VisVars::_visShaderExtension); //refresh
+		}
+	}
 
 	//choose shader
-	ImGui::BeginChild("Shader options", ImVec2(ImGui::GetContentRegionAvail().x * 0.8, 130), true, ImGuiWindowFlags_HorizontalScrollbar);
 
-	for (int i = 0; i < _shaderFileNames.size(); i++) {
-		if (ImGui::SmallButton(_shaderFileNames[i].c_str())) {
-			_visualiserShader = VisualiserShaderManager::getShader(VisualiserManager::shadersFolder() + "/" + _shaderFileNames[i]);
+	static int shaderIndex = -1;
+	if (shaderIndex == -1) {
+		for (int i = 0; i < _shaderFileNames.size(); i++) {
+			if (_shaderFileNames[i] == VisVars::_defaultFragShaderPath.substr(VisVars::_defaultFragShaderPath.find_last_of("/") + 1)) {
+				shaderIndex = i;
+				break;
+			}
 		}
 	}
-	ImGui::EndChild();
+
+	if (UIglobalFeatures::ImGuiBetterCombo(_shaderFileNames, shaderIndex, 1)) {
+		_visualiserShader = VisualiserShaderManager::getShader(VisualiserManager::shadersFolder() + "/" + _shaderFileNames[shaderIndex]);
+	}
 }
 
 

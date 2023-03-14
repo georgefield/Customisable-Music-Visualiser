@@ -31,7 +31,12 @@ private:
 
 	Vengine::InputManager _inputManager;
 
+	void init();
+
 	void initSystems();
+	void initManagers();
+	void initGenericUpdaters();
+
 	void processInput();
 	void gameLoop();
 	void drawVis();
@@ -45,7 +50,8 @@ private:
 
 	int _timeSinceLoadTimerId;
 
-	//setter functions
+	//uniform updater functions
 	float getTimeSinceLoad() { return Vengine::MyTiming::readTimer(_timeSinceLoadTimerId); }
+	float getTimeInAudio() { return float(AudioManager::getCurrentSample()) / float(AudioManager::getSampleRate()); }
 };
 

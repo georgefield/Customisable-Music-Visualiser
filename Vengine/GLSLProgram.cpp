@@ -96,7 +96,7 @@ void GLSLProgram::updateShaderUniformInfo() {
 	GLsizei length; // name length
 
 	glGetProgramiv(_programID, GL_ACTIVE_UNIFORMS, &count);
-
+	
 	for (int i = 0; i < count; i++)
 	{
 		glGetActiveUniform(_programID, (GLuint)i, bufSize, &length, &size, &type, name);

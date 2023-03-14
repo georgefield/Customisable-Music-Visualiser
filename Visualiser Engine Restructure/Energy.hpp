@@ -2,6 +2,7 @@
 #include "Master.h"
 
 #include "VisualiserShaderManager.h"
+#include "SignalProcessingVars.h"
 #include <functional>
 
 class Energy {
@@ -15,27 +16,27 @@ public:
 
 	~Energy() {
 		if (_useSetters) {
-			deleteSetters();
+			removeUpdaters();
 		}
 	}
 
-	//only calculate energy from fourier transform to keep consistent as if allow from audio data have to deal with accounting for hanning window
-	//and the frequencies removed when only including half fourier transform
-	void init(Master* m, std::string nameOfFT = "") {
+
+	//FTid = -1 when no info to be used for shaders
+	void init(Master* m, int FTid) {
 		if (_initialised) {
 			Vengine::warning("Please call reInit to restart already initialised energy class");
 			return;
 		}
 
-		_nameOfFTtoBeingAnalysed = nameOfFT;
+		_FTsourceId = FTid;
 
 		_m = m;
 		_sampleLastCalculated = -1;
 		_initialised = true;
-		_useSetters = (nameOfFT != "");
+		_useSetters = (_FTsourceId >= 0);
 
 		if (_useSetters) {
-			initSetters();
+			initUpdaters();
 		}
 	}
 
@@ -71,9 +72,9 @@ public:
 		for (int i = 0; i < numHarmonics; i++) {
 			energy += fourierTransform[i] * fourierTransform[i];
 		}
-		energy /= float(_m->_fftHistory.numHarmonics()); //energy per sample, num harmonics = window size / 2, would divide by window size if working with audio data but because we delete half of fourier transform we divide by num harmonics
-		energy *= float(_m->_sampleRate); //energy per second
-		//although this not accurate anyway as we applied gain to fourier transform but its okay as only calculate from fourier transform. Bother doing this to sync between fourier values and energy
+		energy /= SPvars._masterFTgain * SPvars._masterFTgain; //fix the gain applied on transform
+		energy *= 2; // miss out the mirrored half of the fourier transform
+		
 		_energy.add(energy, _m->_currentSample);
 	}
 
@@ -81,18 +82,21 @@ private:
 	Master* _m;
 
 	History<float> _energy;
-	std::string _nameOfFTtoBeingAnalysed;
+	int _FTsourceId;
 
 	bool _initialised;
 	bool _useSetters;
 
 	int _sampleLastCalculated;
 
-	void initSetters() {
-		VisualiserShaderManager::addHistoryAsPossibleSSBOsetter(_nameOfFTtoBeingAnalysed + " energy", &_energy);
+	void initUpdaters() {
+		std::string uniformName = "vis_FT" + std::to_string(_FTsourceId) + "_energy";
+		std::function<float()> energyUpdaterFunction = std::bind(&Energy::getEnergy, this);
+		VisualiserShaderManager::Uniforms::setUniformUpdater(uniformName, energyUpdaterFunction);
 	}
 
-	void deleteSetters() {
-		VisualiserShaderManager::deleteHistoryAsPossibleSSBOsetter(_nameOfFTtoBeingAnalysed + " energy");
+	void removeUpdaters() {
+		std::string uniformName = "vis_FT" + std::to_string(_FTsourceId) + "_energy";
+		VisualiserShaderManager::Uniforms::removeUniformUpdater(uniformName);
 	}
 };

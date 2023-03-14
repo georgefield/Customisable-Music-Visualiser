@@ -68,27 +68,26 @@ void MFCCs::createMelLinearlySpacedFilters(int numFilters, float lowerHz, float 
 }
 
 
-void MFCCs::initSetters()
+void MFCCs::initUpdaters()
 {
 	//mel band energys
-	std::function<int()> numMelBandsSetterFunction = std::bind(&MFCCs::getNumMelBands, this);
-	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("# Mel bands", numMelBandsSetterFunction);
+	std::function<int()> numMelBandsUpdaterFunction = std::bind(&MFCCs::getNumMelBands, this);
+	VisualiserShaderManager::Uniforms::setUniformUpdater("vis_numMelBands", numMelBandsUpdaterFunction);
 
-	std::function<float* ()> melBandEnergiesSetterFunction = std::bind(&MFCCs::getBandEnergies, this);
-	VisualiserShaderManager::SSBOs::addPossibleSSBOSetter("Mel band energy", melBandEnergiesSetterFunction, _filterBank.numBands());
+	std::function<float* ()> melBandEnergiesUpdaterFunction = std::bind(&MFCCs::getBandEnergies, this);
+	VisualiserShaderManager::SSBOs::setSSBOupdater("vis_melBandEnergies", melBandEnergiesUpdaterFunction, _filterBank.numBands());
 
-	std::function<float* ()> melSpectrogramSetterFunction = std::bind(&MFCCs::getMelSpectrogram, this);
-	VisualiserShaderManager::SSBOs::addPossibleSSBOSetter("Mel spectrogram", melSpectrogramSetterFunction, _filterBank.numBands());
+	std::function<float* ()> melSpectrogramUpdaterFunction = std::bind(&MFCCs::getMelSpectrogram, this);
+	VisualiserShaderManager::SSBOs::setSSBOupdater("vis_melSpectrogram", melSpectrogramUpdaterFunction, _filterBank.numBands());
 
-	std::function<float* ()> mfccSetterFunction = std::bind(&MFCCs::getMfccs, this);
-	VisualiserShaderManager::SSBOs::addPossibleSSBOSetter("MFCCs", mfccSetterFunction, _filterBank.numBands());
+	std::function<float* ()> mfccUpdaterFunction = std::bind(&MFCCs::getMfccs, this);
+	VisualiserShaderManager::SSBOs::setSSBOupdater("vis_MFCCs", mfccUpdaterFunction, _filterBank.numBands());
 }
 
-void MFCCs::deleteSetters()
+void MFCCs::removeUpdaters()
 {
-	VisualiserShaderManager::Uniforms::deletePossibleUniformSetter("# Mel bands");
-	VisualiserShaderManager::SSBOs::deleteSSBOsetter("Mel band energy");
-	VisualiserShaderManager::SSBOs::deleteSSBOsetter("Mel spectrogram");
-	VisualiserShaderManager::SSBOs::deleteSSBOsetter("MFCCs");
-
+	VisualiserShaderManager::Uniforms::removeUniformUpdater("vis_numMelBands");
+	VisualiserShaderManager::SSBOs::removeSSBOupdater("vis_melBandEnergies");
+	VisualiserShaderManager::SSBOs::removeSSBOupdater("vis_melSpectrogram");
+	VisualiserShaderManager::SSBOs::removeSSBOupdater("vis_MFCCs");
 }

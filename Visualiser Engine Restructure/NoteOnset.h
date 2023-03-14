@@ -57,9 +57,8 @@ public:
 		initSetters();
 
 		//init onset detection function class dependencies
-		_energy.init(_m, "");
-
-		_ftForSpectralDistance.init(_m, "");
+		_energy.init(_m, -1);
+		_ftForSpectralDistance.init(_m, -1);
 
 		_derOfLogEnergyBands.init(_m);
 		_derOfLogEnergyBands.add(0.0, 150, 1.0f);
@@ -72,7 +71,7 @@ public:
 		_derOfLogEnergyBands.add(10000, 20000, 1.0f);
 		_derOfLogEnergyBands.add(15000, 22050, 1.0f);
 
-		_simMatrix.init(2000 / SPvars::UI::_desiredCPS);
+		_simMatrix.init(2000 / SPvars._desiredCPS);
 		_simMatrix.linkToMelSpectrogram(_mfcc);
 	}
 
@@ -91,7 +90,7 @@ public:
 
 		_derOfLogEnergyBands.reInit();
 
-		_simMatrix.reInit(2000 / SPvars::UI::_desiredCPS);
+		_simMatrix.reInit(2000 / SPvars._desiredCPS);
 		_simMatrix.linkToMelSpectrogram(_mfcc);
 	}
 

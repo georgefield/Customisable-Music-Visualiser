@@ -53,3 +53,14 @@ std::string UIglobalFeatures::ImGuiComboStringMaker(std::vector<std::string>& op
 
 	return retVal;
 }
+
+bool UIglobalFeatures::ImGuiBetterCombo(std::vector<std::string>& options, int& currentItem, int id)
+{
+	std::string comboStr = ImGuiComboStringMaker(options);
+
+	ImGui::PushID(id);
+	ImGui::Combo("##", &currentItem, comboStr.c_str(), options.size());
+	ImGui::PopID();
+
+	return ImGui::IsItemEdited();
+}

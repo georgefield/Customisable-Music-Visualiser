@@ -1,8 +1,6 @@
 #include "VisualiserManager.h"
+#include "VisVars.h"
 #include <Vengine/IOManager.h>
-
-const std::string USER_CREATED_VISUALISER_PATH = "Visualisers/User Created/";
-const std::string PRESET_VISUALISER_PATH = "Visualisers/Preset/";
 
 Visualiser VisualiserManager::_current;
 
@@ -14,12 +12,13 @@ void VisualiserManager::init()
 bool VisualiserManager::createNewVisualiser(std::string name)
 {
 	//check it doesnt exist already
-	if ( Vengine::IOManager::directoryExists(USER_CREATED_VISUALISER_PATH + name)){
+	if ( Vengine::IOManager::directoryExists(VisVars::_userCreatedVisualiserPath + name)){
 		Vengine::warning("Cannot create visualiser, visualiser with name '" + name + "' already exists.");
 		return false;
 	}
+
 	//init if it does
-	return _current.initNew(USER_CREATED_VISUALISER_PATH + name);
+	return _current.initNew(VisVars::_userCreatedVisualiserPath + name);
 }
 
 bool VisualiserManager::loadVisualiser(std::string path)
@@ -52,20 +51,20 @@ bool VisualiserManager::saveAsNew(std::string name)
 	}
 
 	//check if visualiser with that name exists already
-	if (Vengine::IOManager::directoryExists(USER_CREATED_VISUALISER_PATH + name)) {
+	if (Vengine::IOManager::directoryExists(VisVars::_userCreatedVisualiserPath + name)) {
 		Vengine::warning("Visualiser with that name already exists in user created visualisers, no copy made");
 		return false;
 	}
 
 	//create copy
-	if (!Vengine::IOManager::copyDirectory(_current.getPath(), USER_CREATED_VISUALISER_PATH + name)) {
+	if (!Vengine::IOManager::copyDirectory(_current.getPath(), VisVars::_userCreatedVisualiserPath + name)) {
 		Vengine::warning("Failed to copy files to new visualiser directory");
 		return false;
 	}
 	
 	//set current visualiser to be the copy
 	_current = Visualiser();
-	_current.initExisting(USER_CREATED_VISUALISER_PATH + name);
+	_current.initExisting(VisVars::_userCreatedVisualiserPath + name);
 
 	return true;
 }

@@ -1,8 +1,11 @@
 #include "DrawFunctions.h"
 #include "MyErrors.h"
 
+#include <cassert>
+
 using namespace Vengine;
 
+std::set<int> DrawFunctions::usedSSBObindings;
 
 void DrawFunctions::clearCurrentBuffer() {
 
@@ -72,10 +75,14 @@ void DrawFunctions::uploadTextureToShader(GLSLProgram program, GLuint& textureID
 
 void DrawFunctions::createSSBO(GLuint& ssboID, GLint binding, void* data, int bytesOfData, GLenum usage) {
 
+	assert(usedSSBObindings.find(binding) == usedSSBObindings.end()); //check ssbo not already created with this binding
+
 	glGenBuffers(1, &ssboID); //generate buffer
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding, ssboID); //make it go in right buffer
 	glBufferData(GL_SHADER_STORAGE_BUFFER, bytesOfData, data, usage); //upload normalised data to ssbo
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
+
+	usedSSBObindings.insert(binding);
 
 	Vengine::testForGlErrors("Failed to create SSBO");
 }
@@ -87,9 +94,22 @@ void DrawFunctions::updateSSBO(GLuint& ssboID, GLint binding, void* data, int by
 
 void DrawFunctions::updateSSBOpart(GLuint& ssboID, GLint binding, void* data, int offset, int bytesOfData) {
 
+	assert(usedSSBObindings.find(binding) != usedSSBObindings.end());
+
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding, ssboID); //make it go in right buffer
 	glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, bytesOfData, data); //upload normalised data to ssbo
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
 
 	Vengine::testForGlErrors("Failed to update SSBO buffer");
+}
+
+void DrawFunctions::deleteSSBO(GLuint ssboID, GLint binding) {
+
+	assert(usedSSBObindings.find(binding) != usedSSBObindings.end());
+
+	glDeleteBuffers(1, &ssboID);
+
+	usedSSBObindings.erase(binding);
+
+	Vengine::testForGlErrors("Failed to delete SSBO");
 }

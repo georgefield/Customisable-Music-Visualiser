@@ -17,6 +17,9 @@ public:
 	}
 
 	float get() {
+		if (history.entries() == 0) {
+			return 0.0f;
+		}
 		return sum / float(history.entries());
 	}
 

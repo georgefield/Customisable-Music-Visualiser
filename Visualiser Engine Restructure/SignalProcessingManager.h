@@ -29,7 +29,7 @@ public:
 	static MFCCs* _mfccs;
 	static SimilarityMatrixHandler* _similarityMatrix;
 
-	static int getGeneralHistorySize() { return SPvars::Const::_generalHistorySize; }
+	static int getGeneralHistorySize() { return SPvars._generalHistorySize; }
 private:
 	static Master* _master;
 

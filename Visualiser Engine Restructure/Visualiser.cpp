@@ -10,9 +10,14 @@ bool Visualiser::initNew(const std::string& path)
 		return false;
 	}
 
+	if (Vengine::IOManager::directoryExists(path)) {
+		Vengine::warning("Visualiser " + path + " already exists");
+		return false;
+	}
+
 	//create necessary directories in visualiser save
-	if (!createConfig() ||
-		!Vengine::IOManager::createFolder(_path + "/textures", false) ||
+	if (!Vengine::IOManager::createFolder(_path + "/textures", false) ||
+		!Vengine::IOManager::createFolder(_path + "/shaders", false) ||
 		!Vengine::IOManager::createFolder(_path + "/shaders", false))
 	{
 		return false;
@@ -29,7 +34,7 @@ bool Visualiser::initExisting(const std::string& path)
 
 	//read config into accessible struct if existing visualiser
 	std::vector<std::string> configBuffer;
-	if (!Vengine::IOManager::readTextFileToBuffer(_path + "/config.cfg", configBuffer)) {
+	if (!Vengine::IOManager::readTextFileToVector(_path + "/config.cfg", configBuffer)) {
 		Vengine::warning("Could not init visualiser from folder " + _path);
 		return false;
 	}
@@ -47,17 +52,15 @@ void Visualiser::save()
 	updateConfig();
 }
 
-void Visualiser::updateConfig()
-{
-	//when updating first clear old config
-	Vengine::IOManager::clearTextFile(_path + "/config.cfg");
-	createConfig();
-}
-
-bool Visualiser::createConfig()
+bool Visualiser::updateConfig()
 {
 	//create/output _config struct to config file
 	std::vector<std::string> configAsText;
 	ConfigManager::configToText(_config, configAsText);
-	return Vengine::IOManager::outputTextFile(_path + "/config.cfg", configAsText);
+	std::string output = "";
+	for (auto& it : configAsText) {
+		output += it + "\n";
+	}
+	output.resize(output.size() - 1); //remove last \n
+	return Vengine::IOManager::outputToTextFile(_path + "/config.cfg", output, true);
 }

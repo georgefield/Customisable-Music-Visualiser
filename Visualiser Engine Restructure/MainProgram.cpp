@@ -24,18 +24,21 @@ const std::string STARTUP_MUSIC_FILEPATH = "Resources/Audio/metronome.wav";
 
 
 void MainProgram::run() {
-	initSystems();
+	init();
 	gameLoop();
+}
+
+void MainProgram::init()
+{
+	initSystems();
+	initManagers();
+	initGenericUpdaters();
 }
 
 void MainProgram::initSystems() {
 
 	//use Vengine to create window
 	_window.create("visualiser", screenWidth, screenHeight, SDL_WINDOW_OPENGL);
-
-	SpriteManager::init(&_viewport, &_window);
-
-	VisualiserManager::init();
 
 	_frameBufferIDs = new GLuint[_numFrameBuffers];
 	_frameBufferTextureIDs = new GLuint[_numFrameBuffers];
@@ -44,27 +47,54 @@ void MainProgram::initSystems() {
 
 	_UI.init(&_window, &_inputManager);
 
-	//time since load setter function
-	Vengine::MyTiming::createTimer(_timeSinceLoadTimerId);
-	std::function<float()> timeSinceLoadSetterFunction = std::bind(&MainProgram::getTimeSinceLoad, this);
-	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Time since program start", timeSinceLoadSetterFunction);
-
-
 	//enable alpha belnding
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); //blend entirely based on alpha
 	glClearColor(0.1, 0.1, 0.1, 1.0); //slightly grey
 
 
-	//audio and signal processing
-	AudioManager::init();
-	AudioManager::load(STARTUP_MUSIC_FILEPATH);
-
-	SignalProcessingManager::init();
-
 	//timing and fps managing
 	Vengine::MyTiming::setNumSamplesForFPS(100);
 	Vengine::MyTiming::setFPSlimit(200);
+
+	Vengine::MyTiming::createTimer(_timeSinceLoadTimerId);
+}
+
+void MainProgram::initManagers()
+{
+	VisualiserManager::init();
+
+	VisualiserShaderManager::init();
+
+	SpriteManager::init(&_viewport, &_window);
+
+	AudioManager::init();
+	AudioManager::load(STARTUP_MUSIC_FILEPATH); //program works by always having a song loaded
+
+	SignalProcessingManager::init();
+}
+
+void MainProgram::initGenericUpdaters()
+{
+	//time since load
+	std::function<float()> timeSinceLoadUpdaterFunction = std::bind(&MainProgram::getTimeSinceLoad, this);
+	VisualiserShaderManager::Uniforms::setUniformUpdater("vis_timeSinceLoad", timeSinceLoadUpdaterFunction);
+
+	//time in audio
+	std::function<float()> timeInAudioUpdaterFunction = std::bind(&MainProgram::getTimeInAudio, this);
+	VisualiserShaderManager::Uniforms::setUniformUpdater("vis_timeInAudio", timeInAudioUpdaterFunction);
+
+	//current sample
+	std::function<int()> currentSampleUpdaterFunction = &AudioManager::getCurrentSample;
+	VisualiserShaderManager::Uniforms::setUniformUpdater("vis_currentSample", currentSampleUpdaterFunction);
+
+	//total samples
+	std::function<int()> totalSamplesUpdaterFunction = &AudioManager::getNumSamples;
+	VisualiserShaderManager::Uniforms::setUniformUpdater("vis_totalSamples", totalSamplesUpdaterFunction);
+
+	//sample rate
+	std::function<int()> sampleRateUpdaterFunction = &AudioManager::getSampleRate;
+	VisualiserShaderManager::Uniforms::setUniformUpdater("vis_sampleRate", sampleRateUpdaterFunction);
 }
 
 void MainProgram::processInput() {
@@ -85,17 +115,21 @@ void MainProgram::processInput() {
 			_inputManager.releaseKey(evnt.key.keysym.sym);
 			break;
 		case SDL_MOUSEBUTTONDOWN:
-			_inputManager.pressKey(evnt.button.button);
+			if (!ImGui::GetIO().WantCaptureMouse) {
+				_inputManager.pressKey(evnt.button.button);
+			}
 			break;
 		case SDL_MOUSEBUTTONUP:
-			_inputManager.releaseKey(evnt.button.button);
+			if (!ImGui::GetIO().WantCaptureMouse) {
+				_inputManager.releaseKey(evnt.button.button);
+			}
 			break;
 		case SDL_MOUSEMOTION:
 			_inputManager.setMouseCoords(evnt.motion.x, evnt.motion.y);
 		}
 	}
 
-	if (_UI.getShowUi()) {
+	if (_UI.getShowUi() && !ImGui::GetIO().WantCaptureMouse) {
 		SpriteManager::processInput(&_inputManager);
 	}
 }

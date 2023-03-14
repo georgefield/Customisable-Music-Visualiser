@@ -16,9 +16,10 @@ namespace Vengine {
 		static bool copyFile(const std::string& sourceFile, const std::string& destinationFile);
 		static bool fileExists(const std::string& filename);
 
-		static bool readTextFileToBuffer(const std::string& filepath, std::vector<std::string>& buffer);
-		static bool outputTextFile(const std::string& filepath, std::vector<std::string>& fileContents);
-		static bool clearTextFile(const std::string& filepath);
+		static bool readTextFileToString(const std::string& filepath, std::string& buffer);
+		static bool readTextFileToVector(const std::string& filepath, std::vector<std::string>& buffer);
+		static bool outputToTextFile(const std::string& filepath, const std::string& fileContents, bool wipeExisting);
+		static bool clearFile(const std::string& filepath);
 
 		static void getFilesInDir(const std::string& dirPath, std::vector<std::string>& files, bool showExtension = true, std::string extension = "");
 

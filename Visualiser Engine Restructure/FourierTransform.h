@@ -14,7 +14,7 @@ public:
 	FourierTransform(int transformHistorySize = 7, float cutOffLow = -1.0f, float cutOffHigh = -1.0f, float cutoffSmoothFrac = 0.0f);
 	~FourierTransform();
 	
-	void init(Master* master, std::string name = "");
+	void init(Master* master, int FTid = -1);
 	void reInit();
 
 	void beginCalculation(); //applying filters must be between begin and end
@@ -53,7 +53,7 @@ public:
 
 	Master* getMasterPtr() const { return _m; }
 
-	std::string getName() const { return _nameOfFT; }
+	int getId() const { return _FTid; }
 
 	float getEnergy() { return _energyOfFt.getEnergy(); }
 	History<float>* getEnergyHistory() { return _energyOfFt.getHistory(); }
@@ -71,7 +71,7 @@ private:
 	bool _initialised;
 	bool _useSetters;
 	int _historySize;
-	std::string _nameOfFT;
+	int _FTid;
 
 	//low res output config
 	int _maxLowResOutputSize;
@@ -118,7 +118,7 @@ private:
 	float smoothCutoff(int i);
 
 	//setter functions
-	void initSetters();
-	void deleteSetters();
+	void setUpdaters();
+	void removeUpdaters();
  };
 

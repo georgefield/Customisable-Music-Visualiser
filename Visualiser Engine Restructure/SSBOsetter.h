@@ -55,7 +55,7 @@ struct SSBOsetter {
 		return true;
 	}
 
-	void callUpdater() {
+	void updateData() {
 		//function value does not need to be updated if constant
 		if (!isValid()) {
 			Vengine::warning("Tried to call updater on invalid SSBOinfo object");
@@ -68,6 +68,7 @@ struct SSBOsetter {
 	bool functionIsAttached;
 	bool isConstant;
 	bool isInitialised;
+	bool ssboForUpdaterInitialised;
 
 	std::string name;
 	std::function<float* ()> updaterFunction;

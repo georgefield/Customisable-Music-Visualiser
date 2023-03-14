@@ -16,7 +16,7 @@ public:
 	{}
 
 	~TempoDetection() {
-		deleteSetters();
+		removeUpdaters();
 	}
 
 	void init(Master* master, NoteOnset* noteOnset) {
@@ -41,7 +41,7 @@ public:
 		_agents = new AgentSet(_m->_sampleRate);
 		//--
 
-		initSetters();
+		initUpdaters();
 	}
 
 	void reInit() {
@@ -132,6 +132,6 @@ private:
 	void computeClusters(ClusterSet* clusters, std::vector<Peak>& peaks);
 	void computeAgents(AgentSet* agents, std::vector<Peak>& peaks);
 
-	void initSetters();
-	void deleteSetters();
+	void initUpdaters();
+	void removeUpdaters();
 };

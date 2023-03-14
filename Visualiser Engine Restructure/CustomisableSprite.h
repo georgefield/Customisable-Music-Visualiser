@@ -69,6 +69,8 @@ private:
 	std::vector<std::string> _shaderFileNames;
 
 	bool _useSimilarityMatrixTexture;
+
+	Vengine::ColourRGBA8 _colour; //for ui to pick colour
 	//--
 
 	//selected/dragging vars--

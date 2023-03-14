@@ -17,7 +17,7 @@ void FourierTransformManager::createFourierTransform(int& id, int historySize, f
 	}
 
 	_fourierTransforms[id] = new FourierTransform(historySize, cutOffLow, cutOffHigh, cutoffSmoothFrac);
-	_fourierTransforms[id]->init(SignalProcessingManager::getMasterPtr(), "FT-"+std::to_string(id));
+	_fourierTransforms[id]->init(SignalProcessingManager::getMasterPtr(), id);
 }
 
 bool FourierTransformManager::fourierTransformExists(int id)

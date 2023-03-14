@@ -22,7 +22,7 @@ void NoteOnset::calculateNext(DataExtractionAlg dataAlg, bool convolve) {
 		onsetValue = bandedDerOfLogEnergy();
 	}
 	if (dataAlg == DataExtractionAlg::SPECTRAL_DISTANCE || dataAlg == DataExtractionAlg::SPECTRAL_DISTANCE_HFC_WEIGHTED) {
-		onsetValue = spectralDistanceOfHarmonics(SPvars::UI::_onsetDetectionFunctionEnum == SPECTRAL_DISTANCE_HFC_WEIGHTED);
+		onsetValue = spectralDistanceOfHarmonics(SPvars._onsetDetectionFunctionEnum == SPECTRAL_DISTANCE_HFC_WEIGHTED);
 	}
 	if (dataAlg == DataExtractionAlg::SIM_MATRIX_MEL_SPEC) {
 		onsetValue = similarityMatrixMelSpectrogram();
@@ -38,7 +38,7 @@ void NoteOnset::calculateNext(DataExtractionAlg dataAlg, bool convolve) {
 
 	if (convolve) {
 		_CONVonsetDetectionHistory.add(
-			_m->sumOfConvolutionOfHistory(&_onsetDetectionHistory, SPvars::UI::_convolveWindowSize, LINEAR_PYRAMID),
+			_m->sumOfConvolutionOfHistory(&_onsetDetectionHistory, SPvars._convolveWindowSize, LINEAR_PYRAMID),
 			_m->_currentSample
 		);
 	}
@@ -52,7 +52,7 @@ void NoteOnset::calculateNext(DataExtractionAlg dataAlg, bool convolve) {
 
 	Peak lastPeak;
 	bool aboveThreshold;
-	if (_thresholder.getLastPeak(SPvars::UI::_thresholdPercentForPeak, lastPeak)) {
+	if (_thresholder.getLastPeak(SPvars._thresholdPercentForPeak, lastPeak)) {
 		_onsetPeaks.add(lastPeak);
 		std::cout << lastPeak.salience << std::endl;
 	}
@@ -209,10 +209,10 @@ float NoteOnset::combination()
 
 void NoteOnset::initSetters()
 {
-	VisualiserShaderManager::addHistoryAsPossibleSSBOsetter("Note Onset", &_onsetDetectionHistory);
+
 }
 
 void NoteOnset::deleteSetters()
 {
-	VisualiserShaderManager::deleteHistoryAsPossibleSSBOsetter("Note Onset");
+
 }

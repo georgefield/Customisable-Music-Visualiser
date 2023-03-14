@@ -31,15 +31,11 @@ public:
 
 private:
 	static void drawNoBatching();
-	static void drawWithBatching();
-
 
 	static int _selectedSpriteId;
 
 	static Vengine::Viewport* _viewport;
 	static Vengine::Window* _window;
-
-	static Vengine::SpriteBatch _spriteBatch;
 
 	//sprite containers
 	static std::unordered_map<int, CustomisableSprite*> _userAddedSpritePtrs; //main container

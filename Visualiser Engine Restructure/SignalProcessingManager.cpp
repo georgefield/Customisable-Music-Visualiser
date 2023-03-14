@@ -30,10 +30,6 @@ void SignalProcessingManager::init() {
 	_master->init(AudioManager::getSampleData(), AudioManager::getSampleRate());
 
 	initAlgorithmObjects(true, true, true, true, true);
-
-	//set up general history size uniform setter
-	std::function<int()> generalHistorySizeSetterFunction = SignalProcessingManager::getGeneralHistorySize;
-	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("General history size", generalHistorySizeSetterFunction);
 }
 
 void SignalProcessingManager::reset()
@@ -43,7 +39,7 @@ void SignalProcessingManager::reset()
 		return;
 	}
 
-	SPvars::UI::_wasSignalProcessingReset = true;
+	SPvars._wasSignalProcessingReset = true;
 
 	_master->reInit(AudioManager::getSampleData(), AudioManager::getSampleRate()); //will tell all other algorithms to reinit
 	FourierTransformManager::reInitAll();
@@ -55,7 +51,7 @@ void SignalProcessingManager::calculate()
 {
 	if (AudioManager::isAudioLoadedThisFrame()) { //change in song
 		Vengine::warning("Change in audio source, reseting signal processing");
-		SPvars::UI::_nextCalculationSample = 0;
+		SPvars._nextCalculationSample = 0;
 		reset(); //reset
 	}
 
@@ -65,68 +61,72 @@ void SignalProcessingManager::calculate()
 	}
 
 	//dependencies
-	if (SPvars::UI::_computeTempoDetection) { SPvars::UI::_computeNoteOnset = true; }
-	if (SPvars::UI::_computeSimilarityMatrix && _similarityMatrix->isRealTime()) { SPvars::UI::_computeMFCCs = true; }
-	if (SPvars::UI::_computeNoteOnset && SPvars::UI::_onsetDetectionFunctionEnum == NoteOnset::DataExtractionAlg::SIM_MATRIX_MEL_SPEC) { SPvars::UI::_computeMFCCs = true; }
+	if (SPvars._computeTempoDetection) { SPvars._computeNoteOnset = true; }
+	if (SPvars._computeSimilarityMatrix && _similarityMatrix->isRealTime()) { SPvars._computeMFCCs = true; }
+	if (SPvars._computeNoteOnset && SPvars._onsetDetectionFunctionEnum == NoteOnset::DataExtractionAlg::SIM_MATRIX_MEL_SPEC) { SPvars._computeMFCCs = true; }
 
-	if (SPvars::UI::_nextCalculationSample > AudioManager::getCurrentSample()) {
+	if (SPvars._nextCalculationSample > AudioManager::getCurrentSample()) {
 		
 		return;
 	}
 
-	_master->beginCalculations(int(SPvars::UI::_nextCalculationSample));
+	_master->beginCalculations(int(SPvars._nextCalculationSample));
 	_master->calculatePeakAmplitude();
+	_master->calculateEnergy();
 
 	//all other signal processing done between begin and end--
 
-	if (SPvars::UI::_computeFourierTransform) {
+	if (SPvars._computeFourierTransform) {
 		_master->calculateFourierTransform();
 		FourierTransformManager::calculateFourierTransforms();
 	}
-	if (SPvars::UI::_computeRms) {
+	if (SPvars._computeRms) {
 		_rms->calculateNext(4096, LINEAR_PYRAMID);
 	}
-	if (SPvars::UI::_computeNoteOnset) {
-		_noteOnset->calculateNext(NoteOnset::DataExtractionAlg(SPvars::UI::_onsetDetectionFunctionEnum), SPvars::UI::_convolveOnsetDetection);
+	if (SPvars._computeNoteOnset) {
+		_noteOnset->calculateNext(NoteOnset::DataExtractionAlg(SPvars._onsetDetectionFunctionEnum), SPvars._convolveOnsetDetection);
 	}
-	if (SPvars::UI::_computeTempoDetection) {
+	if (SPvars._computeTempoDetection) {
 		_tempoDetection->calculateNext();
 	}
-	if (SPvars::UI::_computeMFCCs) {
+	if (SPvars._computeMFCCs) {
 		_mfccs->calculateNext();
 	}
-	if (SPvars::UI::_computeSimilarityMatrix) {
+	if (SPvars._computeSimilarityMatrix) {
 		_similarityMatrix->calculateNext();
 	}
 	//--
 
 	_master->endCalculations();
 
+	//set vis values that will be sent to shader
+	VisualiserShaderManager::updateUniformValuesToOutput();
+
 	//increment sample
-	SPvars::UI::_nextCalculationSample += float(AudioManager::getSampleRate()) / SPvars::UI::_desiredCPS;
+	SPvars._nextCalculationSample += float(AudioManager::getSampleRate()) / SPvars._desiredCPS;
 
 	//time how long calculation lags behind frames--
-	if (SPvars::UI::_nextCalculationSample < AudioManager::getCurrentSample()) {
+	if (SPvars._nextCalculationSample < AudioManager::getCurrentSample()) {
 		Vengine::MyTiming::startTimer(_lagTimerId);
 	}
-	if (SPvars::UI::_nextCalculationSample > AudioManager::getCurrentSample()) {
+	if (SPvars._nextCalculationSample > AudioManager::getCurrentSample()) {
 		Vengine::MyTiming::resetTimer(_lagTimerId);
 	}
 	//--
 
 
 	//if lag for too long reduce cps--
-	if (Vengine::MyTiming::readTimer(_lagTimerId) > SPvars::Const::_lagTimeBeforeReducingCPS) {
-		SPvars::UI::_desiredCPS *= SPvars::Const::_CPSreduceFactor; //decrease desired cps
-		UIglobalFeatures::queueError("Cannot reach desired audio calculations per second (CPS), reducing CPS to " + std::to_string(SPvars::UI::_desiredCPS)); //show error
+	if (Vengine::MyTiming::readTimer(_lagTimerId) > SPvars._lagTimeBeforeReducingCPS) {
+		SPvars._desiredCPS *= SPvars._CPSreduceFactor; //decrease desired cps
+		UIglobalFeatures::queueError("Cannot reach desired audio calculations per second (CPS), reducing CPS to " + std::to_string(SPvars._desiredCPS)); //show error
 
 		reset(); 
 
-		while (SPvars::UI::_nextCalculationSample < AudioManager::getCurrentSample()) {
-			SPvars::UI::_nextCalculationSample += float(AudioManager::getSampleRate()) / SPvars::UI::_desiredCPS;
+		while (SPvars._nextCalculationSample < AudioManager::getCurrentSample()) {
+			SPvars._nextCalculationSample += float(AudioManager::getSampleRate()) / SPvars._desiredCPS;
 		}
 
-		SPvars::UI::_wasCPSautoDecreased = true;
+		SPvars._wasCPSautoDecreased = true;
 		Vengine::MyTiming::resetTimer(_lagTimerId);
 	}
 	//--
@@ -147,12 +147,10 @@ void SignalProcessingManager::initAlgorithmObjects(bool rms, bool noteOnset, boo
 			_rms->reInit();
 		}
 		else {
-			_rms = new RMS(SPvars::Const::_generalHistorySize);
+			_rms = new RMS(SPvars._generalHistorySize);
 			_rms->init(_master);
 		}
 	}
-
-	std::cout << "RMS tick" << std::endl;
 
 	//MFCCs
 	if (mfccs) {
@@ -161,11 +159,9 @@ void SignalProcessingManager::initAlgorithmObjects(bool rms, bool noteOnset, boo
 		}
 		else {
 			_mfccs = new MFCCs();
-			_mfccs->init(_master, SPvars::Const::_numMelBands, 0, 20000);
+			_mfccs->init(_master, SPvars._numMelBands, 0, 20000);
 		}
 	}
-
-	std::cout << "MFCCs tick" << std::endl;
 
 	//Note onset
 	if (noteOnset) {
@@ -173,12 +169,10 @@ void SignalProcessingManager::initAlgorithmObjects(bool rms, bool noteOnset, boo
 			_noteOnset->reInit();
 		}
 		else {
-			_noteOnset = new NoteOnset(SPvars::Const::_generalHistorySize);
+			_noteOnset = new NoteOnset(SPvars._generalHistorySize);
 			_noteOnset->init(_master, _mfccs);
 		}
 	}
-
-	std::cout << "Note onset tick" << std::endl;
 
 	//Tempo detection
 	if (tempoDetection) {
@@ -191,20 +185,14 @@ void SignalProcessingManager::initAlgorithmObjects(bool rms, bool noteOnset, boo
 		}
 	}
 
-	std::cout << "tempo tick" << std::endl;
-
-
 	//Similarity matrix
 	if (similarityMatrix) {
 		if (_similarityMatrix != nullptr) {
-			_similarityMatrix->reInit(SPvars::UI::_nextSimilarityMatrixSize);
+			_similarityMatrix->reInit(SPvars._nextSimilarityMatrixSize);
 		}
 		else {
-			_similarityMatrix = new SimilarityMatrixHandler(SPvars::Const::_generalHistorySize);
-			_similarityMatrix->init(_master, SPvars::UI::_nextSimilarityMatrixSize);
+			_similarityMatrix = new SimilarityMatrixHandler(SPvars._generalHistorySize);
+			_similarityMatrix->init(_master, SPvars._nextSimilarityMatrixSize);
 		}
 	}
-
-	std::cout << "Sim mat tick" << std::endl;
-
 }

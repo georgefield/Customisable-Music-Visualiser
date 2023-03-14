@@ -134,6 +134,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AudioManager.cpp" />
+    <ClCompile Include="ConfigManager.cpp" />
     <ClCompile Include="CustomisableSprite.cpp" />
     <ClCompile Include="DataTextureCreator.cpp" />
     <ClCompile Include="DixonAlgVariableDefinitions.cpp" />
@@ -159,6 +160,7 @@
     <ClCompile Include="VisualiserShader.cpp" />
     <ClCompile Include="VisualiserManager.cpp" />
     <ClCompile Include="VisualiserShaderManager.cpp" />
+    <ClCompile Include="VisVars.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AudioManager.h" />
@@ -202,6 +204,7 @@
     <ClInclude Include="VisualiserShader.h" />
     <ClInclude Include="VisualiserManager.h" />
     <ClInclude Include="VisualiserShaderManager.h" />
+    <ClInclude Include="VisVars.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

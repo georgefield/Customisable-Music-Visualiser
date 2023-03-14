@@ -1,4 +1,5 @@
 #include "SpriteManager.h"
+#include "VisualiserShaderManager.h"
 
 #include <algorithm>
 
@@ -7,7 +8,6 @@ int SpriteManager::_selectedSpriteId = -1;
 Vengine::Viewport* SpriteManager::_viewport = nullptr;
 Vengine::Window* SpriteManager::_window = nullptr;
 
-Vengine::SpriteBatch SpriteManager::_spriteBatch;
 
 //sprite containers
 std::unordered_map<int, CustomisableSprite*> SpriteManager::_userAddedSpritePtrs; //main container
@@ -30,7 +30,6 @@ void SpriteManager::init(Vengine::Viewport* viewport, Vengine::Window* window)
 {
 	_window = window;
 	_viewport = viewport;
-	_spriteBatch.init();
 }
 
 
@@ -117,26 +116,15 @@ void SpriteManager::drawNoBatching()
 			auto shaderProgram = it->getVisualiserShader()->getProgram();
 
 			shaderProgram->use();
-			it->getVisualiserShader()->updateUniformValues();
+			
+			//update uniforms
+			VisualiserShaderManager::setShaderUniforms(it->getVisualiserShader());
 
 			it->draw();
 
 			shaderProgram->unuse();
 		}
 	}
-}
-
-void SpriteManager::drawWithBatching() //useful for fast rendering when not editing
-{
-	_spriteBatch.begin();
-
-	for (auto& it : _userAddedSpritePtrs) {
-
-		_spriteBatch.draw(it.second, it.second->getVisualiserShader()->getProgram(), std::bind(&VisualiserShader::updateUniformValues, it.second->getVisualiserShader()));
-	}
-	_spriteBatch.end();
-
-	_spriteBatch.renderBatch();
 }
 
 void SpriteManager::processInput(Vengine::InputManager* inputManager)

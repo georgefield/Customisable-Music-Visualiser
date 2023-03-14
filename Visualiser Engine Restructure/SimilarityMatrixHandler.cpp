@@ -7,7 +7,7 @@
 
 SimilarityMatrixHandler::SimilarityMatrixHandler(int size)
 	:
-matrix(SPvars::Const::_generalHistorySize),
+matrix(SPvars._generalHistorySize),
 _fourierTransform(nullptr),
 _samplesAheadForFutureMatrix(0)
 {
@@ -18,7 +18,7 @@ SimilarityMatrixHandler::~SimilarityMatrixHandler()
 	if (_fourierTransform != nullptr) {
 		delete _fourierTransform;
 	}
-	deleteSetters();
+	removeUpdaters();
 }
 
 void SimilarityMatrixHandler::init(Master* master, int matrixSize)
@@ -26,23 +26,23 @@ void SimilarityMatrixHandler::init(Master* master, int matrixSize)
 	_master = master;
 	_matrixSize = matrixSize;
 
-	_samplesAheadForFutureMatrix = (float(matrixSize) / (2.0f * SPvars::UI::_desiredCPS)) * _master->_sampleRate;
+	_samplesAheadForFutureMatrix = (float(matrixSize) / (2.0f * SPvars._desiredCPS)) * _master->_sampleRate;
 
 	_futureMaster.init(AudioManager::getSampleData(), AudioManager::getSampleRate(), false);
 
-	_futureMFCCs.init(&_futureMaster, SPvars::Const::_numMelBands, 0, 20000, false);
+	_futureMFCCs.init(&_futureMaster, SPvars._numMelBands, 0, 20000, false);
 
 	//fourier transform inited when created
 
 	matrix.init(matrixSize);
 
-	initSetters();
+	initUpdaters();
 }
 
 void SimilarityMatrixHandler::reInit(int matrixSize)
 {
 	_matrixSize = matrixSize;
-	_samplesAheadForFutureMatrix = (float(matrixSize) / (2.0f * SPvars::UI::_desiredCPS)) * _master->_sampleRate;
+	_samplesAheadForFutureMatrix = (float(matrixSize) / (2.0f * SPvars._desiredCPS)) * _master->_sampleRate;
 
 	_futureMaster.reInit(AudioManager::getSampleData(), AudioManager::getSampleRate());
 
@@ -66,7 +66,7 @@ void SimilarityMatrixHandler::calculateNext()
 		return; //dont bother doing anything if not linked
 	}
 	
-	if (SPvars::UI::_useFutureSimilarityMatrix) {
+	if (SPvars._useFutureSimilarityMatrix) {
 
 		//std::cout << "Samples ahead: " << _samplesAhead << std::endl;
 		_futureMaster.beginCalculations(AudioManager::getCurrentSample() + _samplesAheadForFutureMatrix);
@@ -83,7 +83,7 @@ void SimilarityMatrixHandler::calculateNext()
 		}
 		//--
 
-		matrix.calculateNext(MeasureType(SPvars::UI::_matrixMeasureEnum), SPvars::UI::_similarityMatrixTextureContrastFactor);
+		matrix.calculateNext(MeasureType(SPvars._matrixMeasureEnum), SPvars._similarityMatrixTextureContrastFactor);
 
 		_futureMaster.endCalculations();
 	}
@@ -94,7 +94,7 @@ void SimilarityMatrixHandler::calculateNext()
 			_fourierTransform->endCalculation();
 		}
 
-		matrix.calculateNext(MeasureType(SPvars::UI::_matrixMeasureEnum), SPvars::UI::_similarityMatrixTextureContrastFactor);
+		matrix.calculateNext(MeasureType(SPvars._matrixMeasureEnum), SPvars._similarityMatrixTextureContrastFactor);
 	}
 
 }
@@ -105,7 +105,7 @@ void SimilarityMatrixHandler::linkToMFCCs(int coeffLow, int coeffHigh)
 	_coeffHigh = coeffHigh;
 
 	_linkedTo = MFCC;
-	if (SPvars::UI::_useFutureSimilarityMatrix) {
+	if (SPvars._useFutureSimilarityMatrix) {
 		matrix.linkToMFCCs(&_futureMFCCs, coeffLow, coeffHigh);
 		return;
 	}
@@ -115,7 +115,7 @@ void SimilarityMatrixHandler::linkToMFCCs(int coeffLow, int coeffHigh)
 void SimilarityMatrixHandler::linkToMelBandEnergies()
 {
 	_linkedTo = MelBandEnergies;
-	if (SPvars::UI::_useFutureSimilarityMatrix) {
+	if (SPvars._useFutureSimilarityMatrix) {
 		matrix.linkToMelBandEnergies(&_futureMFCCs);
 		return;
 	}
@@ -125,7 +125,7 @@ void SimilarityMatrixHandler::linkToMelBandEnergies()
 void SimilarityMatrixHandler::linkToMelSpectrogram()
 {
 	_linkedTo = MelSpectrogram;
-	if (SPvars::UI::_useFutureSimilarityMatrix) {
+	if (SPvars._useFutureSimilarityMatrix) {
 		matrix.linkToMelSpectrogram(&_futureMFCCs);
 		return;
 	}
@@ -145,11 +145,11 @@ void SimilarityMatrixHandler::linkToFourierTransform(float cutoffLow, float cuto
 	//create new fourier transform
 	_fourierTransform = new FourierTransform(1, cutoffLow, cutoffHigh, smoothFactor);
 
-	if (SPvars::UI::_useFutureSimilarityMatrix) {
-		_fourierTransform->init(&_futureMaster, "");
+	if (SPvars._useFutureSimilarityMatrix) {
+		_fourierTransform->init(&_futureMaster, -1);
 	}
 	else {
-		_fourierTransform->init(_master, "");
+		_fourierTransform->init(_master, -1);
 	}
 
 	//link it
@@ -158,18 +158,13 @@ void SimilarityMatrixHandler::linkToFourierTransform(float cutoffLow, float cuto
 }
 
 
-void SimilarityMatrixHandler::initSetters()
+void SimilarityMatrixHandler::initUpdaters()
 {
-	//energy setters init in energy class
-	std::function<int()> matrixSizeSetterFunction = std::bind(&SelfSimilarityMatrix::getMatrixSize, &matrix);
-	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Similarity matrix size", matrixSizeSetterFunction);
-
-	std::function<int()> matrixStartIndexForTextureSetterFunction = std::bind(&SelfSimilarityMatrix::getMatrixTextureStartPixelIndex, &matrix);
-	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Similarity matrix texture start point", matrixStartIndexForTextureSetterFunction);
+	std::function<float()> similarityMeasureUpdaterFunction = std::bind(&SelfSimilarityMatrix::getSimilarityMeasure, &matrix);
+	VisualiserShaderManager::Uniforms::setUniformUpdater("vis_similarityMeasure", similarityMeasureUpdaterFunction);
 }
 
-void SimilarityMatrixHandler::deleteSetters()
+void SimilarityMatrixHandler::removeUpdaters()
 {
-	VisualiserShaderManager::Uniforms::deletePossibleUniformSetter("Similarity matrix size");
-	VisualiserShaderManager::Uniforms::deletePossibleUniformSetter("Similarity matrix texture start point");
+	VisualiserShaderManager::Uniforms::removeUniformUpdater("vis_similarityMeasure");
 }

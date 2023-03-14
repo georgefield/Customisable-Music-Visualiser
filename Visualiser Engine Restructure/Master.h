@@ -33,9 +33,12 @@ public:
 	int _previousSample;
 	int _currentSample;
 	float _peakAmplitude;
+	float _peakAmplitudeDb;
+	float _energy;
 	FourierTransformHistory _fftHistory;
 
 	void calculateFourierTransform();
+	void calculateEnergy();
 	void calculatePeakAmplitude();
 	void audioIsPaused();
 
@@ -44,6 +47,9 @@ public:
 
 	float* getBaseFftOutput();
 	int getBaseFftNumHarmonics();
+	float getEnergy();
+	float getPeakAmplitude();
+	float getPeakAmplitudeDb();
 
 	int nyquist() const { assert(_sampleRate > 0); return _sampleRate / 2; }
 private:
@@ -54,6 +60,6 @@ private:
 
 	bool _useSetters;
 
-	void initSetters();
-	void deleteSetters();
+	void setUpdaters();
+	void removeUpdaters();
 };

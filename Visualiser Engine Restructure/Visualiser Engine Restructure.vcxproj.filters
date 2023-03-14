@@ -135,6 +135,12 @@
     <ClCompile Include="UIglobalFeatures.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="VisVars.cpp">
+      <Filter>Source Files\Visualiser Managing</Filter>
+    </ClCompile>
+    <ClCompile Include="ConfigManager.cpp">
+      <Filter>Source Files\Visualiser Managing</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MainProgram.h">
@@ -259,6 +265,9 @@
     </ClInclude>
     <ClInclude Include="UIglobalFeatures.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VisVars.h">
+      <Filter>Header Files\Visualiser Managing</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

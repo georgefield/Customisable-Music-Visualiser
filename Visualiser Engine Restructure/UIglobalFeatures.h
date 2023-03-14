@@ -9,6 +9,7 @@ public:
 	static void	displayErrors();
 
 	static std::string ImGuiComboStringMaker(std::vector<std::string>& options);
+	static bool ImGuiBetterCombo(std::vector<std::string>& options, int& currentItem, int id);
 private:
 
 	static int _errorMessageTimerId;

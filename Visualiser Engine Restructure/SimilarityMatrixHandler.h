@@ -47,7 +47,7 @@ private:
 	float _cutoffSmoothFactor;
 	//--
 
-	void initSetters();
-	void deleteSetters();
+	void initUpdaters();
+	void removeUpdaters();
 };
 

@@ -98,4 +98,6 @@ void Vengine::Window::initImgui(){
 	ImGui_ImplSDL2_InitForOpenGL(_window, _glContext);
 	printf("	init openGL3...\n");
 	ImGui_ImplOpenGL3_Init();
+
+	ImGui::CaptureMouseFromApp(true);
 }

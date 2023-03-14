@@ -20,6 +20,7 @@ public:
 
 	static bool isVisualiserLoaded() { return _current.isInitialised(); }
 	static std::string path() { return _current.getPath(); }
+	static std::string interpretedShadersFolder() { return _current.getPath() + "/interpreted_shaders"; }
 	static std::string shadersFolder() { return _current.getPath() + "/shaders"; }
 	static std::string texturesFolder() { return _current.getPath() + "/textures"; }
 

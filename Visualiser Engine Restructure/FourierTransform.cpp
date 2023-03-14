@@ -22,7 +22,7 @@ FourierTransform::FourierTransform(int historySize, float cutOffLow, float cutOf
 	_current(nullptr),
 	_next(nullptr),
 
-	_energyOfFt(SPvars::Const::_generalHistorySize)
+	_energyOfFt(SPvars._generalHistorySize)
 {
 	_maxLowResOutputSize = 50;
 }
@@ -35,21 +35,21 @@ FourierTransform::~FourierTransform()
 		delete[] _lowResOutputLogScale;
 
 		if (_useSetters) {
-			deleteSetters();
+			removeUpdaters();
 		}
 	}
 }
 
 
-void FourierTransform::init(Master* master, std::string name)
+void FourierTransform::init(Master* master, int FTid)
 {
 	if (_initialised) {
 		Vengine::fatalError("Double initialisation of fourier transform");
 	}
 
 	_initialised = true;
-	_nameOfFT = name;
-	_useSetters = (name != ""); //empty name => not a front facing ft, so dont init setters for uniforms & ssbos
+	_FTid = FTid;
+	_useSetters = (FTid >= 0); //-1 for FT that does not output to gpu for use in shaders
 	_m = master;
 
 	//sanitise and set cutoffs--
@@ -87,10 +87,10 @@ void FourierTransform::init(Master* master, std::string name)
 	_next = &(_working2);
 
 	//init energy of ft
-	_energyOfFt.init(_m, _nameOfFT);
+	_energyOfFt.init(_m, _FTid);
 
 	if (_useSetters) {
-		initSetters();
+		setUpdaters();
 	}
 }
 
@@ -152,13 +152,13 @@ void FourierTransform::beginCalculation()
 		_current->workingArray()[index] = _m->_fftHistory.newest()[i] * smoothCutoff(i);
 		index++;
 	}
+
+	//energy calculated from FT before any smoothing otherwise would be inaccurate
+	_energyOfFt.calculateNext(_current->workingArray(), _current->numHarmonics());
 }
 
 void FourierTransform::endCalculation() {
 	_current->addWorkingArrayToHistory(_m->_currentSample);
-
-	//energy calculated from FT
-	_energyOfFt.calculateNext(getOutput(), _current->numHarmonics());
 
 	//calculate low res log scale output
 	memset(_lowResOutputLogScale, 0.0f, _lowResOutputSize * sizeof(float));
@@ -341,20 +341,25 @@ float FourierTransform::smoothCutoff(int i)
 	return std::min((2.0f * distanceFromCutoffFrac) / _cutoffSmoothFrac, 1.0f); //1.0f => pyramid band, 0.5f => trapezium with top side half of bottom, 0.1f => trapezium top side 9/10 of bottom
 }
 
-void FourierTransform::initSetters()
+void FourierTransform::setUpdaters()
 {
+	std::string uniformPrefix = "vis_FT" + std::to_string(_FTid) + "_";
+
 	//energy setters init in energy class
+
 	std::function<int()> numHarmonicsSetterFunction = std::bind(& FourierTransform::getNumHarmonics, this);
-	VisualiserShaderManager::Uniforms::addPossibleUniformSetter(_nameOfFT + " #freq", numHarmonicsSetterFunction);
+	VisualiserShaderManager::Uniforms::setUniformUpdater(uniformPrefix + "size", numHarmonicsSetterFunction);
 
 	std::function<float* ()> harmonicValueSetterFunction = std::bind(&FourierTransform::getOutput, this);
-	VisualiserShaderManager::SSBOs::addPossibleSSBOSetter(_nameOfFT + " freq values", harmonicValueSetterFunction, _numHarmonics);
+	VisualiserShaderManager::SSBOs::setSSBOupdater(uniformPrefix + "harmonics", harmonicValueSetterFunction, _numHarmonics);
 }
 
-void FourierTransform::deleteSetters()
+void FourierTransform::removeUpdaters()
 {
+	std::string uniformPrefix = "vis_FT" + std::to_string(_FTid) + "_";
+
 	//energy setters deleted in energy class
 
-	VisualiserShaderManager::Uniforms::deletePossibleUniformSetter(_nameOfFT + " #freq");
-	VisualiserShaderManager::SSBOs::deleteSSBOsetter(_nameOfFT + " freq values");
+	VisualiserShaderManager::Uniforms::removeUniformUpdater(uniformPrefix + "size");
+	VisualiserShaderManager::SSBOs::removeSSBOupdater(uniformPrefix + "harmonics");
 }

@@ -21,7 +21,6 @@ void AudioManager::init()
 {
 	miniaudio.init();
 	Vengine::MyTiming::createTimer(_currentSampleExtraPrecisionTimerId);
-	createUniformSetterFunctions();
 }
 
 bool AudioManager::load(std::string filePath)
@@ -242,15 +241,4 @@ void AudioManager::showImguiDebugWindow()
 		ImGui::Text("No audio loaded");
 	}
 	ImGui::End();
-}
-
-//private-------
-
-void AudioManager::createUniformSetterFunctions()
-{
-	std::function<int()> currentSampleSetterFunc = AudioManager::getCurrentSample;
-	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Current Sample", currentSampleSetterFunc);
-
-	std::function<int()> sampleRateSetterFunc = AudioManager::getSampleRate;
-	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Sample Rate", sampleRateSetterFunc);
 }

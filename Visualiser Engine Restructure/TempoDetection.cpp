@@ -252,7 +252,7 @@ void TempoDetection::computeAgents(AgentSet* agents, std::vector<Peak>& peaks)
 	float tolPrePercentage = 0.2; //20%
 	float tolPostPercentage = 0.4; //40%
 
-	int maxTolPre = tolPrePercentage * (60.0f / SPvars::UI::MIN_TEMPO) * _m->_sampleRate; //used for optimisation
+	int maxTolPre = tolPrePercentage * (60.0f / SPvars.MIN_TEMPO) * _m->_sampleRate; //used for optimisation
 
 	int tolInner = 0.05 * _m->_sampleRate; // 50 ms
 
@@ -310,28 +310,25 @@ void TempoDetection::computeAgents(AgentSet* agents, std::vector<Peak>& peaks)
 	agents->removeOldPeaksFromAgents(_m->_currentSample);
 }
 
-void TempoDetection::initSetters()
+void TempoDetection::initUpdaters()
 {
-	std::function<float()> tempoSetterFunction = std::bind(&TempoDetection::getTempo, this);
-	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Tempo", tempoSetterFunction);
+	std::function<float()> tempoUpdaterFunction = std::bind(&TempoDetection::getTempo, this);
+	VisualiserShaderManager::Uniforms::setUniformUpdater("vis_tempoEstimate", tempoUpdaterFunction);
 
-	std::function<float()> timeSinceLastBeatSetterFunction = std::bind(&TempoDetection::getTimeSinceLastBeat, this);
-	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Time since last beat", timeSinceLastBeatSetterFunction);
+	std::function<float()> confidenceInTempoUpdaterFunction = std::bind(&TempoDetection::getConfidenceInTempo, this);
+	VisualiserShaderManager::Uniforms::setUniformUpdater("vis_tempoEstimateConfidence", confidenceInTempoUpdaterFunction);
 
-	std::function<float()> timeToNextBeatSetterFunction = std::bind(&TempoDetection::getTimeToNextBeat, this);
-	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Time to next beat", timeToNextBeatSetterFunction);
+	std::function<float()> timeSinceLastBeatUpdaterFunction = std::bind(&TempoDetection::getTimeSinceLastBeat, this);
+	VisualiserShaderManager::Uniforms::setUniformUpdater("vis_timeSinceLastBeat", timeSinceLastBeatUpdaterFunction);
 
-	std::function<float()> confidenceInTempoSetterFunction = std::bind(&TempoDetection::getTempo, this);
-	VisualiserShaderManager::Uniforms::addPossibleUniformSetter("Tempo confidence", confidenceInTempoSetterFunction);
+	std::function<float()> timeToNextBeatUpdaterFunction = std::bind(&TempoDetection::getTimeToNextBeat, this);
+	VisualiserShaderManager::Uniforms::setUniformUpdater("vis_timeToNextBeat", timeToNextBeatUpdaterFunction);
 }
 
-void TempoDetection::deleteSetters()
+void TempoDetection::removeUpdaters()
 {
-	VisualiserShaderManager::Uniforms::deletePossibleUniformSetter("Tempo");
-
-	VisualiserShaderManager::Uniforms::deletePossibleUniformSetter("Time since last beat");
-
-	VisualiserShaderManager::Uniforms::deletePossibleUniformSetter("Time to next beat");
-
-	VisualiserShaderManager::Uniforms::deletePossibleUniformSetter("Tempo confidence");
+	VisualiserShaderManager::Uniforms::removeUniformUpdater("vis_tempoEstimate");
+	VisualiserShaderManager::Uniforms::removeUniformUpdater("vis_tempoEstimateConfidence");
+	VisualiserShaderManager::Uniforms::removeUniformUpdater("vis_timeSinceLastBeat");
+	VisualiserShaderManager::Uniforms::removeUniformUpdater("vis_timeToNextBeat");
 }

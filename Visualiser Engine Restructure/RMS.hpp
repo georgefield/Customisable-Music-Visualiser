@@ -13,7 +13,7 @@ public:
 	}
 
 	~RMS() {
-		deleteSetters();
+		removeUpdaters();
 	}
 
 	void init(Master* master) {
@@ -21,7 +21,7 @@ public:
 		_sampleLastCalculated = -1;
 		_sumOfSamplesSquared = 0;
 
-		initSetters();
+		initUpdaters();
 	}
 
 	void reInit() {
@@ -77,11 +77,12 @@ private:
 
 	int _sampleLastCalculated;
 
-	void initSetters() {
-		VisualiserShaderManager::addHistoryAsPossibleSSBOsetter("RMS", &_rms);
+	void initUpdaters() {
+		std::function<float()> rmsUpdaterFunction = std::bind(&RMS::getRMS, this);
+		VisualiserShaderManager::Uniforms::setUniformUpdater("vis_RMS", rmsUpdaterFunction);
 	}
 	
-	void deleteSetters() {
-		VisualiserShaderManager::deleteHistoryAsPossibleSSBOsetter("RMS");
+	void removeUpdaters() {
+		VisualiserShaderManager::Uniforms::removeUniformUpdater("vis_RMS");
 	}
 };

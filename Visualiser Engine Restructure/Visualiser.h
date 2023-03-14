@@ -29,7 +29,6 @@ private:
 
 	bool _initialised;
 
-	void updateConfig();
-	bool createConfig();
+	bool updateConfig();
 };
 

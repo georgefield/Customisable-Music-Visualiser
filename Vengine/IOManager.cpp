@@ -94,7 +94,7 @@ bool Vengine::IOManager::fileExists(const std::string& filename)
 }
 
 
-bool IOManager::readTextFileToBuffer(const std::string& filepath, std::vector<std::string>& buffer) {
+bool IOManager::readTextFileToString(const std::string& filepath, std::string& buffer) {
 
 	std::ifstream file(filepath);
 	if (file.fail()) {
@@ -107,32 +107,56 @@ bool IOManager::readTextFileToBuffer(const std::string& filepath, std::vector<st
 		return false;
 	}
 
-	//line by line in vector
-	buffer.clear();
-	std::string tmp = "";
+	std::string tmp;
+	while (std::getline(file, tmp)) {
+		buffer += tmp + "\n";
+	}
+
+	return true;
+}
+
+
+bool Vengine::IOManager::readTextFileToVector(const std::string& filepath, std::vector<std::string>& buffer) {
+
+	std::ifstream file(filepath);
+	if (file.fail()) {
+		perror(filepath.c_str());
+		return false;
+	}
+
+	if (!file.is_open()) {
+		Vengine::warning("Failed to open file " + filepath);
+		return false;
+	}
+
+	std::string tmp;
 	while (std::getline(file, tmp)) {
 		buffer.push_back(tmp);
 	}
 
 	return true;
-} //for ascii mainly
-
-bool Vengine::IOManager::outputTextFile(const std::string& filepath, std::vector<std::string>& fileContents){
-
-		std::ofstream file(filepath); // create file object
-		if (file.is_open()) { // check if file was successfully opened
-			for (const auto& content : fileContents) {
-				file << content << "\n"; // write each string in vector to file with newline character
-			}
-			file.close(); // close file
-			return true;
-		}
-
-		Vengine::warning("Was not able to create/open then output to file " + filepath);
-		return false;
 }
 
-bool Vengine::IOManager::clearTextFile(const std::string& filepath)
+
+bool Vengine::IOManager::outputToTextFile(const std::string& filepath, const std::string& fileContents, bool wipeExisting) {
+
+	if (wipeExisting && fileExists(filepath)) //if wipe existing add truncate flag
+		std::cout << "Clearing";
+		clearFile(filepath);
+
+	std::ofstream file(filepath); // open file
+
+	if (file.is_open()) { // check if file was successfully opened
+		file << fileContents; // write to file
+		file.close(); // close file
+		return true;
+	}
+
+	Vengine::warning("Was not able to create/open then output to file " + filepath);
+	return false;
+}
+
+bool Vengine::IOManager::clearFile(const std::string& filepath)
 {
 	if (!std::filesystem::exists(filepath)) {
 		Vengine::warning("Tried to clear text file that does not exist");
@@ -146,7 +170,7 @@ bool Vengine::IOManager::clearTextFile(const std::string& filepath)
 void IOManager::getFilesInDir(const std::string& dirPath, std::vector<std::string>& files, bool showExtension, std::string extension)
 {
 	files.clear();
-	for (const auto& entry : std::filesystem::directory_iterator(dirPath)){
+	for (const auto& entry : std::filesystem::directory_iterator(dirPath)) {
 		if (extension == "" || entry.path().extension().string() == extension) {
 			files.push_back(entry.path().stem().string() + (showExtension ? entry.path().extension().string() : ""));
 		}

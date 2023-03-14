@@ -1,53 +1,53 @@
 #pragma once
-struct SPvars {
-	struct UI {	//Can interact with them through UI
-		//which to compute--
-		static bool _computeFourierTransform;
-		static bool _computeRms;
-		static bool _computeNoteOnset;
-		static bool _computeTempoDetection;
-		static bool _computeMFCCs;
-		static bool _computeSimilarityMatrix;
-		//--
+struct SPvarsStruct {
+	//which to compute--
+	bool _computeFourierTransform = true;
+	bool _computeRms = true;
+	bool _computeNoteOnset = true;
+	bool _computeTempoDetection = true;
+	bool _computeMFCCs = true;
+	bool _computeSimilarityMatrix = true;
+	//--
 
-		//modifyable properties of algorithms--
-		//general
-		static bool _wasCPSautoDecreased;
-		static bool _wasSignalProcessingReset;
-		static int _nextCalculationSample;
+	//modifyable properties of algorithms--
+	//general
+	bool _wasCPSautoDecreased = false;
+	bool _wasSignalProcessingReset = false;
+	int _nextCalculationSample = 0;
 
-		//note onset
-		static int _onsetDetectionFunctionEnum;
-		static bool _convolveOnsetDetection;
-		static int _convolveWindowSize;
-		static float _thresholdPercentForPeak;
+	//note onset
+	int _onsetDetectionFunctionEnum = 6;
+	bool _convolveOnsetDetection = true;
+	int _convolveWindowSize = 7;
+	float _thresholdPercentForPeak = 7.5;
 
-		//tempo detection
-		static float MIN_TEMPO;
-		static float MAX_TEMPO;
+	//tempo detection
+	float MIN_TEMPO = 40;
+	float MAX_TEMPO = 230;
 
-		//similarity matrix
-		static int _nextSimilarityMatrixSize;
-		static bool _fastSimilarityMatrixTexture;
-		static float _similarityMatrixTextureContrastFactor;
-		static int _matrixMeasureEnum;
-		static bool _useFutureSimilarityMatrix;
-		//--
+	//similarity matrix
+	int _nextSimilarityMatrixSize = 100;
+	bool _fastSimilarityMatrixTexture = true;
+	float _similarityMatrixTextureContrastFactor = 20.0f;
+	int _matrixMeasureEnum = 0;
+	bool _useFutureSimilarityMatrix = false;
+	//--
 
-		//other properties--
-		static float _desiredCPS; //desired calculations per second
-		//--
-	};
+	//other properties--
+	float _desiredCPS = 100; //desired calculations per second
+	float _masterFTgain = 8.0f;
+	//--
 
-	struct Const {
-		static const int _generalHistorySize;
+	//consts
+	const int _generalHistorySize = 1000;
 
-		static const int _numMelBands;
+	const int _numMelBands = 25;
 
-		static const int _STFTsamples;
+	const int _STFTsamples = 4096;
 
-		static const float _lagTimeBeforeReducingCPS;
+	const float _lagTimeBeforeReducingCPS = 1.0f;
 
-		static const float _CPSreduceFactor;
-	};
+	const float _CPSreduceFactor = 0.75;
 };
+
+static SPvarsStruct SPvars;

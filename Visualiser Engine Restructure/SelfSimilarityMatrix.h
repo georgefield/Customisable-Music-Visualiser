@@ -80,6 +80,8 @@ public:
 	//getters
 
 	float getSimilarityMeasure() {
+		if (_linkedTo == NONE)
+			return 0.0f;
 		return _similarityMeasureHistory.newest();
 	}
 	History<float>* getSimilarityMeasureHistory() {
@@ -95,7 +97,7 @@ public:
 
 	Vengine::GLtexture getMatrixTexture() {
 		if (!_similarityMatrix->isTextureCreated()) {
-			_similarityMatrix->createTexture(SPvars::UI::_fastSimilarityMatrixTexture);
+			_similarityMatrix->createTexture(SPvars._fastSimilarityMatrixTexture);
 		}
 		return _similarityMatrix->getMatrixTexture();
 	}

@@ -38,7 +38,5 @@ private:
 	static int _currentSampleExtraPrecisionTimerId; //for some reason mini audio current sample works in 
 	static int _stickySample;
 	static int _currentSample;
-
-	static void createUniformSetterFunctions(); //call on program start
 };
 

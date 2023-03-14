@@ -19,7 +19,8 @@ public:
 
 	//getters
 	bool getShowUi() const { return _showUi; }
-
+	bool getShowInfoBoxes() const { return _showInfoBoxes; }
+		
 	Vengine::Viewport getViewport();
 
 private:
@@ -28,6 +29,8 @@ private:
 	Vengine::InputManager* _inputManager;
 
 	bool _showUi;
+	bool _showInfoBoxes;
+
 	//ImGui variables--
 	int _toolbarSizePx, _sidebarSizePx;
 
@@ -41,22 +44,21 @@ private:
 	bool _fullscreen;
 
 	//ssbo menu vars
-	bool _showSSBOmanager;
-	bool _showUniformManager;
+	bool _showShaderVariablesUi;
 	bool _showImportShaderUi;
+	bool _showCreateShaderUi;
 
-	void ssboManagerUi();
-	void uniformManagerUi();
+	void shaderVariablesUi();
 	void importShaderUi();
+	void createShaderUi();
 
+	//signal processing ui
 	bool _showGeneralSignalProcessingUi;
 	bool _showFourierTransformUi;
 	bool _showNoteOnsetUi;
 	bool _showTempoDetectionUi;
 	bool _showMFCCsUi;
 	bool _showSelfSimilarityMatrixUi;
-
-	//calculate
 	//--
 
 
@@ -73,7 +75,7 @@ private:
 	void processFileMenuSelection();
 
 	//helper gui functions
-	bool textInputPrompt(const std::string& message, char* buf, int bufSize, bool& useText);
+	bool textInputPrompt(const std::string& message, char* buf, int bufSize, bool& isPromptOpen);
 
 	void imguiHistoryPlotter(History<float>* history);
 

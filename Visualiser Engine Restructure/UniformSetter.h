@@ -6,10 +6,9 @@ struct UniformSetter {
 
 	UniformSetter() : isInitialised(false){}
 
-	void initialise(std::string functionName, std::function<T()> UpdaterFunction) {
+	void initialise(std::function<T()> UpdaterFunction) {
 		isInitialised = true;
 		updaterFunction = UpdaterFunction;
-		setterName = functionName;
 		functionValue = NULL; //to set, call 'callUpdater'
 	}
 
@@ -39,7 +38,6 @@ struct UniformSetter {
 	}
 
 	bool isInitialised;
-	std::string setterName;
 	std::function<T()> updaterFunction;
 	T functionValue;
 };

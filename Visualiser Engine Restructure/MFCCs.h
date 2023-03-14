@@ -20,7 +20,7 @@ public:
 
 	~MFCCs() {
 		if (_useSetters) {
-			deleteSetters();
+			removeUpdaters();
 		}
 
 		delete[] _bandEnergies;
@@ -48,7 +48,7 @@ public:
 
 		_useSetters = useSetters;
 		if (_useSetters) {
-			initSetters();
+			initUpdaters();
 		}
 	}
 
@@ -95,6 +95,6 @@ private:
 	float* _melSpectrogram;
 	float* _mfccs;
 
-	void initSetters();
-	void deleteSetters();
+	void initUpdaters();
+	void removeUpdaters();
 };
