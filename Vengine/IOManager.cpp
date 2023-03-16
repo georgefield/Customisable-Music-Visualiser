@@ -71,6 +71,7 @@ bool IOManager::readFileToBuffer(const std::string& filepath, std::vector<unsign
 	return true;
 } //for binary mainly
 
+
 bool IOManager::copyFile(const std::string& sourceFile, const std::string& destinationFile)
 {
 	if (fileExists(destinationFile)) {
@@ -139,12 +140,12 @@ bool Vengine::IOManager::readTextFileToVector(const std::string& filepath, std::
 
 
 bool Vengine::IOManager::outputToTextFile(const std::string& filepath, const std::string& fileContents, bool wipeExisting) {
-
-	if (wipeExisting && fileExists(filepath)) //if wipe existing add truncate flag
-		std::cout << "Clearing";
-		clearFile(filepath);
-
-	std::ofstream file(filepath); // open file
+	
+	std::ofstream file;
+	if (wipeExisting) //if wipe existing add truncate flag
+		file.open(filepath, std::ios::out | std::ios::trunc);
+	else
+		file.open(filepath, std::ios::out);
 
 	if (file.is_open()) { // check if file was successfully opened
 		file << fileContents; // write to file
@@ -158,7 +159,7 @@ bool Vengine::IOManager::outputToTextFile(const std::string& filepath, const std
 
 bool Vengine::IOManager::clearFile(const std::string& filepath)
 {
-	if (!std::filesystem::exists(filepath)) {
+	if (!fileExists(filepath)) {
 		Vengine::warning("Tried to clear text file that does not exist");
 		return false;
 	}

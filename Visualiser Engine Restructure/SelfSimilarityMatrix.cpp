@@ -33,7 +33,7 @@ void SelfSimilarityMatrix::calculateNext(MeasureType measureType, float contrast
 	if (measureType == SIMILARITY){
 		calculateSimilarityMeasure();
 	}
-	if (measureType == PRECUSSION) {
+	if (measureType == PERCUSSION) {
 		calculatePrecussionMeasure();
 	}
 
@@ -82,6 +82,7 @@ void SelfSimilarityMatrix::calculateSimilarityMeasure()
 		sum += getSelfSimilarityMatrixValue(i, i) * checkerboardKernel(i, i);
 	}
 	sum /= _similarityMatrix->matrixSize() * _similarityMatrix->matrixSize();
+	sum = std::max(sum, 0.0f); //clamp >0
 	_similarityMeasureHistory.add(sum);
 }
 
@@ -130,6 +131,7 @@ void SelfSimilarityMatrix::calculatePrecussionMeasure()
 	}
 
 	sum /= _similarityMatrix->matrixSize() * _similarityMatrix->matrixSize();
+	sum = std::max(sum, 0.0f); //clamp >0
 	_similarityMeasureHistory.add(sum);
 }
 

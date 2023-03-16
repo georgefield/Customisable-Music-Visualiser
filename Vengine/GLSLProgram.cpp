@@ -7,7 +7,8 @@
 
 using namespace Vengine;
 
-GLSLProgram::GLSLProgram() : _programID(0), _vertexShaderID(0), _fragShaderID(0), _numAttribs(0), _isBeingUsed(false)
+GLSLProgram::GLSLProgram() : _programID(0), _vertexShaderID(0), _fragShaderID(0), _numAttribs(0), _isBeingUsed(false),
+_syntaxError("")
 {
 }
 
@@ -18,7 +19,7 @@ GLSLProgram::~GLSLProgram()
 }
 
 
-void GLSLProgram::compileShaders(const std::string& vertShaderFilepath, const std::string& fragShaderFilepath) {
+bool GLSLProgram::compileShaders(const std::string& vertShaderFilepath, const std::string& fragShaderFilepath) {
 
 	_shaderName = fragShaderFilepath;
 
@@ -33,8 +34,12 @@ void GLSLProgram::compileShaders(const std::string& vertShaderFilepath, const st
 	}
 
 
-	compileShader(vertShaderFilepath, _vertexShaderID);
-	compileShader(fragShaderFilepath, _fragShaderID);
+	if (!compileShader(vertShaderFilepath, _vertexShaderID)) {
+		return false;
+	}
+	if (!compileShader(fragShaderFilepath, _fragShaderID)) {
+		return false;
+	}
 
 	// Get a program object. (needed for add attrib)
 	_programID = glCreateProgram();
@@ -43,13 +48,13 @@ void GLSLProgram::compileShaders(const std::string& vertShaderFilepath, const st
 }
 
 
-void GLSLProgram::linkShaders() {
+bool GLSLProgram::linkShaders() {
 
-	// Attach our shaders to our program
+	// Attach the shaders to the program
 	glAttachShader(_programID, _vertexShaderID);
 	glAttachShader(_programID, _fragShaderID);
 
-	// Link our program
+	// Link the program
 	glLinkProgram(_programID);
 
 	// Note the different functions here: glGetProgram* instead of glGetShader*.
@@ -64,15 +69,16 @@ void GLSLProgram::linkShaders() {
 		std::vector<GLchar> errorLog(maxLength);
 		glGetProgramInfoLog(_programID, maxLength, &maxLength, &errorLog[0]);
 
-		// We don't need the program anymore.
+		// dont need program anymore
 		glDeleteProgram(_programID);
-		// Don't leak shaders either.
+		// dont leak shaders
 		glDeleteShader(_vertexShaderID);
 		glDeleteShader(_fragShaderID);
 
-		// Provide the infolog in whatever manor you deem best.
-		std::printf("%s\n", &(errorLog[0])); //interprets vector of chars as a string
-		fatalError("shaders failed to link");
+		// set syntaxerror string to the error log
+		_syntaxError = "GLSL linking error: \n";
+		_syntaxError += &errorLog[0];
+		return false;
 	}
 
 	// Always detach shaders after a successful link.
@@ -80,9 +86,15 @@ void GLSLProgram::linkShaders() {
 	glDetachShader(_programID, _fragShaderID);
 
 	testForGlErrors("Error linking shaders");
+
+	return true;
 }
 
 void GLSLProgram::updateShaderUniformInfo() {
+
+	if (_syntaxError != "") {
+		fatalError("Cannot get uniform info of shader with syntax error");
+	}
 
 	GLint i;
 	GLint count;
@@ -128,10 +140,19 @@ GLuint GLSLProgram::getUniformLocation(const std::string& uniformName) {
 	return location;
 }
 
+std::string Vengine::GLSLProgram::getSyntaxError()
+{
+	return _syntaxError;
+}
+
 
 
 
 void GLSLProgram::use() {
+
+	if (_syntaxError != "") {
+		fatalError("Cannot use shader with syntax error");
+	}
 
 	glUseProgram(_programID);
 	for (int i = 0; i < _numAttribs; i++) {
@@ -163,7 +184,7 @@ GLenum Vengine::GLSLProgram::getUniformType(std::string name)
 
 
 
-void GLSLProgram::compileShader(const std::string& filepath, GLuint& id) {
+bool GLSLProgram::compileShader(const std::string& filepath, GLuint& id) {
 	std::ifstream vertexFile(filepath);
 	if (vertexFile.fail()) {
 		perror(filepath.c_str());
@@ -195,7 +216,9 @@ void GLSLProgram::compileShader(const std::string& filepath, GLuint& id) {
 		glDeleteShader(id);
 
 		// Provide the infolog in whatever manor you deem best.
-		std::printf("%s\n", &(errorLog[0])); //interprets vector of chars as a string
-		fatalError("shader " + filepath + " failed to compile");
+		_syntaxError = filepath + "\n";
+		_syntaxError += &(errorLog[0]); //interprets vector of chars as a string
+		return false;
 	}
+	return true;
 }

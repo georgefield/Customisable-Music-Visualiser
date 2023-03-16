@@ -1,15 +1,16 @@
 #include "Master.h"
+#include "AudioManager.h"
 #include <Vengine/MyErrors.h>
 #include <cmath>
 #include <functional>
 
 #include "VisualiserShaderManager.h"
-#include "SignalProcessingVars.h"
+#include "SPvars.h"
 
 Master::Master() :
 	_audioData(nullptr),
 
-	_fftwAPI(SPvars._STFTsamples),
+	_fftwAPI(SP::consts._STFTsamples),
 	_fftHistory(1),//store 17 previous fourier transforms
 
 	_sampleFftLastCalculated(-1),
@@ -53,11 +54,11 @@ void Master::reInit(float* audioData, int sampleRate) {
 void Master::beginCalculations(int currentSample) {
 
 	assert(_sampleRate > 0);
+	_currentSample = currentSample;
 
-	if (currentSample == _previousSample) {
+	if (_currentSample == _previousSample) {
 		Vengine::warning("No change in sample between begin calculation calls");
 	}
-	_currentSample = currentSample;
 }
 
 
@@ -67,13 +68,18 @@ float hanningWindow(float frac){ //reduces noise
 
 void Master::calculateFourierTransform() {
 
+	//dont calculate if at end
+	if (_currentSample + SP::consts._STFTsamples >= AudioManager::getNumSamples()) {
+		return;
+	}
+
 	//make sure not called twice on same frame
 	if (_sampleFftLastCalculated == _currentSample) {
 		return;
 	}
 	_sampleFftLastCalculated = _currentSample;
 
-	_fftwAPI.calculate(_audioData, _currentSample, _fftHistory.workingArray(), SPvars._masterFTgain, hanningWindow); //use fftw api to calculate fft
+	_fftwAPI.calculate(_audioData, _currentSample, _fftHistory.workingArray(), SP::vars._masterFTgain, hanningWindow); //use fftw api to calculate fft
 	_fftHistory.addWorkingArrayToHistory();
 	//updates _fftHistory ^^^
 }
@@ -81,20 +87,31 @@ void Master::calculateFourierTransform() {
 //accounts for hanning window so calculations from samples and transforms are equivalent
 void Master::calculateEnergy()
 {
+	//dont calculate if at end
+	if (_currentSample + SP::consts._STFTsamples >= AudioManager::getNumSamples()) {
+		return;
+	}
+
 	_energy = 0;
 	float hanningWindowFactor = 0;
 
-	for (int i = _currentSample; i < _currentSample + SPvars._STFTsamples; i++) {
-		hanningWindowFactor = hanningWindow(float(i - _currentSample) / float(SPvars._STFTsamples));
+	for (int i = _currentSample; i < _currentSample + SP::consts._STFTsamples; i++) {
+		hanningWindowFactor = hanningWindow(float(i - _currentSample) / float(SP::consts._STFTsamples));
 		_energy += _audioData[i] * _audioData[i] * hanningWindowFactor * hanningWindowFactor;
 	}
-	_energy /= SPvars._STFTsamples;
+	_energy /= SP::consts._STFTsamples;
+	_RMS = sqrt(_energy);
 }
 
 void Master::calculatePeakAmplitude()
 {
+	//dont calculate if at end
+	if (_currentSample >= AudioManager::getNumSamples()) {
+		return;
+	}
+
 	if (_currentSample - _sampleOfLastPeak > _sampleRate * 0.1f) { //after waiting 0.1 seconds at peak
-		_peakAmplitude *= expf(-30.0f / SPvars._desiredCPS); //0->-30db in 1 second
+		_peakAmplitude *= expf(-30.0f / SP::vars._desiredCPS); //0->-30db in 1 second
 	}
 	
 	for (int i = _previousSample; i < _currentSample; i++) {
@@ -111,7 +128,7 @@ void Master::calculatePeakAmplitude()
 
 void Master::audioIsPaused()
 {
-	_peakAmplitude *= expf(-30.0f / SPvars._desiredCPS); //0->-30db in 1 second
+	_peakAmplitude *= expf(-30.0f / SP::vars._desiredCPS); //0->-30db in 1 second
 	_peakAmplitudeDb = log(_peakAmplitude);
 }
 
@@ -142,6 +159,7 @@ int Master::getBaseFftNumHarmonics() { return _fftHistory.numHarmonics(); }
 float Master::getPeakAmplitude(){ return _peakAmplitude; }
 float Master::getPeakAmplitudeDb() { return _peakAmplitudeDb; }
 float Master::getEnergy() { return _energy; }
+float Master::getRMS() { return _RMS; }
 //--
 
 void Master::setUpdaters()
@@ -151,6 +169,9 @@ void Master::setUpdaters()
 
 	std::function<float()> masterEnergyUpdaterFunction = std::bind(&Master::getEnergy, this);
 	VisualiserShaderManager::Uniforms::setUniformUpdater("vis_energy", masterEnergyUpdaterFunction);
+
+	std::function<float()> masterRMSupdaterFunction = std::bind(&Master::getRMS, this);
+	VisualiserShaderManager::Uniforms::setUniformUpdater("vis_RMS", masterRMSupdaterFunction);
 
 	std::function<float()> peakAmplitudeUpdaterFunction = std::bind(&Master::getPeakAmplitude, this);
 	VisualiserShaderManager::Uniforms::setUniformUpdater("vis_peakAmplitude", peakAmplitudeUpdaterFunction);

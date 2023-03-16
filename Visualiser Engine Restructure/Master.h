@@ -35,6 +35,7 @@ public:
 	float _peakAmplitude;
 	float _peakAmplitudeDb;
 	float _energy;
+	float _RMS;
 	FourierTransformHistory _fftHistory;
 
 	void calculateFourierTransform();
@@ -50,6 +51,7 @@ public:
 	float getEnergy();
 	float getPeakAmplitude();
 	float getPeakAmplitudeDb();
+	float getRMS();
 
 	int nyquist() const { assert(_sampleRate > 0); return _sampleRate / 2; }
 private:

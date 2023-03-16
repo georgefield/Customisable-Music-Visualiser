@@ -7,11 +7,15 @@
 class FourierTransformManager
 {
 public:
-	static void createFourierTransform(int& id, int historySize, float cutOffLow = 0.0f, float cutOffHigh = 22050.0f, float cutoffSmoothFrac = 0.0f);
+	static void createFourierTransformFromStruct(FourierTransform::FTinfo info);
+
+	static void createFourierTransform(int id, int historySize, float cutOffLow = 0.0f, float cutOffHigh = 22050.0f, float cutoffSmoothFrac = 0.0f);
 
 	static bool fourierTransformExists(int id);
 
 	static void eraseFourierTransform(int id);
+
+	static void clearFourierTransforms();
 
 	static void reInitAll();
 	static void calculateFourierTransforms();
@@ -21,6 +25,7 @@ public:
 	//info getters
 	static int numTransforms() { return _fourierTransforms.size(); }
 	static std::vector<int> idArr();
+	static std::vector<int> availiableIdArr();
 
 private:
 

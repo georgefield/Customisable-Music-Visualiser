@@ -6,20 +6,8 @@
 
 #include <Vengine/MyTiming.h>
 #include "SimilarityMatrixStructure.h"
+#include "SimMatrixStructs.h"
 
-static enum LinkedTo {
-	NONE,
-	DEBUG,
-	MFCC,
-	MelBandEnergies,
-	MelSpectrogram,
-	FT
-};
-
-static enum MeasureType {
-	SIMILARITY = 0,
-	PRECUSSION = 1
-};
 
 class SelfSimilarityMatrix
 {
@@ -97,7 +85,7 @@ public:
 
 	Vengine::GLtexture getMatrixTexture() {
 		if (!_similarityMatrix->isTextureCreated()) {
-			_similarityMatrix->createTexture(SPvars._fastSimilarityMatrixTexture);
+			_similarityMatrix->createTexture(SP::vars._fastSimilarityMatrixTexture);
 		}
 		return _similarityMatrix->getMatrixTexture();
 	}

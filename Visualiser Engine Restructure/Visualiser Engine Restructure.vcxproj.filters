@@ -114,9 +114,6 @@
     <ClCompile Include="DixonAlgVariableDefinitions.cpp">
       <Filter>Source Files\Signal Processing Algorithms</Filter>
     </ClCompile>
-    <ClCompile Include="SignalProcessingVars.cpp">
-      <Filter>Source Files\Signal Processing Managing</Filter>
-    </ClCompile>
     <ClCompile Include="SimilarityMatrixHandler.cpp">
       <Filter>Source Files\Signal Processing Algorithms\Self Similarity Matrix</Filter>
     </ClCompile>
@@ -140,6 +137,9 @@
     </ClCompile>
     <ClCompile Include="ConfigManager.cpp">
       <Filter>Source Files\Visualiser Managing</Filter>
+    </ClCompile>
+    <ClCompile Include="SPvars.cpp">
+      <Filter>Source Files\Signal Processing Managing</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -165,9 +165,6 @@
       <Filter>Header Files\Signal Processing Algorithms</Filter>
     </ClInclude>
     <ClInclude Include="Energy.hpp">
-      <Filter>Header Files\Signal Processing Algorithms</Filter>
-    </ClInclude>
-    <ClInclude Include="RMS.hpp">
       <Filter>Header Files\Signal Processing Algorithms</Filter>
     </ClInclude>
     <ClInclude Include="Threshold.h">
@@ -251,7 +248,7 @@
     <ClInclude Include="SimilarityMatrixHandler.h">
       <Filter>Header Files\Signal Processing Algorithms\Self Similarity Matrix</Filter>
     </ClInclude>
-    <ClInclude Include="SignalProcessingVars.h">
+    <ClInclude Include="SPvars.h">
       <Filter>Header Files\Signal Processing Managing</Filter>
     </ClInclude>
     <ClInclude Include="DataTextureCreator.h">
@@ -268,6 +265,9 @@
     </ClInclude>
     <ClInclude Include="VisVars.h">
       <Filter>Header Files\Visualiser Managing</Filter>
+    </ClInclude>
+    <ClInclude Include="SimMatrixStructs.h">
+      <Filter>Header Files\Signal Processing Algorithms\Self Similarity Matrix</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

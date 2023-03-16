@@ -12,12 +12,14 @@ namespace Vengine {
 		GLSLProgram();
 		~GLSLProgram();
 
-		void compileShaders(const std::string& vertShaderFilepath, const std::string& fragShaderFilepath);
-		void linkShaders();
+		bool compileShaders(const std::string& vertShaderFilepath, const std::string& fragShaderFilepath);
+		bool linkShaders();
 		void addAttrib(const std::string& attribName);
 		void updateShaderUniformInfo();
 
 		GLuint getUniformLocation(const std::string& uniformName);
+
+		std::string getSyntaxError();
 
 		void use();
 		void unuse();
@@ -30,10 +32,12 @@ namespace Vengine {
 		GLenum getUniformType(std::string name);
 
 	private:
+		std::string _syntaxError;
+
 		std::map<std::string, GLenum> _shaderUniforms;
 		std::vector<std::string> _uniformNames;
 
-		void compileShader(const std::string& filepath, GLuint& id);
+		bool compileShader(const std::string& filepath, GLuint& id);
 
 		std::string _shaderName;
 

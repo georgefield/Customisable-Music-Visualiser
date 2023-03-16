@@ -8,20 +8,23 @@
 #include "VisVars.h"
 #include "SignalProcessingManager.h"
 #include "UIglobalFeatures.h"
+#include "SpriteManager.h"
 
 //#include <imgui_stdlib.h> //for input text functions
 
-CustomisableSprite::CustomisableSprite(int id, const std::string& name, Vengine::Viewport* viewport, Vengine::Window* window) :
+CustomisableSprite::CustomisableSprite(int id, Vengine::Viewport* viewport, Vengine::Window* window) :
 	_viewport(viewport),
 	_window(window),
 
-	_name(name),
 	_selected(true),
 	_deleted(false),
 	_justCreated(true),
 	_showInEditor(true),
+	_resetTextureCombo(true),
+	_resetShaderCombo(true),
+	_showUi(true),
+	_uiOpened(true),
 	id(id),
-
 
 	//imgui vars
 	_isOptionsEnlarged(false),
@@ -30,38 +33,50 @@ CustomisableSprite::CustomisableSprite(int id, const std::string& name, Vengine:
 {
 }
 
-
-void CustomisableSprite::init(Vengine::Model* model, glm::vec2 pos, glm::vec2 dim, float depth, std::string textureFilepath, GLuint glDrawType)
-{
-	Sprite::init(model, pos, dim, depth, textureFilepath, glDrawType);
+void CustomisableSprite::init(SpriteInfo spriteInfo) {
+	//set up sprite--
+	memcpy(&_spriteInfo, &spriteInfo, sizeof(SpriteInfo));
+	Sprite::init(_spriteInfo.model, getPos(), getDim(), _spriteInfo.depth);
 	_justCreated = true;
 
-	_visualiserShader = VisualiserShaderManager::getShader(VisVars::_defaultFragShaderPath);
-	_texture = Vengine::ResourceManager::getTexture("Resources/NO_TEXTURE.png");
+	if (_spriteInfo.shaderFilename[0] == NULL)
+		strcpy_s(_spriteInfo.shaderFilename, sizeof(SpriteInfo::shaderFilename), VisVars::_defaultFragShaderPath.substr(VisVars::_defaultFragShaderPath.find_last_of("/") + 1).c_str());
+	std::cout << _spriteInfo.shaderFilename << std::endl;
 
+	if (_spriteInfo.textureFilename[0] == NULL)
+		assert(_spriteInfo.useSimilarityMatrixTexture || !_spriteInfo.applyTexture);
+
+	setModelColour(_spriteInfo.colour);
+	//apply texture and shader
+
+	updateTexture();
+	updateShader();
+
+	//--
+
+	//set up ui vars--
 	Vengine::IOManager::getFilesInDir(VisualiserManager::texturesFolder(), _textureFileNames);
 	Vengine::IOManager::getFilesInDir(VisualiserManager::shadersFolder(), _shaderFileNames, true, VisVars::_visShaderExtension);
 
 	Vengine::MyTiming::createTimer(_timerID); //timer for selection ui
-
-	_colour = getModelColour();
-	setModelColour(_colour); //for some reason its not set straight away
+	//--
 }
 
-
-void CustomisableSprite::draw(){
+void CustomisableSprite::draw() {
 
 	//draw imgui
-	if (_selected) {
+	if (_selected && _showUi) {
 		drawUi();
 	}
 
-	if (_useSimilarityMatrixTexture) {
+	if (_spriteInfo.useSimilarityMatrixTexture) {
 		_texture = SignalProcessingManager::_similarityMatrix->matrix.getMatrixTexture();
 	}
 
 	//draw sprite
 	Sprite::draw();
+
+	_uiOpened = false;
 }
 
 void CustomisableSprite::drawUi() {
@@ -75,18 +90,21 @@ void CustomisableSprite::drawUi() {
 	ImGui::SetNextWindowSize(ImVec2(optionsSizePx.x, optionsSizePx.y));
 
 	///*** gui for sprite ***
-	ImGui::Begin(_name.c_str(), (bool*)0, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
+	ImGui::Begin(_spriteInfo.name, (bool*)0, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
 
 	//enlarge option only if no override on rect
 	ImGui::Checkbox("Enlarge settings", &_isOptionsEnlarged);
 
 	//rename--
-	static char renamer[25] = "";
+	static char renamer[sizeof(SpriteInfo::name)] = "";
+	if (_uiOpened) {
+		strcpy_s(renamer, sizeof(SpriteInfo::name), _spriteInfo.name);
+	}
 	ImGui::InputTextWithHint("##", "Enter text here", renamer, IM_ARRAYSIZE(renamer));
 	ImGui::SameLine();
 	if (ImGui::Button("Rename")) {
 		if (renamer[0] != NULL) { //string is length > 0
-			_name = renamer;
+			strcpy_s(_spriteInfo.name, sizeof(SpriteInfo::name), renamer);
 		}
 	}
 	//--
@@ -94,12 +112,15 @@ void CustomisableSprite::drawUi() {
 	ImGui::Separator();
 
 	//choose shader for sprite
-	if (ImGui::CollapsingHeader("Sprite shader"))
+	if (ImGui::CollapsingHeader("Sprite shader")) {
 		shaderChooser();
-
+		updateShader();
+	}
 	//if shader contains texture uniform then
-	if (ImGui::CollapsingHeader("Sprite texture"))
+	if (ImGui::CollapsingHeader("Sprite texture")){
 		textureChooser();
+		updateTexture();
+	}
 
 	ImGui::Separator();
 
@@ -119,8 +140,22 @@ void CustomisableSprite::drawUi() {
 	//convert to opengl coords
 	if (ImGui::IsItemDeactivatedAfterEdit()) {
 		glm::vec2 openGLpos = Tools::pxPosToOpenGL(glm::vec2(pos[0], pos[1]), _window, _viewport, true);
-		setModelPos(openGLpos);
+		_spriteInfo.pos[0] = openGLpos.x;
+		_spriteInfo.pos[1] = openGLpos.y;
+		setModelPos(getPos());
 	}
+
+	//slider
+	ImGui::PushID(0);
+	ImGui::SliderInt2("##", pos, 0, _window->getScreenWidth());
+	ImGui::PopID();
+	if (ImGui::IsItemEdited()) {
+		glm::vec2 openGLpos = Tools::pxPosToOpenGL(glm::vec2(pos[0], pos[1]), _window, _viewport, true);
+		_spriteInfo.pos[0] = openGLpos.x;
+		_spriteInfo.pos[1] = openGLpos.y;
+		setModelPos(getPos());
+	}
+	
 	//--
 
 	ImGui::Separator();
@@ -140,31 +175,50 @@ void CustomisableSprite::drawUi() {
 	//convert to opengl coords
 	if (ImGui::IsItemDeactivatedAfterEdit()) {
 		glm::vec2 openGLsize = Tools::pxDimToOpenGL(glm::vec2(dim[0], dim[1]), _window, _viewport, true);
-		setModelDim(openGLsize);
+		_spriteInfo.dim[0] = openGLsize.x;
+		_spriteInfo.dim[1] = openGLsize.y;
+		setModelDim(getDim());
 	}
+	
+	//slider
+	ImGui::PushID(1);
+	ImGui::SliderInt2("##", dim, 0, _window->getScreenWidth());
+	if (ImGui::IsItemEdited()) {
+		glm::vec2 openGLsize = Tools::pxDimToOpenGL(glm::vec2(dim[0], dim[1]), _window, _viewport, true);
+		_spriteInfo.dim[0] = openGLsize.x;
+		_spriteInfo.dim[1] = openGLsize.y;
+		setModelDim(getDim());
+	}
+	ImGui::PopID();
 	//--
 
 	ImGui::Separator();
 
 	//choose depth--
-	float depth = _depth;
-	ImGui::InputFloat("Depth", &depth);
-	setDepth(depth);
+	ImGui::InputFloat("Depth", &_depth);
+	if (ImGui::IsItemEdited()) {
+		updateSpriteInfoToMatchDepth();
+		SpriteManager::updateDepthSortedSprites();
+	}
 	//--
 
 	ImGui::Separator();
 	ImGui::Text("Colour");
 
 	//choose colour--
-	static float pickedColour[4] = { static_cast<float>(_colour.r) / 255.0f, static_cast<float>(_colour.g) / 255.0f,static_cast<float>(_colour.b) / 255.0f, static_cast<float>(_colour.a) / 255.0f };
-	ImGui::ColorEdit4("Background colour", pickedColour);
-	if (ImGui::IsItemEdited()) { 
-		_colour.r = static_cast<GLubyte>(pickedColour[0] * 255.0f);
-		_colour.g = static_cast<GLubyte>(pickedColour[1] * 255.0f);
-		_colour.b = static_cast<GLubyte>(pickedColour[2] * 255.0f);
-		_colour.a = static_cast<GLubyte>(pickedColour[3] * 255.0f);
+	static float pickedColour[4];
+	if (_uiOpened) {
+		float currentColour[4] = { static_cast<float>(_spriteInfo.colour.r) / 255.0f, static_cast<float>(_spriteInfo.colour.g) / 255.0f, static_cast<float>(_spriteInfo.colour.b) / 255.0f, static_cast<float>(_spriteInfo.colour.a) / 255.0f };
+		memcpy(pickedColour, currentColour, sizeof(currentColour));
+	}
+	ImGui::ColorEdit4("Sprite colour", pickedColour);
+	if (ImGui::IsItemEdited()) {
+		_spriteInfo.colour.r = static_cast<GLubyte>(pickedColour[0] * 255.0f);
+		_spriteInfo.colour.g = static_cast<GLubyte>(pickedColour[1] * 255.0f);
+		_spriteInfo.colour.b = static_cast<GLubyte>(pickedColour[2] * 255.0f);
+		_spriteInfo.colour.a = static_cast<GLubyte>(pickedColour[3] * 255.0f);
 
-		setModelColour(_colour);
+		setModelColour(_spriteInfo.colour);
 	}
 	//--
 
@@ -176,7 +230,7 @@ void CustomisableSprite::drawUi() {
 
 	//delete self--
 	if (ImGui::Button("Delete")) {
-		setIfDeleted();
+		setDeleted();
 	}
 	//--
 
@@ -184,53 +238,110 @@ void CustomisableSprite::drawUi() {
 	//***
 }
 
+void CustomisableSprite::updateShader()
+{
+	assert(_spriteInfo.shaderFilename[0] != NULL);
+	//always need simple.visfrag
+	if (!Vengine::IOManager::fileExists(VisualiserManager::shadersFolder() + "/simple.visfrag")) {
+		Vengine::warning("No simple.visfrag in new visualiser: had to copy from resources");
+		Vengine::IOManager::copyFile(VisVars::_defaultFragShaderPath, VisualiserManager::shadersFolder() + "/simple.visfrag");
+	}
+
+	auto tmp = VisualiserShaderManager::getShader(VisualiserManager::shadersFolder() + "/" + _spriteInfo.shaderFilename);
+	if (tmp != nullptr) {
+		_visualiserShader = tmp;
+	}
+	else {
+		_resetShaderCombo;
+		strcpy_s(_spriteInfo.shaderFilename, sizeof("simple.visfrag"), "simple.visfrag");
+		_visualiserShader = VisualiserShaderManager::getShader(VisualiserManager::shadersFolder() + "/" + _spriteInfo.shaderFilename);
+	}
+}
+
+void CustomisableSprite::updateTexture()
+{
+	if (!_spriteInfo.applyTexture) {
+		_texture = Vengine::ResourceManager::getTexture(VisVars::_1x1WhiteTexturePath);
+		return;
+	}
+	if (_spriteInfo.useSimilarityMatrixTexture) {
+		_texture = SignalProcessingManager::_similarityMatrix->matrix.getMatrixTexture();
+		return;
+	}
+	if (_spriteInfo.textureFilename[0] != NULL) {
+		_texture = Vengine::ResourceManager::getTexture(VisualiserManager::texturesFolder() + "/" + _spriteInfo.textureFilename);
+	}
+}
+
 void CustomisableSprite::textureChooser()
 {
 	ImGui::Text("Set texture to pass to shader:");
 
 	//choose whether texture or not
-	static bool applyTexture = false;
+	static bool applyTexture = _spriteInfo.applyTexture;
 	ImGui::Checkbox("Apply Texture", &applyTexture);
-	if (ImGui::IsItemEdited() && !applyTexture) {
-		_texture = Vengine::ResourceManager::getTexture("Resources/NO_TEXTURE.png");
+	if (!applyTexture) {
+		_spriteInfo.applyTexture = applyTexture;
+		return;
 	}
 
-	if (applyTexture) {
+	//refresh texture list
+	if (ImGui::Button("Refresh")) {
+		Vengine::IOManager::getFilesInDir(VisualiserManager::texturesFolder(), _textureFileNames, true, ".png");
+	}
 
-		if (ImGui::Button("Refresh")) {
-			Vengine::IOManager::getFilesInDir(VisualiserManager::texturesFolder(), _textureFileNames, true, ".png");
+	ImGui::SameLine();
+
+	//add texture from outside project folder
+	if (ImGui::Button("Add another texture")) {
+		std::string chosenFile = "";
+		if (PFDapi::fileChooser("Choose texture", Vengine::IOManager::getProjectDirectory(), chosenFile, { "PNG images (.png)", "*.png" }, true) && chosenFile != "") {
+
+			//copy to textures folder and then set that texture
+			strcpy_s(_spriteInfo.textureFilename, sizeof(SpriteInfo::textureFilename), VisualiserManager::externalToInternalTexture(chosenFile).c_str());
+			_spriteInfo.applyTexture = true;
+			_resetTextureCombo = true;
+
+			//refresh files
+			Vengine::IOManager::getFilesInDir(VisualiserManager::texturesFolder(), _textureFileNames, true, ".png"); //refresh
 		}
+	}
 
-		ImGui::SameLine();
+	//choose between file or similarity matrix texture
+	static int textureType = 0;
+	ImGui::RadioButton("Texture file", &textureType, 0);
+	ImGui::RadioButton("Similarity matrix texture", &textureType, 1);
 
-		if (ImGui::Button("Add another texture")) {
-			std::string chosenFile = "";
-			if (PFDapi::fileChooser("Choose texture", Vengine::IOManager::getProjectDirectory(), chosenFile, { "PNG images (.png)", "*.png" }, true)) {
-				std::cout << chosenFile << " < chosen" << std::endl;
-				//copy to textures folder and then load that texture
-				_texture = Vengine::ResourceManager::getTexture(VisualiserManager::externalToInternalTexture(chosenFile));
-				//refresh files
-				Vengine::IOManager::getFilesInDir(VisualiserManager::texturesFolder(), _textureFileNames, true, ".png"); //refresh
+	_spriteInfo.useSimilarityMatrixTexture = (textureType == 1);
+	if (_spriteInfo.useSimilarityMatrixTexture) {
+		return;
+	}
+
+	static int textureIndex = -1;
+	//get correct start texture index for combo
+	if (_resetTextureCombo || _uiOpened) {
+		for (int i = 0; i < _textureFileNames.size(); i++) {
+			if (_textureFileNames[i] == _spriteInfo.textureFilename) {
+				textureIndex = i;
+				_resetTextureCombo = false;
+				break;
 			}
 		}
+	}
 
-		//choose between file or similarity matrix texture
-		static int textureType = 0;
-		ImGui::RadioButton("Texture file", &textureType, 0);
-		ImGui::RadioButton("Similarity matrix texture", &textureType, 1);
-
-		if (textureType == 0) {
-			static int textureIndex = 0;
-
-			if (UIglobalFeatures::ImGuiBetterCombo(_textureFileNames, textureIndex, 0)) {
-				_texture = Vengine::ResourceManager::getTexture(VisualiserManager::texturesFolder() + "/" + _textureFileNames[textureIndex]);
-			}
+	//choose texture from file in texture project folder
+	if (UIglobalFeatures::ImGuiBetterCombo(_textureFileNames, textureIndex, 0)) {
+		if (_textureFileNames.size() == 0) {
+			return;
 		}
 
-		if (ImGui::IsItemEdited()) {
-			_useSimilarityMatrixTexture = (textureType == 1);
+		if (_textureFileNames[textureIndex].length() > sizeof(SpriteInfo::textureFilename)) {
+			UIglobalFeatures::queueError("Texture filename too long " + std::to_string(_textureFileNames[textureIndex].length()) + "/" + std::to_string(sizeof(SpriteInfo::textureFilename)));
+			return;
 		}
-		//--
+
+		strcpy_s(_spriteInfo.textureFilename, sizeof(SpriteInfo::textureFilename), _textureFileNames[textureIndex].c_str());
+		_spriteInfo.applyTexture = true;
 	}
 
 }
@@ -246,37 +357,58 @@ void CustomisableSprite::shaderChooser()
 
 	ImGui::SameLine();
 
+	//add shader from outside project folder
 	if (ImGui::Button("Add another shader")) {
 		std::string chosenFile = "";
-		if (PFDapi::fileChooser("Choose shader to add", Vengine::IOManager::getProjectDirectory(), chosenFile, { "Visualiser frag ( "+ VisVars::_visShaderExtension + ")", " * " + VisVars::_visShaderExtension }, true)) {
-			_visualiserShader = VisualiserShaderManager::getShader(chosenFile);
+		if (PFDapi::fileChooser("Choose shader to add", Vengine::IOManager::getProjectDirectory(), chosenFile, { "Visualiser frag ( " + VisVars::_visShaderExtension + ")", " * " + VisVars::_visShaderExtension }, true)) {
+
+			//copy to shaders folder and then set that texture
+			strcpy_s(_spriteInfo.shaderFilename, sizeof(SpriteInfo::shaderFilename), VisualiserManager::externalToInternalShader(chosenFile).c_str());
+			_resetShaderCombo = true;
+
 			Vengine::IOManager::getFilesInDir(VisualiserManager::shadersFolder(), _shaderFileNames, true, VisVars::_visShaderExtension); //refresh
 		}
 	}
 
-	//choose shader
-
+	assert(_shaderFileNames.size() >= 0);
 	static int shaderIndex = -1;
-	if (shaderIndex == -1) {
+	//get correct start shader index for combo
+	if (_resetShaderCombo || _uiOpened) {
 		for (int i = 0; i < _shaderFileNames.size(); i++) {
-			if (_shaderFileNames[i] == VisVars::_defaultFragShaderPath.substr(VisVars::_defaultFragShaderPath.find_last_of("/") + 1)) {
+			if (_shaderFileNames[i] == _spriteInfo.shaderFilename) {
 				shaderIndex = i;
+				_resetShaderCombo = false;
 				break;
 			}
 		}
 	}
 
+	//choose shader from shader project folder
 	if (UIglobalFeatures::ImGuiBetterCombo(_shaderFileNames, shaderIndex, 1)) {
-		_visualiserShader = VisualiserShaderManager::getShader(VisualiserManager::shadersFolder() + "/" + _shaderFileNames[shaderIndex]);
+		
+		if (_shaderFileNames[shaderIndex].length() > sizeof(SpriteInfo::shaderFilename)) {
+			UIglobalFeatures::queueError("Shader filename too long " + std::to_string(_shaderFileNames[shaderIndex].length()) + "/" + std::to_string(sizeof(SpriteInfo::shaderFilename)));
+			return;
+		}
+
+		strcpy_s(_spriteInfo.shaderFilename, sizeof(SpriteInfo::shaderFilename), _shaderFileNames[shaderIndex].c_str());
+	}
+
+	ImGui::SameLine();
+	if (ImGui::Button("Recompile")) {
+		VisualiserShaderManager::recompileShader(VisualiserManager::shadersFolder() + "/" + _shaderFileNames[shaderIndex]);
 	}
 }
 
 
-void CustomisableSprite::processInput(Vengine::InputManager* inputManager){
+void CustomisableSprite::processInput(Vengine::InputManager* inputManager) {
 
 	//opengl mouse pos
 	glm::vec2 mousePos = Tools::pxPosToOpenGL(inputManager->getMouseCoords(), _window, _viewport);
 
+	if (inputManager->isKeyPressed(SDLK_DELETE)) {
+		setDeleted();
+	}
 
 	//click down
 	if (!_justCreated) {
@@ -286,23 +418,26 @@ void CustomisableSprite::processInput(Vengine::InputManager* inputManager){
 				Vengine::MyTiming::startTimer(_timerID);
 				_posOfMouseAtClick = mousePos;
 				_posOfSpriteAtClick = getModelPos();
+				_showUi = false;
 			}
 			else if (Tools::posWithinRect(mousePos, _optionsRect) && _selected) {
 				//do nothing if pos within settings rect
 			}
-			else { 
+			else {
 				_selected = false;
 			}
 		}
 
 		//dragging while held down, selected
 		if (_selected && inputManager->isKeyDown(SDL_BUTTON_LEFT) && Tools::posWithinRect(mousePos, getModelBoundingBox())) {
-
-			setModelPos(_posOfSpriteAtClick + (mousePos - _posOfMouseAtClick));
+			_spriteInfo.pos[0] = (_posOfSpriteAtClick + (mousePos - _posOfMouseAtClick)).x;
+			_spriteInfo.pos[1] = (_posOfSpriteAtClick + (mousePos - _posOfMouseAtClick)).y;
+			setModelPos(getPos());
 		}
 
 		if (inputManager->isKeyReleased(SDL_BUTTON_LEFT) && Tools::posWithinRect(mousePos, getModelBoundingBox())) {
-			if (Vengine::MyTiming::readTimer(_timerID) < 0.3) {
+			_showUi = true;
+			if (Vengine::MyTiming::readTimer(_timerID) < 0.2) {
 				_selected = !_selected;
 			}
 		}
@@ -319,13 +454,17 @@ void CustomisableSprite::updateOptionsRect()
 {
 	glm::vec2 optionsDim;
 	if (_isOptionsEnlarged) {
-		optionsDim = { 1.0, 1.0 };
+		optionsDim = { 1.2, 1.2 };
 	}
 	else {
 		optionsDim = { 0.8, 0.8 };
 	}
 
-	glm::vec2 optionsPos = getModelPos();
+	glm::vec2 optionsPos = glm::vec2(-0.95, 1.0f - optionsDim.y);
+	_optionsRect = { optionsPos.x, optionsPos.y, optionsDim.x, optionsDim.y };
+	return;
+
+	//glm::vec2 optionsPos = getModelPos();
 	optionsPos.y -= optionsDim.y;
 
 

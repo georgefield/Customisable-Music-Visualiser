@@ -13,7 +13,8 @@ namespace Vengine {
 	{
 	public:
 		static GLtexture getTexture(std::string textureFilepath); //loads texture in aswell
-		static GLSLProgram* getShaderProgram(std::string vertPath, std::string fragPath); //loads shader in aswell
+		static GLSLProgram* getShaderProgram(std::string vertPath, std::string fragPath, std::string& errorOut); //loads shader in aswell
+		static GLSLProgram* reloadShaderProgram(std::string vertPath, std::string fragPath, std::string& errorOut);
 		static void unloadAllResources();
 
 	private:

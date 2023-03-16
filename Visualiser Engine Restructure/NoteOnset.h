@@ -71,7 +71,7 @@ public:
 		_derOfLogEnergyBands.add(10000, 20000, 1.0f);
 		_derOfLogEnergyBands.add(15000, 22050, 1.0f);
 
-		_simMatrix.init(2000 / SPvars._desiredCPS);
+		_simMatrix.init(2000 / SP::vars._desiredCPS);
 		_simMatrix.linkToMelSpectrogram(_mfcc);
 	}
 
@@ -90,7 +90,7 @@ public:
 
 		_derOfLogEnergyBands.reInit();
 
-		_simMatrix.reInit(2000 / SPvars._desiredCPS);
+		_simMatrix.reInit(2000 / SP::vars._desiredCPS);
 		_simMatrix.linkToMelSpectrogram(_mfcc);
 	}
 

@@ -21,15 +21,26 @@ Sprite::~Sprite()
 	delete _model;
 }
 
+//helper function
+Model* getModelObject(ModelType model) {
+	if (model == Vengine::Mod_Quad)
+		return new Vengine::Quad();
+	if (model == Vengine::Mod_Triangle)
+		return new Vengine::Triangle();
+	if (model == Vengine::Mod_Ring)
+		return new Vengine::Ring120side();
+	if (model == Vengine::Mod_Circle)
+		return new Vengine::Circle120side();
+}
+//
 
-void Sprite::init(Model* model, glm::vec2 pos, glm::vec2 dim, float depth, std::string textureFilepath, GLuint glDrawType) {
+void Sprite::init(ModelType model, glm::vec2 pos, glm::vec2 dim, float depth, std::string textureFilepath, GLuint glDrawType) {
 
-	_model = model;
+	_model = getModelObject(model);
 	_model->init();
 	_model->setBoundingBox(pos, dim);
-
 	_depth = depth;
-
+	
 	if (textureFilepath != "") {
 		_texture = ResourceManager::getTexture(textureFilepath);
 	}

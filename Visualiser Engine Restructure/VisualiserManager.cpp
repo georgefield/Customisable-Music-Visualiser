@@ -3,10 +3,12 @@
 #include <Vengine/IOManager.h>
 
 Visualiser VisualiserManager::_current;
+int VisualiserManager::_timeSinceSaveTimerId;
 
 void VisualiserManager::init()
 {
-	loadVisualiser("Resources/Startup Visualiser");
+	Vengine::MyTiming::createTimer(_timeSinceSaveTimerId);
+	Vengine::MyTiming::startTimer(_timeSinceSaveTimerId);
 }
 
 bool VisualiserManager::createNewVisualiser(std::string name)
@@ -18,7 +20,7 @@ bool VisualiserManager::createNewVisualiser(std::string name)
 	}
 
 	//init if it does
-	return _current.initNew(VisVars::_userCreatedVisualiserPath + name);
+	return _current.initNewBlankVis(VisVars::_userCreatedVisualiserPath + name);
 }
 
 bool VisualiserManager::loadVisualiser(std::string path)
@@ -28,8 +30,9 @@ bool VisualiserManager::loadVisualiser(std::string path)
 		Vengine::warning("Cannot load visualiser with path '" + path + "' as it does not exist.");
 		return false;
 	}
+
 	//init if it does
-	return _current.initExisting(path);
+	return _current.initFromExisting(path);
 }
 
 bool VisualiserManager::save()
@@ -39,40 +42,52 @@ bool VisualiserManager::save()
 		return false;
 	}
 
-	_current.save();
-	return true;
+	if (_current.getPath() == VisVars::_startupVisualiserPath) {
+		Vengine::warning("Cannot save over startup visualiser");
+		return false;
+	}
+
+	if (_current.save()) {
+		Vengine::MyTiming::resetTimer(_timeSinceSaveTimerId);
+		Vengine::MyTiming::startTimer(_timeSinceSaveTimerId);
+		return true;
+	}
+	return false;
 }
 
 bool VisualiserManager::saveAsNew(std::string name)
 {
-	if (!_current.isInitialised()) {
-		Vengine::warning("Visualiser not initialised and cannot be saved");
-		return false;
-	}
-
 	//check if visualiser with that name exists already
 	if (Vengine::IOManager::directoryExists(VisVars::_userCreatedVisualiserPath + name)) {
 		Vengine::warning("Visualiser with that name already exists in user created visualisers, no copy made");
 		return false;
 	}
-
-	//create copy
-	if (!Vengine::IOManager::copyDirectory(_current.getPath(), VisVars::_userCreatedVisualiserPath + name)) {
-		Vengine::warning("Failed to copy files to new visualiser directory");
-		return false;
+	printf("SAVE AS");
+	//set current visualiser to be a save of whats being worked on now in a different folder
+	if (_current.initNewAsCurrentVis(VisVars::_userCreatedVisualiserPath + name)) {
+		Vengine::MyTiming::resetTimer(_timeSinceSaveTimerId);
+		Vengine::MyTiming::startTimer(_timeSinceSaveTimerId);
+		return true;
 	}
-	
-	//set current visualiser to be the copy
-	_current = Visualiser();
-	_current.initExisting(VisVars::_userCreatedVisualiserPath + name);
+	return false;
+}
 
-	return true;
+bool VisualiserManager::recentlySaved(){
+	return Vengine::MyTiming::readTimer(_timeSinceSaveTimerId) < 2;
 }
 
 std::string VisualiserManager::externalToInternalTexture(std::string texturePath)
 {
 	//copy to textures folder
 	Vengine::IOManager::copyFile(texturePath, VisualiserManager::texturesFolder() + texturePath.substr(texturePath.find_last_of('/')));
-	//return new texture
-	return VisualiserManager::texturesFolder() + texturePath.substr(texturePath.find_last_of('/'));
+	//returns name
+	return texturePath.substr(texturePath.find_last_of('/') + 1);
+}
+
+std::string VisualiserManager::externalToInternalShader(std::string shaderPath)
+{
+	//copy to shaders folder
+	Vengine::IOManager::copyFile(shaderPath, VisualiserManager::shadersFolder() + shaderPath.substr(shaderPath.find_last_of('/')));
+	//returns name
+	return shaderPath.substr(shaderPath.find_last_of('/') + 1);
 }

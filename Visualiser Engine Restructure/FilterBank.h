@@ -32,7 +32,7 @@ struct Band {
 		harmonicLow = floorf((lower / maxHz) * float(_masterFT->getMasterPtr()->_fftHistory.numHarmonics()));
 		harmonicHigh = ceilf((upper / maxHz) * float(_masterFT->getMasterPtr()->_fftHistory.numHarmonics()));
 
-		if (_masterFT->getCutoffLow() != 0 || _masterFT->getCutoffHigh() != _masterFT->getMasterPtr()->nyquist()) {
+		if (_masterFT->_FTinfo.cutoffLow != 0 || _masterFT->_FTinfo.cutoffHigh != _masterFT->getMasterPtr()->nyquist()) {
 			Vengine::fatalError("Only pass full spectrum FT as master to band");
 		}
 	}
@@ -105,8 +105,7 @@ struct FilterBank {
 	void updateAll(bool customFT = false) {
 
 		if (!customFT) {
-			masterTransform.beginCalculation();
-			masterTransform.endCalculation();
+			masterTransform.calculateNext();
 		}
 
 		for (auto& it : filters) {

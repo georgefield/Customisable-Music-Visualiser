@@ -4,17 +4,9 @@
 
 FourierTransform::FourierTransform(int historySize, float cutOffLow, float cutOffHigh, float cutoffSmoothFrac) :
 
-	_cutOffLow(cutOffLow),
-	_cutOffHigh(cutOffHigh),
-	_minCutoffLow(cutOffLow < 0),
-	_maxCutoffHigh(cutOffHigh < 0),
-
-	_cutoffSmoothFrac(cutoffSmoothFrac),
-
 	_working1(historySize),
 	_working2(historySize),
 
-	_historySize(historySize),
 	_initialised(false),
 
 	_numHarmonics(-1),
@@ -22,8 +14,15 @@ FourierTransform::FourierTransform(int historySize, float cutOffLow, float cutOf
 	_current(nullptr),
 	_next(nullptr),
 
-	_energyOfFt(SPvars._generalHistorySize)
+	_energyOfFt(SP::consts._generalHistorySize)
 {
+	_FTinfo.cutoffLow = cutOffLow;
+	_FTinfo.cutoffHigh = cutOffHigh;
+	_FTinfo.isMinCutoffLow = cutOffLow < 0;
+	_FTinfo.isMaxCutoffHigh = cutOffHigh < 0;
+	_FTinfo.cutoffSmoothFrac = cutoffSmoothFrac;
+	_FTinfo.historySize = historySize;
+
 	_maxLowResOutputSize = 50;
 }
 
@@ -48,22 +47,20 @@ void FourierTransform::init(Master* master, int FTid)
 	}
 
 	_initialised = true;
-	_FTid = FTid;
+	_FTinfo.id = FTid;
 	_useSetters = (FTid >= 0); //-1 for FT that does not output to gpu for use in shaders
 	_m = master;
 
 	//sanitise and set cutoffs--
-	if (_cutOffHigh > _m->nyquist())
-		_maxCutoffHigh = true;
+	if (_FTinfo.cutoffHigh > _m->nyquist())
+		_FTinfo.isMaxCutoffHigh = true;
 
-	if (_minCutoffLow)
-		_cutOffLow = 0.0f;
+	if (_FTinfo.isMinCutoffLow)
+		_FTinfo.cutoffLow = 0.0f;
 
-	if (_maxCutoffHigh)
-		_cutOffHigh = _m->nyquist();
+	if (_FTinfo.isMaxCutoffHigh)
+		_FTinfo.cutoffHigh = _m->nyquist();
 	//--
-
-	initDefaultVars();
 
 	setFourierTransformFrequencyInfo();
 
@@ -87,7 +84,7 @@ void FourierTransform::init(Master* master, int FTid)
 	_next = &(_working2);
 
 	//init energy of ft
-	_energyOfFt.init(_m, _FTid);
+	_energyOfFt.init(_m, _FTinfo.id);
 
 	if (_useSetters) {
 		setUpdaters();
@@ -101,11 +98,11 @@ void FourierTransform::reInit()
 	}
 
 	//make sure max cutoffs are adjusted for possible changed sample rate--
-	if (_minCutoffLow)
-		_cutOffLow = 0.0f;
+	if (_FTinfo.isMinCutoffLow)
+		_FTinfo.cutoffLow = 0.0f;
 
-	if (_maxCutoffHigh)
-		_cutOffHigh = _m->nyquist();
+	if (_FTinfo.isMaxCutoffHigh)
+		_FTinfo.cutoffHigh = _m->nyquist();
 	//--
 
 	setFourierTransformFrequencyInfo();
@@ -135,6 +132,75 @@ void FourierTransform::reInit()
 
 	_energyOfFt.reInit();
 }
+
+void FourierTransform::calculateNext()
+{
+	beginCalculation();
+	if (_FTinfo.applyFirst != NO_FUNCTION) {
+		applyFunction(_FTinfo.applyFirst);
+	}
+	if (_FTinfo.applySecond != NO_FUNCTION) {
+		applyFunction(_FTinfo.applySecond);
+	}
+	if (_FTinfo.applyThird != NO_FUNCTION) {
+		applyFunction(_FTinfo.applyThird);
+	}
+	endCalculation();
+}
+
+
+void FourierTransform::setSmoothEffect(int firstSecondOrThird, FunctionType function)
+{
+	assert(firstSecondOrThird >= 0 && firstSecondOrThird <= 2);
+
+	if (firstSecondOrThird == 0) {
+		_FTinfo.applyFirst = function;
+		return;
+	}
+	if (firstSecondOrThird == 1) {
+		_FTinfo.applySecond = function;
+		return;
+	}
+	if (firstSecondOrThird == 2) {
+		_FTinfo.applyThird = function;
+		return;
+	}
+}
+
+
+void FourierTransform::addSmoothEffect(FunctionType function)
+{
+	if (_FTinfo.applyFirst == NO_FUNCTION) {
+		_FTinfo.applyFirst = function;
+		return;
+	}
+	if (_FTinfo.applySecond == NO_FUNCTION) {
+		_FTinfo.applySecond = function;
+		return;
+	}
+	if (_FTinfo.applyThird == NO_FUNCTION) {
+		_FTinfo.applyThird = function;
+		return;
+	}
+}
+
+void FourierTransform::removeSmoothEffect()
+{
+	if (_FTinfo.applyThird != NO_FUNCTION) {
+		_FTinfo.applyThird = NO_FUNCTION;
+		return;
+	}
+	if (_FTinfo.applySecond != NO_FUNCTION) {
+		_FTinfo.applySecond = NO_FUNCTION;
+		return;
+	}
+	if (_FTinfo.applyFirst != NO_FUNCTION) {
+		_FTinfo.applyFirst = NO_FUNCTION;
+		return;
+	}
+
+}
+
 
 void FourierTransform::beginCalculation()
 {
@@ -219,16 +285,16 @@ void FourierTransform::applyFunctions(FunctionType* args, int numArgs)
 
 void FourierTransform::applyFreqConvolving(float* in, float* out)
 {
-	if (_windowSize == 1) {
+	if (_FTinfo.freqWindowSize == 1) {
 		return;
 	}
 
 	memset(out, 0.0f, sizeof(float) * _numHarmonics);
 
 	for (int i = 0; i < _numHarmonics; i++) {
-		int jStart = std::max(i - (_windowSize / 2), 0);
-		for (int j = jStart; j < std::min(i + (_windowSize / 2), _numHarmonics); j++) {
-			out[i] += in[j] * Kernels::apply(_freqKernel, j - jStart, _windowSize);
+		int jStart = std::max(i - (_FTinfo.freqWindowSize / 2), 0);
+		for (int j = jStart; j < std::min(i + (_FTinfo.freqWindowSize / 2), _numHarmonics); j++) {
+			out[i] += in[j] * Kernels::apply(LINEAR_PYRAMID, j - jStart, _FTinfo.freqWindowSize);
 		}
 	}
 }
@@ -240,16 +306,16 @@ void FourierTransform::applySmoothing(float* in, float* out) {
 
 	//calculate smoothed ft from 'in' ft
 	float timeSinceLastCalculation = float(_m->_currentSample - _m->_previousSample) / float(_m->_sampleRate);
-	float maxAcceleration = _maxAccelerationPerSecond * timeSinceLastCalculation;
+	float maxAcceleration = _FTinfo.maxAccelerationPerSecond * timeSinceLastCalculation;
 
 	for (int i = 0; i < _numHarmonics; i++) {
 		if (in[i] > _smoothedFt[i]) {
-			float change = std::fmin(timeSinceLastCalculation / _attack, in[i] - _smoothedFt[i]);
+			float change = std::fmin(timeSinceLastCalculation / _FTinfo.attack, in[i] - _smoothedFt[i]);
 			change = std::fmin(_smoothedFtDot[i] + maxAcceleration, change); //clamp change to be within max acceleration of last change
 			_smoothedFtDot[i] = change;
 		}
 		else {
-			float change = -std::fmin(timeSinceLastCalculation / _release, _smoothedFt[i] - in[i]);
+			float change = -std::fmin(timeSinceLastCalculation / _FTinfo.release, _smoothedFt[i] - in[i]);
 			change = std::fmax(_smoothedFtDot[i] - maxAcceleration, change);
 			_smoothedFtDot[i] = change;
 		}
@@ -266,16 +332,16 @@ void FourierTransform::applySmoothing(float* in, float* out) {
 void FourierTransform::applyTimeConvolving(FourierTransformHistory* in, float* out) {
 
 	//sanity check input
-	if (_previousXtransforms > _historySize) {
+	if (_FTinfo.timeWindowSize > _FTinfo.historySize) {
 		Vengine::warning("Requested to convolve over more frames than exists stored fft data, defaulting to over all stored data");
-		_previousXtransforms = _historySize;
+		_FTinfo.timeWindowSize = _FTinfo.historySize;
 	}
 
 	memset(out, 0.0f, sizeof(float) * _numHarmonics);
 
-	for (int i = 0; i < _previousXtransforms; i++) {
+	for (int i = 0; i < _FTinfo.timeWindowSize; i++) {
 		for (int j = 0; j < _numHarmonics; j++) {
-			out[j] += in->get(i)[j] * Kernels::apply(_timeKernel, i, _previousXtransforms); //overwrite oldest
+			out[j] += in->get(i)[j] * Kernels::apply(LINEAR_PYRAMID, i, _FTinfo.timeWindowSize); //overwrite oldest
 		}
 	}
 }
@@ -284,16 +350,16 @@ void FourierTransform::applyTimeConvolving(FourierTransformHistory* in, float* o
 void FourierTransform::setFourierTransformFrequencyInfo()
 {
 	//calculate cutoff points and sanitise input--
-	float fourierLowFrac = _cutOffLow / _m->nyquist(); //as nyquist max freq
-	float fourierHighFrac = _cutOffHigh / _m->nyquist();
+	float fourierLowFrac = _FTinfo.cutoffLow / _m->nyquist(); //as nyquist max freq
+	float fourierHighFrac = _FTinfo.cutoffHigh / _m->nyquist();
 	if (fourierHighFrac > 1) {
 		Vengine::warning("Cutoff high > nyquist, setting equal to nyquist");
-		_cutOffHigh = _m->nyquist();
+		_FTinfo.cutoffHigh = _m->nyquist();
 		fourierHighFrac = 1;
 	}
 	if (fourierLowFrac < 0) {
 		Vengine::warning("Cutoff low < 0, setting equal to 0");
-		_cutOffLow = 0;
+		_FTinfo.cutoffLow = 0;
 		fourierLowFrac = 0;
 	}
 	//--
@@ -314,36 +380,20 @@ void FourierTransform::setFourierTransformFrequencyInfo()
 
 }
 
-void FourierTransform::initDefaultVars()
-{
-	//default freq convolve vars
-	_windowSize = 5;
-	_freqKernel = LINEAR_PYRAMID;
-
-	//default smooth vars
-	_attack = 0.15;
-	_release = 0.5;
-	_maxAccelerationPerSecond = 0.5;
-
-	//default time convolve vars
-	_previousXtransforms = std::min(_historySize, 7);
-	_timeKernel = LINEAR_PYRAMID;
-}
-
 float FourierTransform::smoothCutoff(int i)
 {
-	if (_cutoffSmoothFrac == 0.0f) {
+	if (_FTinfo.cutoffSmoothFrac == 0.0f) {
 		return 1.0f; //no smoothing
 	}
 
 	float distanceFromCutoffFrac = float(std::min(i - _harmonicLow, _harmonicHigh - i)) / float(_numHarmonics);
 
-	return std::min((2.0f * distanceFromCutoffFrac) / _cutoffSmoothFrac, 1.0f); //1.0f => pyramid band, 0.5f => trapezium with top side half of bottom, 0.1f => trapezium top side 9/10 of bottom
+	return std::min((2.0f * distanceFromCutoffFrac) / _FTinfo.cutoffSmoothFrac, 1.0f); //1.0f => pyramid band, 0.5f => trapezium with top side half of bottom, 0.1f => trapezium top side 9/10 of bottom
 }
 
 void FourierTransform::setUpdaters()
 {
-	std::string uniformPrefix = "vis_FT" + std::to_string(_FTid) + "_";
+	std::string uniformPrefix = "vis_FT" + std::to_string(_FTinfo.id) + "_";
 
 	//energy setters init in energy class
 
@@ -356,7 +406,7 @@ void FourierTransform::setUpdaters()
 
 void FourierTransform::removeUpdaters()
 {
-	std::string uniformPrefix = "vis_FT" + std::to_string(_FTid) + "_";
+	std::string uniformPrefix = "vis_FT" + std::to_string(_FTinfo.id) + "_";
 
 	//energy setters deleted in energy class
 

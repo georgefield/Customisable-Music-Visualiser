@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "SimMatrixStructs.h"
 
 class UIglobalFeatures
 {
@@ -10,9 +11,17 @@ public:
 
 	static std::string ImGuiComboStringMaker(std::vector<std::string>& options);
 	static bool ImGuiBetterCombo(std::vector<std::string>& options, int& currentItem, int id);
+	static bool ImGuiBetterCombo(std::vector<int>& options, int& currentItem, int id);
+
+	static void addSyntaxErrorToWindow(const std::string& error);
+	static void clearSyntaxErrorWindow();
+	static std::vector<std::string>* getSyntaxErrorArray();
+
+	static SimMatInfo _uiSMinfo;
 private:
 
 	static int _errorMessageTimerId;
 	static std::vector<std::string> _errorQueue;
+	static std::vector<std::string> _syntaxErrorArray;
 };
 

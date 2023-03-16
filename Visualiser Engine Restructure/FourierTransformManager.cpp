@@ -2,18 +2,28 @@
 #include "VisualiserShaderManager.h"
 #include "VisualiserManager.h"
 #include "SignalProcessingManager.h"
-
+#include "UIglobalFeatures.h"
 #include <functional>
 
 std::unordered_map<int, FourierTransform*> FourierTransformManager::_fourierTransforms;
 
 
-void FourierTransformManager::createFourierTransform(int& id, int historySize, float cutOffLow, float cutOffHigh, float cutoffSmoothFrac)
+void FourierTransformManager::createFourierTransformFromStruct(FourierTransform::FTinfo info)
 {
-	//id generation
-	id = _fourierTransforms.size();
-	while (_fourierTransforms.find(id) != _fourierTransforms.end()) {
-		id++;
+	createFourierTransform(info.id, info.historySize, info.cutoffLow, info.cutoffHigh, info.cutoffSmoothFrac);
+	memcpy(&getFourierTransform(info.id)->_FTinfo, &info, sizeof(FourierTransform::FTinfo)); //copy info
+}
+
+void FourierTransformManager::createFourierTransform(int id, int historySize, float cutOffLow, float cutOffHigh, float cutoffSmoothFrac)
+{
+	if (id >= SP::consts._maxFourierTransforms) {
+		Vengine::warning("id greater than max fourier transforms");
+		return;
+	}
+
+	if (fourierTransformExists(id)) {
+		Vengine::warning("Cannot create FT of id " + std::to_string(id) + " as it already exists");
+		return;
 	}
 
 	_fourierTransforms[id] = new FourierTransform(historySize, cutOffLow, cutOffHigh, cutoffSmoothFrac);
@@ -35,6 +45,13 @@ void FourierTransformManager::eraseFourierTransform(int id)
 	_fourierTransforms.erase(id);
 }
 
+void FourierTransformManager::clearFourierTransforms()
+{
+	for (auto& id : idArr()) {
+		eraseFourierTransform(id);
+	}
+}
+
 void FourierTransformManager::reInitAll()
 {
 	for (auto& it : _fourierTransforms) {
@@ -46,10 +63,7 @@ void FourierTransformManager::calculateFourierTransforms()
 {
 	//calculate the fourier transforms in fourier transform manager
 	for (auto& it : _fourierTransforms){
-		it.second->beginCalculation();
-		//test->applyFunction(FourierTransform::SMOOTH);
-		//test->applyFunction(FourierTransform::FREQUENCY_CONVOLVE);
-		it.second->endCalculation();
+		it.second->calculateNext();
 	}
 }
 
@@ -69,4 +83,15 @@ std::vector<int> FourierTransformManager::idArr()
 		ret.push_back(it.first);
 	}
 	return ret;
+}
+
+std::vector<int> FourierTransformManager::availiableIdArr()
+{
+	std::vector<int> availiableFTids;
+	for (int i = 0; i < SP::consts._maxFourierTransforms; i++) {
+		if (!fourierTransformExists(i)) {
+			availiableFTids.push_back(i);
+		}
+	}
+	return availiableFTids;
 }

@@ -16,7 +16,8 @@ public:
 	static bool save();
 	static bool saveAsNew(std::string name);
 
-	static std::string externalToInternalTexture(std::string texturePath);
+	static std::string externalToInternalTexture(std::string texturePath); //returns texture filename
+	static std::string externalToInternalShader(std::string shaderPath); //returns shader filename
 
 	static bool isVisualiserLoaded() { return _current.isInitialised(); }
 	static std::string path() { return _current.getPath(); }
@@ -24,8 +25,10 @@ public:
 	static std::string shadersFolder() { return _current.getPath() + "/shaders"; }
 	static std::string texturesFolder() { return _current.getPath() + "/textures"; }
 
-
+	static bool recentlySaved();
 private:
 	static Visualiser _current;
+
+	static int _timeSinceSaveTimerId;
 };
 

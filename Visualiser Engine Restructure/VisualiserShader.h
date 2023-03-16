@@ -15,7 +15,7 @@ public:
 		_containsTextureUniform(false)
 	{}
 
-	void init(const std::string& fragPath, const std::string& visualiserPath);
+	bool init(const std::string& fragPath, const std::string& visualiserPath);
 
 	Vengine::GLSLProgram* getProgram() const { if (_program == nullptr) { Vengine::fatalError("Program not initialised"); } return _program; }
 

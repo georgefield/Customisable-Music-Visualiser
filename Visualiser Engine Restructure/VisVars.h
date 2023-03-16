@@ -20,4 +20,8 @@ struct VisVars {
 	static const std::string _userCreatedVisualiserPath;
 
 	static const std::string _presetVisualiserPath;
+
+	static const std::string _1x1WhiteTexturePath;
+
+	static const std::string _startupVisualiserPath;
 };

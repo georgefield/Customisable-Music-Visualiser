@@ -5,13 +5,16 @@
 class SimilarityMatrixHandler
 {
 public:
+
 	SimilarityMatrixHandler(int size);
 	~SimilarityMatrixHandler();
 
-	void init(Master* master, int matrixSize);
-	void reInit(int matrixSize);
+	void init(Master* master);
+	void reInit();
 
 	void calculateNext();
+
+	void relinkBasedOnSPvars();
 
 	void linkToMFCCs(int coeffLow, int coeffHigh);
 	void linkToMelBandEnergies();
@@ -22,30 +25,20 @@ public:
 
 	//getters
 	bool isRealTime() { return _samplesAheadForFutureMatrix == 0; }
-	LinkedTo isLinkedTo() { return _linkedTo; }
-	bool isLinkInfoTheSame(int coeffLow, int coeffHigh) { return _linkedTo == MFCC && coeffLow == _coeffLow && coeffHigh == _coeffHigh; }	
-	bool isLinkInfoTheSame(float cutoffLow, float cutoffHigh, float cutoffSmoothFactor) { return _linkedTo == FT && cutoffLow == _cutoffLow && cutoffHigh == _cutoffHigh && _cutoffSmoothFactor == cutoffSmoothFactor; }
+	LinkedTo isLinkedTo() { return _SMinfo._linkedTo; }
 
+	SimMatInfo _SMinfo;
 private:
 
 	Master* _master;
 	Master _futureMaster;
 	MFCCs _futureMFCCs;
 
-	LinkedTo _linkedTo;
 	FourierTransform* _fourierTransform;
 
 	int _samplesAheadForFutureMatrix;
-	int _matrixSize;
 
-	//link info--
-	int _coeffLow;
-	int _coeffHigh;
-
-	float _cutoffLow;
-	float _cutoffHigh;
-	float _cutoffSmoothFactor;
-	//--
+	int _counterForDownscale;
 
 	void initUpdaters();
 	void removeUpdaters();

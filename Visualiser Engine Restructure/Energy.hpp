@@ -2,7 +2,7 @@
 #include "Master.h"
 
 #include "VisualiserShaderManager.h"
-#include "SignalProcessingVars.h"
+#include "SPvars.h"
 #include <functional>
 
 class Energy {
@@ -72,7 +72,7 @@ public:
 		for (int i = 0; i < numHarmonics; i++) {
 			energy += fourierTransform[i] * fourierTransform[i];
 		}
-		energy /= SPvars._masterFTgain * SPvars._masterFTgain; //fix the gain applied on transform
+		energy /= SP::vars._masterFTgain * SP::vars._masterFTgain; //fix the gain applied on transform
 		energy *= 2; // miss out the mirrored half of the fourier transform
 		
 		_energy.add(energy, _m->_currentSample);

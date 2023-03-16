@@ -2,15 +2,19 @@
 #include "VisualiserShaderManager.h"
 #include "VisualiserManager.h"
 #include "VisVars.h"
+#include "UIglobalFeatures.h"
 #include <fstream>
 
-void VisualiserShader::init(const std::string& fragPath, const std::string& visualiserPath)
+bool VisualiserShader::init(const std::string& fragPath, const std::string& visualiserPath)
 {
 	updateShaderName(fragPath);
 	_sourcePath = fragPath;
 	_visualiserPath = visualiserPath;
 
 	_program = compile();
+	if (_program == nullptr)
+		return false;
+	return true;
 }
 
 
@@ -48,5 +52,10 @@ Vengine::GLSLProgram* VisualiserShader::compile()
 
 	Vengine::IOManager::outputToTextFile(_interpretedShaderSourcePath, sourceCode, true);
 
-	return Vengine::ResourceManager::getShaderProgram(VisVars::_commonVertShaderPath, _interpretedShaderSourcePath);
+	std::string errorOut;
+	Vengine::GLSLProgram* program = Vengine::ResourceManager::reloadShaderProgram(VisVars::_commonVertShaderPath, _interpretedShaderSourcePath, errorOut);
+	if (program == nullptr) {
+		UIglobalFeatures::addSyntaxErrorToWindow(errorOut);
+	}
+	return program;
 }

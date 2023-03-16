@@ -27,6 +27,8 @@ public:
 	static std::string getCommonShaderPrefix();
 
 	static bool createShader(std::string name);
+
+	static void recompileShader(std::string fragPath);
 	//--
 
 	//ssbo managing--

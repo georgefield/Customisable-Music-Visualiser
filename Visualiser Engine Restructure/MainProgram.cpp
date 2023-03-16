@@ -7,6 +7,7 @@
 #include "FourierTransformManager.h"
 #include "VisualiserShaderManager.h"
 #include "VisualiserManager.h"
+#include "VisVars.h"
 
 
 const int screenWidth = 1024;
@@ -63,15 +64,16 @@ void MainProgram::initSystems() {
 void MainProgram::initManagers()
 {
 	VisualiserManager::init();
-
 	VisualiserShaderManager::init();
-
-	SpriteManager::init(&_viewport, &_window);
 
 	AudioManager::init();
 	AudioManager::load(STARTUP_MUSIC_FILEPATH); //program works by always having a song loaded
 
 	SignalProcessingManager::init();
+
+	VisualiserManager::loadVisualiser(VisVars::_startupVisualiserPath);
+
+	SpriteManager::init(&_viewport, &_window);
 }
 
 void MainProgram::initGenericUpdaters()
@@ -109,10 +111,14 @@ void MainProgram::processInput() {
 			_gameState = ProgramState::EXIT;
 			break;
 		case SDL_KEYDOWN:
-			_inputManager.pressKey(evnt.key.keysym.sym);
+			if (!ImGui::GetIO().WantCaptureKeyboard) {
+				_inputManager.pressKey(evnt.key.keysym.sym);
+			}
 			break;
 		case SDL_KEYUP:
-			_inputManager.releaseKey(evnt.key.keysym.sym);
+			if (!ImGui::GetIO().WantCaptureKeyboard) {
+				_inputManager.releaseKey(evnt.key.keysym.sym);
+			}
 			break;
 		case SDL_MOUSEBUTTONDOWN:
 			if (!ImGui::GetIO().WantCaptureMouse) {
@@ -125,11 +131,13 @@ void MainProgram::processInput() {
 			}
 			break;
 		case SDL_MOUSEMOTION:
-			_inputManager.setMouseCoords(evnt.motion.x, evnt.motion.y);
+			if (!ImGui::GetIO().WantCaptureMouse) {
+				_inputManager.setMouseCoords(evnt.motion.x, evnt.motion.y);
+			}
 		}
 	}
 
-	if (_UI.getShowUi() && !ImGui::GetIO().WantCaptureMouse) {
+	if (_UI.getShowUi() && !ImGui::GetIO().WantCaptureMouse && !ImGui::GetIO().WantCaptureKeyboard) {
 		SpriteManager::processInput(&_inputManager);
 	}
 }
@@ -148,14 +156,6 @@ void MainProgram::gameLoop() {
 
 			if (_inputManager.isKeyPressed(SDL_BUTTON_LEFT)) {
 				printf("%f fps\n", Vengine::MyTiming::getFPS());
-			}
-			if (_inputManager.isKeyPressed(SDLK_SPACE)) {
-				if (AudioManager::isAudioPlaying()) {
-					AudioManager::pause();
-				}
-				else {
-					AudioManager::play();
-				}
 			}
 		
 
@@ -203,5 +203,6 @@ void MainProgram::drawUi(){
 	_UI.toolbar();
 	_UI.sidebar();
 	_UI.displayErrors();
+
 	_UI.processInput();
 }

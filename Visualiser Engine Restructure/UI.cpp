@@ -6,6 +6,7 @@
 #include "Tools.h"
 #include <algorithm>
 #include "UIglobalFeatures.h"
+#include "VisVars.h"
 
 #include "PFDapi.h"
 
@@ -23,8 +24,8 @@ void UI::init(Vengine::Window* window, Vengine::InputManager* inputManager) {
 	_window = window;
 	_inputManager = inputManager;
 
-	_toolbarSizePx = 100;
 	_sidebarSizePx = 200;
+	_toolbarSizePx = _sidebarSizePx/_window->getAspectRatio();
 }
 
 
@@ -64,10 +65,8 @@ void UI::toolbar() {
 	}
 
 	if (ImGui::BeginMenu("View")) {
-		if (ImGui::MenuItem("Toggle UI (tab)")) {
-			_showUi = false;
-		}
-
+		ImGui::MenuItem("Toggle UI (ctrl+a)", NULL, &_showUi);
+		ImGui::MenuItem("Toggle Info Boxes (ctrl+x)", NULL, &_showInfoBoxes);
 		ImGui::MenuItem("Fullscreen", NULL, &_fullscreen); //todo
 		ImGui::EndMenu();
 	}
@@ -75,18 +74,18 @@ void UI::toolbar() {
 
 	if (ImGui::BeginMenu("Shader Managing")) {
 		ImGui::MenuItem("Shader variables", NULL, &_showShaderVariablesUi);
-		ImGui::MenuItem("Import shader", NULL, &_showImportShaderUi);
-		ImGui::MenuItem("Create Shader", NULL, &_showCreateShaderUi);
+		ImGui::MenuItem("Create shader", NULL, &_showCreateShaderUi);
+		ImGui::MenuItem("Show shader errors", NULL, &_showSyntaxErrorsUi);
 		ImGui::EndMenu();
 	}
 
 	if (_showInfoBoxes) {
 		if (_showShaderVariablesUi)
 			shaderVariablesUi();
-		if (_showImportShaderUi)
-			importShaderUi();
 		if (_showCreateShaderUi)
 			createShaderUi();
+		if (_showSyntaxErrorsUi)
+			syntaxErrorsUi();
 	}
 
 	if (ImGui::BeginMenu("Signal Processing")) {
@@ -120,21 +119,22 @@ void UI::toolbar() {
 	ImGui::EndMenuBar();
 
 	//add sprite--
-	ImGui::BeginChild("add button child", ImVec2(ImGui::GetContentRegionAvail().y *2, ImGui::GetContentRegionAvail().y), false);
+	ImGui::BeginChild("add button child", ImVec2(ImGui::GetContentRegionAvail().y, ImGui::GetContentRegionAvail().y / 2), false);
 
 	if (ImGui::Button("Add sprite", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y))) {
 		ImGui::OpenPopup("add menu");
 	}
 	if (ImGui::BeginPopup("add menu")) {
 		if (ImGui::Selectable("Quad"))
-			SpriteManager::addSprite(Vengine::Mod_Quad, glm::vec2(-0.5), glm::vec2(1));
+			SpriteManager::addSprite(Vengine::Mod_Quad);
 		if (ImGui::Selectable("Triangle"))
-			SpriteManager::addSprite(Vengine::Mod_Triangle, glm::vec2(-0.5), glm::vec2(1));
+			SpriteManager::addSprite(Vengine::Mod_Triangle);
 		if (ImGui::Selectable("Circle"))
-			SpriteManager::addSprite(Vengine::Mod_Circle, glm::vec2(-0.5), glm::vec2(1));
-		if (ImGui::Selectable("Ring"))
-			SpriteManager::addSprite(Vengine::Mod_Ring, glm::vec2(-0.5), glm::vec2(1));
-
+			SpriteManager::addSprite(Vengine::Mod_Circle);
+		if (ImGui::Selectable("Ring")) {
+			SpriteManager::addSprite(Vengine::Mod_Ring);
+			//SpriteManager::addSprite(Vengine::Mod_Ring);
+		}
 		ImGui::EndPopup();
 	}
 
@@ -144,11 +144,12 @@ void UI::toolbar() {
 	ImGui::SameLine();
 
 	//audio playback ui--
-	ImGui::BeginChild("playback child", ImVec2(250, ImGui::GetContentRegionAvail().y), false);
+	ImGui::BeginChild("playback child", ImVec2(250, ImGui::GetContentRegionAvail().y / 1.5), false);
 
 	//load song
 	if (ImGui::Button("Load song")) {
 		std::string chosenAudio;
+		SignalProcessingManager::computeAudioInterrupt();
 		PFDapi::fileChooser("Choose audio", Vengine::IOManager::getProjectDirectory(), chosenAudio, { "Audio files", "*.wav *.mp3 *.flac" }, true);
 		AudioManager::load(chosenAudio);
 	}
@@ -164,7 +165,6 @@ void UI::toolbar() {
 	ImGui::DragInt("##", &scrubber, 5000.0f, 0, AudioManager::getNumSamples(), "%d", ImGuiSliderFlags_AlwaysClamp);
 	if (ImGui::IsItemEdited()) {
 		AudioManager::seekToSample(scrubber);
-		SPvars._nextCalculationSample = scrubber;
 	}
 	if (!ImGui::IsItemActive() && AudioManager::isAudioPlaying()) {
 		scrubber = AudioManager::getCurrentSample();
@@ -190,7 +190,7 @@ void UI::toolbar() {
 
 	ImGui::SameLine();
 
-	ImGui::BeginChild("db meter", ImVec2(150, ImGui::GetContentRegionAvail().y));
+	ImGui::BeginChild("db meter", ImVec2(150, ImGui::GetContentRegionAvail().y / 1.5));
 
 	float logAmplitude = SignalProcessingManager::getMasterPtr()->getPeakAmplitudeDb() + 12;
 	ImGui::PlotHistogram("0 db\n-3 db\n-6 db\n-9 db", &logAmplitude, 1, 0, "##", 0, 13, ImVec2(20, 65));
@@ -216,6 +216,16 @@ void UI::toolbar() {
 	}
 	//--
 
+	//visualiser name--
+	ImGui::Text(VisualiserManager::path().c_str());
+	//--
+
+	ImGui::SameLine();
+
+	if (VisualiserManager::recentlySaved()) {
+		ImGui::TextColored(ImVec4(0.5,1,0.5,1),"Save successful");
+	}
+
 	ImGui::End();
 }
 
@@ -235,6 +245,7 @@ void UI::sidebar() {
 	std::vector<CustomisableSprite*> spritesByDepthOrder = SpriteManager::getDepthSortedSprites();
 
 	ImGui::Text("Sprites");
+	ImGui::Text("Ctrl+d to deselect all");
 	ImGui::BeginChild("Sprites", ImVec2(ImGui::GetContentRegionAvail().x, std::min(_window->getScreenHeight() * 0.8f, 500.0f)), true);
 
 	bool sortRequired = false;
@@ -246,20 +257,31 @@ void UI::sidebar() {
 		auto it = spritesByDepthOrder[i];
 
 		//name
-		ImGui::Text(it->getName().c_str());
+		ImGui::Text(it->_spriteInfo.name);
 
 		//change depth
-		ImGui::InputFloat("Depth", it->getDepthPtr());
-		if (ImGui::IsItemDeactivated()) {
+		ImGui::InputFloat("Depth", &it->_depth);
+		if (ImGui::IsItemDeactivatedAfterEdit()) {
+			it->updateSpriteInfoToMatchDepth();
 			sortRequired = true; //sort if depth changed
 		}
 
 		//show in editor
-		ImGui::Checkbox("Show (editor)", it->getShowInEditorPtr()); ImGui::SameLine();
+		ImGui::Checkbox("Show (editor)", it->getShowInEditorPtr());
+		if (ImGui::IsItemEdited() && *it->getShowInEditorPtr() == false) {
+			it->setIfSelected(false);
+		}
+
 		//select sprite
-		if (ImGui::Button("Select")) {
+		if (it->isSelected()) {
+			if (ImGui::Button("Deselect")) {
+				SpriteManager::deselectCurrent();
+				it->setIfSelected(false);
+			}
+		}
+		else if (ImGui::Button("Select")) {
 			SpriteManager::deselectCurrent();
-			spritesByDepthOrder[it->id]->setIfSelected(true);
+			it->setIfSelected(true);
 		}
 
 		//delete
@@ -293,12 +315,38 @@ void UI::displayErrors()
 
 void UI::processInput()
 {
-	if (_inputManager->isKeyPressed(SDLK_TAB)) {
+	if (_inputManager->isKeyDown(SDLK_LCTRL) && _inputManager->isKeyPressed(SDLK_a)) { //ctrl a fullscreen
 		_showUi = !_showUi;
 	}
-
-	if (_inputManager->isKeyDown(SDLK_LCTRL) && _inputManager->isKeyPressed(SDLK_x)) {
+	if (_inputManager->isKeyDown(SDLK_LCTRL) && _inputManager->isKeyPressed(SDLK_x)) { //ctrl x dont show info boxes
 		_showInfoBoxes = !_showInfoBoxes;
+	}
+	if (_inputManager->isKeyDown(SDLK_LCTRL) && _inputManager->isKeyPressed(SDLK_d)) { //ctrl d deselect current
+		SpriteManager::deselectCurrent();
+	}
+	if (_inputManager->isKeyDown(SDLK_LCTRL) && _inputManager->isKeyPressed(SDLK_r)) { //ctrl r reset signal processing
+		SignalProcessingManager::reset();
+	}
+
+	if (!ImGui::GetIO().WantCaptureKeyboard) {
+
+		if (_inputManager->isKeyPressed(SDLK_SPACE)) {
+			if (AudioManager::isAudioPlaying()) {
+				AudioManager::pause();
+			}
+			else if (AudioManager::isAudioFinished()){
+				//restart
+				AudioManager::seekToSample(0);
+				AudioManager::play();
+			}
+			else {
+				AudioManager::play();
+			}
+		}
+
+		if (_save == false && _inputManager->isKeyDown(SDLK_LCTRL) && _inputManager->isKeyPressed(SDLK_s)) {
+			_save = true;
+		}
 	}
 }
 
@@ -328,21 +376,43 @@ void UI::shaderVariablesUi()
 
 	ImGui::Begin("Shader variables", &_showShaderVariablesUi, ImGuiWindowFlags_AlwaysAutoResize);
 
-	ImGui::Text("These are the variable that you can use in a .visfrag shader");
+	ImGui::Text("These are the variables that you can use in a .visfrag shader");
 
-	if (ImGui::CollapsingHeader("Arrays")) {
+	if (ImGui::CollapsingHeader("Input sprite info")) {
+		ImGui::Text("Information about the current pixel and sprite the shader is being run on");
+		ImGui::BulletText("vis_fragmentPosition");
+		ImGui::BulletText("vis_fragmentUV");
+		ImGui::BulletText("vis_spriteColour");
+		ImGui::BulletText("vis_spriteTexture");
+		ImGui::BulletText("vis_inColour");
+	}
+
+	if (ImGui::CollapsingHeader("Output pixel colour")) {
+		ImGui::Text("Set this to the colour you want the pixel at vis_fragmentPosition to be");
+		ImGui::BulletText("vis_outputColour");
+	}
+
+	if (ImGui::CollapsingHeader("Custom variables")) {
+		ImGui::Text("Can set these through a shader, they are shared between shaders and persistent between frames.\nSet to zero on visualiser load");
+		ImGui::BulletText("vis_userVar1");
+		ImGui::BulletText("vis_userVar3");
+		ImGui::BulletText("vis_userVar4");
+	}
+
+	if (ImGui::CollapsingHeader("Audio info (arrays)")) {
+		ImGui::Text("Array size variables are availiable (look in 'values' tab)");
 		std::vector<std::string> SSBOnames;
 		VisualiserShaderManager::SSBOs::getAllSSBOnames(SSBOnames);
 		std::sort(SSBOnames.begin(), SSBOnames.end()); //sort alphabetically
 
 		for (auto& it : SSBOnames) {
 			std::string infoStr = it + " = " + VisualiserShaderManager::SSBOs::getSSBOstatus(it);
-			ImGui::Text(infoStr.c_str());
+			ImGui::BulletText(infoStr.c_str());
 		}
 
 	}
 
-	if (ImGui::CollapsingHeader("Values")) {
+	if (ImGui::CollapsingHeader("Audio info (values)")) {
 		std::vector<std::string> uniformNames;
 		VisualiserShaderManager::Uniforms::getAllUniformNames(uniformNames);
 		std::sort(uniformNames.begin(), uniformNames.end()); //sort alphabetically
@@ -356,28 +426,20 @@ void UI::shaderVariablesUi()
 				infoStr += std::to_string(int(value));
 			else
 				infoStr += std::to_string(value);
-			ImGui::Text(infoStr.c_str());
+			ImGui::BulletText(infoStr.c_str());
 		}
 	}
 
 	ImGui::End();
 }
 
-void UI::importShaderUi()
-{
-	std::string chosenFile = "";
-	if (PFDapi::fileChooser("Choose shader to add", Vengine::IOManager::getProjectDirectory(), chosenFile, { "Fragment Files (.frag)", "*.frag" }, true)) {
-		VisualiserShaderManager::getShader(chosenFile);
-	}
-	else {
-		UIglobalFeatures::queueError("Could not import shader " + chosenFile);
-	}
-
-	_showImportShaderUi = false;
-}
-
 void UI::createShaderUi()
 {
+	if (VisualiserManager::path() == VisVars::_startupVisualiserPath) {
+		UIglobalFeatures::queueError("Cannot create shader without loading or creating new visualiser first");
+		_showCreateShaderUi = false;
+		return;
+	}
 	static char shaderName[25] = "";
 	if (textInputPrompt("Shader name:", shaderName, 25, _showCreateShaderUi)) {
 		if (!VisualiserShaderManager::createShader(shaderName)) {
@@ -385,6 +447,34 @@ void UI::createShaderUi()
 		}
 		shaderName[0] = NULL;
 	}
+}
+
+void UI::syntaxErrorsUi()
+{
+	ImGui::Begin("Syntax errors", &_showSyntaxErrorsUi, ImGuiWindowFlags_AlwaysAutoResize);
+
+	std::vector<std::string>* errorArr = UIglobalFeatures::getSyntaxErrorArray();
+	ImGui::Text(("Error history (" + std::to_string(errorArr->size()) + " entries)").c_str());
+	int count = 0;
+	for (auto& it : *errorArr) {
+		std::string title;
+		if (it.size() > 40)
+			title = (it.substr(0, 37) + "...");
+		else
+			title = it;
+
+		ImGui::PushID(count);
+		if (ImGui::CollapsingHeader(title.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
+			ImGui::Text(it.c_str());
+		}
+		ImGui::PopID();
+		count++;
+	}
+	if (ImGui::Button("Clear")) {
+		UIglobalFeatures::clearSyntaxErrorWindow();
+	}
+
+	ImGui::End();
 }
 
 //***
@@ -396,30 +486,29 @@ void UI::generalSignalProcessingUi()
 {
 	ImGui::Begin("General", &_showGeneralSignalProcessingUi, ImGuiWindowFlags_AlwaysAutoResize);
 
-	ImGui::Checkbox("Compute Fourier Transforms", &SPvars._computeFourierTransform);
-	ImGui::Checkbox("Compute RMS", &SPvars._computeRms);
-	ImGui::Checkbox("Compute Note Onset", &SPvars._computeNoteOnset);
-	ImGui::Checkbox("Compute Tempo Detection", &SPvars._computeTempoDetection);
-	ImGui::Checkbox("Compute MFCCs", &SPvars._computeMFCCs);
-	ImGui::Checkbox("Compute Self Similarity Matrix", &SPvars._computeSimilarityMatrix);
+	ImGui::Checkbox("Compute Fourier Transforms", &SP::vars._computeFourierTransform);
+	ImGui::Checkbox("Compute Note Onset", &SP::vars._computeNoteOnset);
+	ImGui::Checkbox("Compute Tempo Detection", &SP::vars._computeTempoDetection);
+	ImGui::Checkbox("Compute MFCCs", &SP::vars._computeMFCCs);
+	ImGui::Checkbox("Compute Self Similarity Matrix", &SP::vars._computeSimilarityMatrix);
 
 	ImGui::Separator();
 
 	std::string fpsInfo = "FPS: " + std::to_string(int(Vengine::MyTiming::getFPS()));
 	ImGui::Text(fpsInfo.c_str());
 
-	std::string cpsInfo = "Audio calculations per second (CPS): " + std::to_string(int(SPvars._desiredCPS));
+	std::string cpsInfo = "Audio calculations per second (CPS): " + std::to_string(int(SP::vars._desiredCPS));
 	ImGui::Text(cpsInfo.c_str());
 	ImGui::Text("Can auto decrease if calculations fall behind");
 
-	static float CPS = SPvars._desiredCPS;
-	if (SPvars._wasCPSautoDecreased) {
-		CPS = SPvars._desiredCPS;
+	static float CPS = SP::vars._desiredCPS;
+	if (SP::vars._wasCPSautoDecreased) {
+		CPS = SP::vars._desiredCPS;
 	}
 
 	ImGui::SliderFloat("CPS", &CPS, 10, 120, "%.1f");
-	if (CPS != SPvars._desiredCPS && ImGui::Button("Set CPS")) {
-		SPvars._desiredCPS = CPS;
+	if (CPS != SP::vars._desiredCPS && ImGui::Button("Set CPS")) {
+		SP::vars._desiredCPS = CPS;
 		SignalProcessingManager::reset();
 	}
 
@@ -447,7 +536,7 @@ void UI::fourierTransformsUi()
 {
 	ImGui::Begin("Fourier Tranforms", &_showFourierTransformUi, ImGuiWindowFlags_AlwaysAutoResize);
 
-	ImGui::Checkbox("Compute Fourier Transforms", &SPvars._computeFourierTransform);
+	ImGui::Checkbox("Compute Fourier Transforms", &SP::vars._computeFourierTransform);
 
 	//get id array
 	std::vector<int> fourierTransformIds = FourierTransformManager::idArr();
@@ -462,6 +551,8 @@ void UI::fourierTransformsUi()
 
 			ImGui::PushID(i);
 
+			auto ft = FourierTransformManager::getFourierTransform(id);
+
 			//name of ft--
 			ImGui::Text(("Fourier transform " + std::to_string(id)).c_str());
 			//--
@@ -471,20 +562,62 @@ void UI::fourierTransformsUi()
 			//--
 
 			//show cutoff information--
-			float cutoffLow = FourierTransformManager::getFourierTransform(id)->getCutoffLow();
+			float cutoffLow = ft->_FTinfo.cutoffLow;
 			ImGui::Text(("Cutoff low: " + std::to_string(cutoffLow)).c_str());
 			ImGui::SameLine();
-			float cutoffHigh = FourierTransformManager::getFourierTransform(id)->getCutoffHigh();
+			float cutoffHigh = ft->_FTinfo.cutoffHigh;
 			ImGui::Text(("Cutoff high: " + std::to_string(cutoffHigh)).c_str());
-			float cutoffSmooth = FourierTransformManager::getFourierTransform(id)->getCutoffSmoothFraction();
+			float cutoffSmooth = ft->_FTinfo.cutoffSmoothFrac;
 			ImGui::Text(("Cutoff smooth fraction: " + std::to_string(cutoffSmooth)).c_str());
 			//--
 
-			ImGui::Separator();
+			if (ImGui::CollapsingHeader("Smoothing options", ImGuiTreeNodeFlags_Leaf)) {
+				//more options for ft--
+				static std::vector<std::string> smoothOptions = { "Average of neighbours", "A.R.A. smoothing", "Time convolve" };
+				static int smoothTypeIndex = 0;
+				UIglobalFeatures::ImGuiBetterCombo(smoothOptions, smoothTypeIndex, 3);
 
-			//more options for ft--
+				FourierTransform::FunctionType smoothType = FourierTransform::NO_FUNCTION;
 
+				if (smoothTypeIndex == 0) {
+					smoothType = FourierTransform::FREQUENCY_CONVOLVE;
+					ImGui::SliderInt("Window width", &ft->_FTinfo.freqWindowSize, 2, 100, "%d", ImGuiSliderFlags_Logarithmic);
+				}
+				else if (smoothTypeIndex == 1) {
+					smoothType = FourierTransform::SMOOTH;
+					ImGui::SliderFloat("Attack (s)", &ft->_FTinfo.attack, 0.0f, 2.0f);
+					ImGui::SliderFloat("Release (s)", &ft->_FTinfo.release, 0.0f, 2.0f);
+					ImGui::SliderFloat("Acceleration (max/s)", &ft->_FTinfo.maxAccelerationPerSecond, 0.0f, 2.0f);
+				}
+				else if (smoothTypeIndex == 2) {
+					smoothType = FourierTransform::TIME_CONVOLVE;
+					ImGui::SliderInt("Window length", &ft->_FTinfo.timeWindowSize, 2, 7, "%d");
+				}
 
+				if (ImGui::Button("Add")) {
+					ft->addSmoothEffect(smoothType);
+				}
+
+				ImGui::Text("Smoothing pipeline:");
+				if (ft->_FTinfo.applyFirst != FourierTransform::NO_FUNCTION) {
+					std::string idStr = smoothOptions[ft->_FTinfo.applyFirst];
+					ImGui::TextColored(ImVec4(1.0f,0.5f,1.0f,1.0f),(" " + idStr).c_str());
+				}
+				if (ft->_FTinfo.applySecond != FourierTransform::NO_FUNCTION) {
+					std::string idStr = smoothOptions[ft->_FTinfo.applySecond];
+					ImGui::SameLine(); ImGui::Text(" ->");
+					ImGui::TextColored(ImVec4(1.0f, 0.5f, 1.0f, 1.0f), (" " + idStr).c_str());
+				}
+				if (ft->_FTinfo.applyThird != FourierTransform::NO_FUNCTION) {
+					std::string idStr = smoothOptions[ft->_FTinfo.applyThird];
+					ImGui::SameLine(); ImGui::Text(" ->");
+					ImGui::TextColored(ImVec4(1.0f, 0.5f, 1.0f, 1.0f), (" " + idStr).c_str());
+				}
+
+				if (ImGui::Button("Remove last")) {
+					ft->removeSmoothEffect();
+				}
+			}
 			//--
 
 			//remove ft
@@ -499,23 +632,30 @@ void UI::fourierTransformsUi()
 	}
 
 	//*** create another transform ***
+	if (FourierTransformManager::availiableIdArr().size() == 0) {
+		return; //if at max then do show creation ui
+	}
+
 
 	//imgui vars
 	static float nextCutoffLow = 0.0f;
-	static float nextCutoffHigh = SignalProcessingManager::getMasterPtr()->_sampleRate / 2.0f;
+	static float nextCutoffHigh = SignalProcessingManager::getMasterPtr()->nyquist();
 	static float nextCutoffSmoothFactor = 0.0f;
 	ImGui::Text("Ctrl+Click to edit manually");
 	ImGui::SliderFloat("Cutoff Hz low", &nextCutoffLow, 0.0f, SignalProcessingManager::getMasterPtr()->nyquist(), "%.1f", ImGuiSliderFlags_AlwaysClamp);
 	ImGui::SliderFloat("Cutoff Hz high", &nextCutoffHigh, 0.0f, SignalProcessingManager::getMasterPtr()->nyquist(), "%.1f", ImGuiSliderFlags_AlwaysClamp);
 	ImGui::SliderFloat("Cutoff smooth fraction", &nextCutoffSmoothFactor, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+	
+	std::vector<int> availiableIds = FourierTransformManager::availiableIdArr();
+	static int nextId = 0;
+	UIglobalFeatures::ImGuiBetterCombo(availiableIds, nextId, 2);
 
 	if (ImGui::Button("Create new")) {
 		if (nextCutoffHigh < nextCutoffLow) {
 			UIglobalFeatures::queueError("Cutoff low cannot be above cutoff high");
 		}
 		else {
-			int id;
-			FourierTransformManager::createFourierTransform(id, 1, nextCutoffLow, nextCutoffHigh, nextCutoffSmoothFactor);
+			FourierTransformManager::createFourierTransform(availiableIds.at(nextId), 7, nextCutoffLow, nextCutoffHigh, nextCutoffSmoothFactor);
 		}
 	}
 
@@ -525,33 +665,31 @@ void UI::fourierTransformsUi()
 
 void UI::noteOnsetUi()
 {
-	ImGui::ShowDemoWindow();
-
 	ImGui::Begin("Note Onset", &_showNoteOnsetUi, ImGuiWindowFlags_AlwaysAutoResize);
 
-	ImGui::Checkbox("Compute note onset", &SPvars._computeNoteOnset);
+	ImGui::Checkbox("Compute note onset", &SP::vars._computeNoteOnset);
 
 	ImGui::Text("Onset detection function:");
-	ImGui::RadioButton("Energy", &SPvars._onsetDetectionFunctionEnum, 0);
-	ImGui::RadioButton("Derivative of log energy", &SPvars._onsetDetectionFunctionEnum, 1);
-	ImGui::RadioButton("Banded derivative of log energy", &SPvars._onsetDetectionFunctionEnum, 2);
-	ImGui::RadioButton("Spectral distance", &SPvars._onsetDetectionFunctionEnum, 3);
-	ImGui::RadioButton("Spectral distance high freq. weighted", &SPvars._onsetDetectionFunctionEnum, 4);
-	ImGui::RadioButton("Similarity matrix", &SPvars._onsetDetectionFunctionEnum, 5);
-	ImGui::RadioButton("Combination (fast)", &SPvars._onsetDetectionFunctionEnum, 6);
-	ImGui::RadioButton("Combination", &SPvars._onsetDetectionFunctionEnum, 7);
+	ImGui::RadioButton("Energy", &SP::vars._onsetDetectionFunctionEnum, 0);
+	ImGui::RadioButton("Derivative of log energy", &SP::vars._onsetDetectionFunctionEnum, 1);
+	ImGui::RadioButton("Banded derivative of log energy", &SP::vars._onsetDetectionFunctionEnum, 2);
+	ImGui::RadioButton("Spectral distance", &SP::vars._onsetDetectionFunctionEnum, 3);
+	ImGui::RadioButton("Spectral distance high freq. weighted", &SP::vars._onsetDetectionFunctionEnum, 4);
+	ImGui::RadioButton("Similarity matrix", &SP::vars._onsetDetectionFunctionEnum, 5);
+	ImGui::RadioButton("Combination (fast)", &SP::vars._onsetDetectionFunctionEnum, 6);
+	ImGui::RadioButton("Combination", &SP::vars._onsetDetectionFunctionEnum, 7);
 
-	ImGui::Checkbox("Convolve onset detection", &SPvars._convolveOnsetDetection);
-	if (SPvars._convolveOnsetDetection) {
-		ImGui::SliderInt("Convolve window size", &SPvars._convolveWindowSize, 1, 100);
+	ImGui::Checkbox("Convolve onset detection", &SP::vars._convolveOnsetDetection);
+	if (SP::vars._convolveOnsetDetection) {
+		ImGui::SliderInt("Convolve window size", &SP::vars._convolveWindowSize, 1, 100);
 	}
 
 	ImGui::Text("Onset detection function:");
-	imguiHistoryPlotter(SignalProcessingManager::_noteOnset->getOnsetHistory(SPvars._convolveOnsetDetection));
+	imguiHistoryPlotter(SignalProcessingManager::_noteOnset->getOnsetHistory(SP::vars._convolveOnsetDetection));
 	ImGui::Text("Inferred peaks (passed to tempo):");
 	imguiHistoryPlotter(SignalProcessingManager::_noteOnset->getDisplayPeaks());
 
-	ImGui::SliderFloat("Peak threshold (top X%)", &SPvars._thresholdPercentForPeak, 1.0f, 25.0f);
+	ImGui::SliderFloat("Peak threshold (top X%)", &SP::vars._thresholdPercentForPeak, 1.0f, 25.0f);
 
 	ImGui::End();
 }
@@ -560,7 +698,7 @@ void UI::tempoDetectionUi()
 {
 	ImGui::Begin("Tempo", &_showTempoDetectionUi, ImGuiWindowFlags_AlwaysAutoResize);
 
-	ImGui::Checkbox("Compute Tempo", &SPvars._computeTempoDetection);
+	ImGui::Checkbox("Compute Tempo", &SP::vars._computeTempoDetection);
 
 	std::string tempo = "Tempo guess: " + std::to_string(SignalProcessingManager::_tempoDetection->getTempo());
 	ImGui::Text(tempo.c_str());
@@ -586,13 +724,13 @@ void UI::tempoDetectionUi()
 	std::string timeSinceLastBeat = "Time since last beat: " + std::to_string(SignalProcessingManager::_tempoDetection->getTimeSinceLastBeat());
 	ImGui::Text(timeSinceLastBeat.c_str());
 
-	ImGui::SliderFloat("Max Tempo", &SPvars.MAX_TEMPO, 30, 250, "%.1f");
-	if (ImGui::IsItemEdited() && SPvars.MAX_TEMPO < SPvars.MIN_TEMPO) {
-		SPvars.MIN_TEMPO = SPvars.MAX_TEMPO;
+	ImGui::SliderFloat("Max Tempo", &SP::vars.MAX_TEMPO, 30, 250, "%.1f");
+	if (ImGui::IsItemEdited() && SP::vars.MAX_TEMPO < SP::vars.MIN_TEMPO) {
+		SP::vars.MIN_TEMPO = SP::vars.MAX_TEMPO;
 	}
-	ImGui::SliderFloat("Min Tempo", &SPvars.MIN_TEMPO, 30, 250, "%.1f");
-	if (ImGui::IsItemEdited() && SPvars.MAX_TEMPO < SPvars.MIN_TEMPO) {
-		SPvars.MAX_TEMPO = SPvars.MIN_TEMPO;
+	ImGui::SliderFloat("Min Tempo", &SP::vars.MIN_TEMPO, 30, 250, "%.1f");
+	if (ImGui::IsItemEdited() && SP::vars.MAX_TEMPO < SP::vars.MIN_TEMPO) {
+		SP::vars.MAX_TEMPO = SP::vars.MIN_TEMPO;
 	}
 
 
@@ -615,7 +753,7 @@ void UI::mfccUi()
 {
 	ImGui::Begin("MFCCs", &_showMFCCsUi, ImGuiWindowFlags_AlwaysAutoResize);
 
-	ImGui::Checkbox("Compute MFCCs", &SPvars._computeMFCCs);
+	ImGui::Checkbox("Compute MFCCs", &SP::vars._computeMFCCs);
 
 	ImGui::Separator();
 
@@ -634,15 +772,10 @@ void UI::selfSimilarityMatrixUi()
 {
 	ImGui::Begin("Self Similarity Matrix", &_showSelfSimilarityMatrixUi, ImGuiWindowFlags_AlwaysAutoResize);
 
-	ImGui::Checkbox("Compute Self Similarity Matrix", &SPvars._computeSimilarityMatrix);
+	ImGui::Checkbox("Compute Self Similarity Matrix", &SP::vars._computeSimilarityMatrix);
 
 
-	//track if settings changed, linking function called if confirm pressed and reset similarity matrix--
-	static bool changedMatrixSettings = false;
-	static std::function<void()> linkingFunction;
-	//--
-
-	if (changedMatrixSettings) {
+	if (UIglobalFeatures::_uiSMinfo != SignalProcessingManager::_similarityMatrix->_SMinfo || SignalProcessingManager::_similarityMatrix->_SMinfo._linkedTo == NONE) {
 		ImGui::TextColored(ImVec4(1, 0, 0, 1), "--Need to confirm--");
 	}
 	else {
@@ -651,133 +784,85 @@ void UI::selfSimilarityMatrixUi()
 
 	//*** matrix settings***
 
-	ImGui::BeginChild("Matrix settings", ImVec2(350, 415), true);
+	ImGui::BeginChild("Matrix settings", ImVec2(360, 440), true);
 
 	//which one to calculate (future or real time)--
-	static int realTimeOrFuture = 0;
 	ImGui::Text("Link to:");
-	ImGui::RadioButton("Real time", &realTimeOrFuture, 0); ImGui::SameLine();
-	ImGui::RadioButton("Future (recommended)", &realTimeOrFuture, 1);
-
-	if (SPvars._useFutureSimilarityMatrix != (realTimeOrFuture == 1)) {
-		changedMatrixSettings = true;
-	}
+	ImGui::RadioButton("Real time", (int*) &UIglobalFeatures::_uiSMinfo._useFuture, int(false)); ImGui::SameLine();
+	ImGui::RadioButton("Future (recommended)", (int*) &UIglobalFeatures::_uiSMinfo._useFuture, int(true));
 	//--
 
-	//matrix size--
-	static int matrixSizeTmp = SPvars._nextSimilarityMatrixSize;
-	if (SPvars._wasCPSautoDecreased) {
-		SPvars._nextSimilarityMatrixSize *= SPvars._CPSreduceFactor;
-		matrixSizeTmp = SPvars._nextSimilarityMatrixSize;
+	//matrix size & resolution--
+	ImGui::SliderInt("Matrix Size", &UIglobalFeatures::_uiSMinfo._matrixSize, 1, 500);
+	if (UIglobalFeatures::_uiSMinfo._matrixSize > 300 && UIglobalFeatures::_uiSMinfo._downscale == 1) {
+		ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "Recommend using downscale");
 	}
-	ImGui::SliderInt("Matrix Size", &matrixSizeTmp, 1, 1000);
-	std::string timeOverInfo = "covers " + std::to_string((float(matrixSizeTmp) / SPvars._desiredCPS)).substr(0, 4) + "s";
+	ImGui::SliderInt("Downscale", &UIglobalFeatures::_uiSMinfo._downscale, 1, 5);
+	std::string timeOverInfo = "covers " + std::to_string((float(UIglobalFeatures::_uiSMinfo._matrixSize) / SP::vars._desiredCPS) * (float)UIglobalFeatures::_uiSMinfo._downscale).substr(0, 4) + "s";
 	ImGui::Text(timeOverInfo.c_str());
-
-	if (matrixSizeTmp != SPvars._nextSimilarityMatrixSize) {
-		SPvars._nextSimilarityMatrixSize = matrixSizeTmp;
-		changedMatrixSettings = true;
-	}
-	//--
-
-	//fast or slow texture creation--
-	static int fastOrSlow = SPvars._fastSimilarityMatrixTexture;
-	ImGui::Text("Texture creation type:");
-	ImGui::RadioButton("Fast", &fastOrSlow, 1); ImGui::SameLine();
-	ImGui::RadioButton("Slow", &fastOrSlow, 0);
-
-	if (fastOrSlow != SPvars._fastSimilarityMatrixTexture) {
-		SPvars._fastSimilarityMatrixTexture = fastOrSlow;
-		changedMatrixSettings = true;
-	}
 	//--
 
 	//link to options--
-	static int linkTo = 0;
 	ImGui::Text("Link to:");
-	ImGui::RadioButton("MFCCs", &linkTo, 0);
-	ImGui::RadioButton("Mel band energies", &linkTo, 1);
-	ImGui::RadioButton("Mel spectrogram", &linkTo, 2);
-	ImGui::RadioButton("Fourier transform", &linkTo, 3);
+	ImGui::RadioButton("MFCCs", (int*)&UIglobalFeatures::_uiSMinfo._linkedTo, LinkedTo::MFCC);
+	ImGui::RadioButton("Mel band energies", (int*)&UIglobalFeatures::_uiSMinfo._linkedTo, LinkedTo::MelBandEnergies);
+	ImGui::RadioButton("Mel spectrogram", (int*)&UIglobalFeatures::_uiSMinfo._linkedTo, LinkedTo::MelSpectrogram);
+	ImGui::RadioButton("Fourier transform", (int*)&UIglobalFeatures::_uiSMinfo._linkedTo, LinkedTo::FT);
 	//--
 
-	if (linkTo == 0) { // link to mfccs vv
+	//extra settings for certain links
+	if (UIglobalFeatures::_uiSMinfo._linkedTo == 0) { // link to mfccs vv
 		ImGui::Separator();
 
 		ImGui::Text("MFCCs coefficients: ");
-		static int low = 4;
+
 		ImGui::PushID(0);
-		ImGui::SliderInt("##", &low, 1, SPvars._numMelBands);
+		ImGui::SliderInt("##", &UIglobalFeatures::_uiSMinfo._coeffLow, 1, SP::consts._numMelBands);
 		ImGui::PopID();
 
 		ImGui::Text("to");
 
-		static int high = 13;
 		ImGui::PushID(1);
-		ImGui::SliderInt("##", &high, 1, SPvars._numMelBands);
+		ImGui::SliderInt("##", &UIglobalFeatures::_uiSMinfo._coeffHigh, 1, SP::consts._numMelBands);
 		ImGui::PopID();
-		//|= to stop it overriding changedMatrixSettings that was set to true elsewhere
-		changedMatrixSettings |= !SignalProcessingManager::_similarityMatrix->isLinkInfoTheSame(low, high);
-		if (changedMatrixSettings) {
-			linkingFunction = std::bind(&SimilarityMatrixHandler::linkToMFCCs, SignalProcessingManager::_similarityMatrix, low, high);
-		}
 	}
-	if (linkTo == 1) { // link to mel band energies (real time only) vv
-		changedMatrixSettings |= SignalProcessingManager::_similarityMatrix->isLinkedTo() != MelBandEnergies;
-		if (changedMatrixSettings) {
-			linkingFunction = std::bind(&SimilarityMatrixHandler::linkToMelBandEnergies, SignalProcessingManager::_similarityMatrix);
-		}
-	}
-	if (linkTo == 2) {	// link to mel spectrogram (real time only) vv
-		changedMatrixSettings |= SignalProcessingManager::_similarityMatrix->isLinkedTo() != MelSpectrogram;
-		if (changedMatrixSettings) {
-			linkingFunction = std::bind(&SimilarityMatrixHandler::linkToMelSpectrogram, SignalProcessingManager::_similarityMatrix);
-		}
-	}
-	if (linkTo == 3) {	// link to fourier transform vv
-		static float nextCutoffLow = 0.0f;
-		static float nextCutoffHigh = SignalProcessingManager::getMasterPtr()->nyquist();
-		static float nextCutoffSmoothFactor = 0.0f;
-
+	if (UIglobalFeatures::_uiSMinfo._linkedTo == 3) {	// link to fourier transform vv
 		ImGui::Text("Ctrl+Click to edit manually");
-		ImGui::SliderFloat("Cutoff Hz low", &nextCutoffLow, 0.0f, SignalProcessingManager::getMasterPtr()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
-		ImGui::SliderFloat("Cutoff Hz high", &nextCutoffHigh, 0.0f, SignalProcessingManager::getMasterPtr()->_sampleRate / 2.0f, "%.1f", ImGuiSliderFlags_AlwaysClamp);
-		ImGui::SliderFloat("Cutoff smooth fraction", &nextCutoffSmoothFactor, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
-
-		changedMatrixSettings |= !SignalProcessingManager::_similarityMatrix->isLinkInfoTheSame(nextCutoffLow, nextCutoffHigh, nextCutoffSmoothFactor);
-		if (changedMatrixSettings) {
-			linkingFunction = std::bind(&SimilarityMatrixHandler::linkToFourierTransform, SignalProcessingManager::_similarityMatrix, nextCutoffLow, nextCutoffHigh, nextCutoffSmoothFactor);
-		}
-	}
-
-	//measure type of similarity matrix--
-	static int measureTypeEnum = SPvars._matrixMeasureEnum;
-	ImGui::Text("Matrix measure type:");
-	ImGui::RadioButton("Similarity", &measureTypeEnum, 0); ImGui::SameLine();
-	ImGui::RadioButton("Percussion", &measureTypeEnum, 1);
-
-	if (measureTypeEnum != SPvars._matrixMeasureEnum) {
-		SPvars._matrixMeasureEnum = measureTypeEnum;
+		ImGui::SliderFloat("Cutoff Hz low", &UIglobalFeatures::_uiSMinfo._cutoffLow, 0.0f, SignalProcessingManager::getMasterPtr()->nyquist(), "%.1f", ImGuiSliderFlags_AlwaysClamp);
+		ImGui::SliderFloat("Cutoff Hz high", &UIglobalFeatures::_uiSMinfo._cutoffHigh, 0.0f, SignalProcessingManager::getMasterPtr()->nyquist(), "%.1f", ImGuiSliderFlags_AlwaysClamp);
+		ImGui::SliderFloat("Cutoff smooth fraction", &UIglobalFeatures::_uiSMinfo._cutoffSmoothFactor, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 	}
 	//--
-	ImGui::SliderFloat("Texture contrast", &SPvars._similarityMatrixTextureContrastFactor, 1, 100, "%.3f", ImGuiSliderFlags_Logarithmic);
 
-	if (changedMatrixSettings && ImGui::Button("Confirm", ImVec2(80, 25))) {
-		SignalProcessingManager::_similarityMatrix->reInit(SPvars._nextSimilarityMatrixSize);
-
-		SPvars._useFutureSimilarityMatrix = (realTimeOrFuture == 1); //must call before linking function to link to right thing
-		linkingFunction(); //even if no change in linking function must relink after resize. Because this is static will remember last function linked to
-		changedMatrixSettings = false;
+	if ((!(UIglobalFeatures::_uiSMinfo == SignalProcessingManager::_similarityMatrix->_SMinfo) )
+		&& ImGui::Button("Confirm", ImVec2(80,25))) 
+	{
+		SignalProcessingManager::_similarityMatrix->_SMinfo = UIglobalFeatures::_uiSMinfo;
+		SignalProcessingManager::_similarityMatrix->reInit();
+	}
+	if (SP::vars._wasCPSautoDecreased) {
+		UIglobalFeatures::_uiSMinfo._matrixSize *= SP::consts._CPSreduceFactor;
+		SignalProcessingManager::_similarityMatrix->_SMinfo._matrixSize *= SP::consts._CPSreduceFactor;
+		
+		if (UIglobalFeatures::_uiSMinfo == SignalProcessingManager::_similarityMatrix->_SMinfo) { //reinit if only thing changed was cps
+			SignalProcessingManager::_similarityMatrix->reInit();
+		}
 	}
 
-	if (SPvars._wasSignalProcessingReset) {
-		linkingFunction();
-	}
+	// changes that dont require reinit--
+	//measure type of similarity matrix
+	ImGui::Text("Matrix measure type:");
+	ImGui::RadioButton("Similarity", &SP::vars._matrixMeasureEnum, SIMILARITY); ImGui::SameLine();
+	ImGui::RadioButton("Percussion", &SP::vars._matrixMeasureEnum, PERCUSSION);
 
-	if (SPvars._wasCPSautoDecreased) {
-		SignalProcessingManager::_similarityMatrix->reInit(SPvars._nextSimilarityMatrixSize);
-		linkingFunction();
+	//compute texture
+	ImGui::Checkbox("Create texture", &SP::vars._computeTexture);
+	
+	//contrast
+	if (&SP::vars._computeTexture) {
+		ImGui::SliderFloat("Contrast Factor", &SP::vars._similarityMatrixTextureContrastFactor, 1, 100, "%.3f", ImGuiSliderFlags_Logarithmic);
 	}
+	// --
 
 	ImGui::EndChild();
 	//***
@@ -788,18 +873,17 @@ void UI::selfSimilarityMatrixUi()
 }
 
 void UI::endSPui() {
-	SPvars._wasSignalProcessingReset = false;
-	SPvars._wasCPSautoDecreased = false;
+	SP::vars._wasSignalProcessingReset = false;
+	SP::vars._wasCPSautoDecreased = false;
 }
 //***
 
 void UI::processFileMenuSelection()
 {
-	//stop common problem
-	if ((_save || _saveAs) && !VisualiserManager::isVisualiserLoaded()) {
-		UIglobalFeatures::queueError("Cannot save, no visualiser loaded");
+	//have to save as if not loaded a visualiser
+	if (_save && VisualiserManager::path() == VisVars::_startupVisualiserPath) {
 		_save = false;
-		_saveAs = false;
+		_saveAs = true;
 	}
 
 	if (_new) {
@@ -816,7 +900,7 @@ void UI::processFileMenuSelection()
 	if (_save) {
 		if (!VisualiserManager::save()) {
 			UIglobalFeatures::queueError("Failed to save");
-		}
+		} 
 		_save = false;
 		return;
 	}
@@ -835,6 +919,7 @@ void UI::processFileMenuSelection()
 	if (_load) {
 
 		std::string visualiserPath = "";
+		SignalProcessingManager::computeAudioInterrupt();
 		if (PFDapi::folderChooser("Chooser folder containing the .cfg of the visualiser to load",
 			Vengine::IOManager::getProjectDirectory() + "/Visualisers", visualiserPath, false))
 		{
@@ -847,7 +932,7 @@ void UI::processFileMenuSelection()
 			visualiserPath = visualiserPath.substr(Vengine::IOManager::getProjectDirectory().size() + 1); //+1 to remove '/' at start
 
 			if (!VisualiserManager::loadVisualiser(visualiserPath)) {
-				UIglobalFeatures::queueError("Failed to save, likely no visualiser loaded");
+				UIglobalFeatures::queueError("Failed to load visualiser");
 			}
 		}
 

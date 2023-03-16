@@ -22,7 +22,7 @@ void NoteOnset::calculateNext(DataExtractionAlg dataAlg, bool convolve) {
 		onsetValue = bandedDerOfLogEnergy();
 	}
 	if (dataAlg == DataExtractionAlg::SPECTRAL_DISTANCE || dataAlg == DataExtractionAlg::SPECTRAL_DISTANCE_HFC_WEIGHTED) {
-		onsetValue = spectralDistanceOfHarmonics(SPvars._onsetDetectionFunctionEnum == SPECTRAL_DISTANCE_HFC_WEIGHTED);
+		onsetValue = spectralDistanceOfHarmonics(SP::vars._onsetDetectionFunctionEnum == SPECTRAL_DISTANCE_HFC_WEIGHTED);
 	}
 	if (dataAlg == DataExtractionAlg::SIM_MATRIX_MEL_SPEC) {
 		onsetValue = similarityMatrixMelSpectrogram();
@@ -38,7 +38,7 @@ void NoteOnset::calculateNext(DataExtractionAlg dataAlg, bool convolve) {
 
 	if (convolve) {
 		_CONVonsetDetectionHistory.add(
-			_m->sumOfConvolutionOfHistory(&_onsetDetectionHistory, SPvars._convolveWindowSize, LINEAR_PYRAMID),
+			_m->sumOfConvolutionOfHistory(&_onsetDetectionHistory, SP::vars._convolveWindowSize, LINEAR_PYRAMID),
 			_m->_currentSample
 		);
 	}
@@ -52,7 +52,7 @@ void NoteOnset::calculateNext(DataExtractionAlg dataAlg, bool convolve) {
 
 	Peak lastPeak;
 	bool aboveThreshold;
-	if (_thresholder.getLastPeak(SPvars._thresholdPercentForPeak, lastPeak)) {
+	if (_thresholder.getLastPeak(SP::vars._thresholdPercentForPeak, lastPeak)) {
 		_onsetPeaks.add(lastPeak);
 		std::cout << lastPeak.salience << std::endl;
 	}
@@ -75,7 +75,7 @@ float NoteOnset::energy()
 {
 	_energy.calculateNext(_m->_fftHistory.newest(), _m->_fftHistory.numHarmonics()); //depends on energy
 	float energy = _energy.getEnergy();
-	knee(energy, 0.015f, 1.0f, 2.0f);
+	knee(energy, 16.0f, 1.0f, 2.0f);
 	return energy;
 }
 
@@ -106,13 +106,7 @@ float NoteOnset::bandedDerOfLogEnergy()
 
 	//same as der of log energy but weight the bands
 
-	//calculate bands -- 
-	_derOfLogEnergyBands.getMasterTransform()->beginCalculation();
-	_derOfLogEnergyBands.getMasterTransform()->applyFunction(FourierTransform::SMOOTH);
-	_derOfLogEnergyBands.getMasterTransform()->applyFunction(FourierTransform::FREQUENCY_CONVOLVE);
-	_derOfLogEnergyBands.getMasterTransform()->endCalculation();
-
-	_derOfLogEnergyBands.updateAll(true);
+	_derOfLogEnergyBands.updateAll(false);
 	//--
 
 	float weights[9] = { 1,1,2,2,5,5,10,25,40 };
@@ -125,7 +119,7 @@ float NoteOnset::bandedDerOfLogEnergy()
 		sum += weights[i] * bandDOLE;
 	}
 
-	knee(sum, 0.33f, 1.0f, 2.0f);
+	knee(sum, 0.22f, 1.0f, 2.0f);
 
 	return (sum < 0 ? 0 : sum); //only take onset (positive change in energy)
 }
@@ -135,10 +129,10 @@ float NoteOnset::spectralDistanceOfHarmonics(bool HFC) {
 	float one_over_dt = ((float)_m->_sampleRate / (float)(_m->_currentSample - _m->_previousSample)) * 0.001; //do dt in ms as otherwise numbers too big
 
 	//calculate the fourier transform to use for spectral distance--
-	_ftForSpectralDistance.beginCalculation();
-	_ftForSpectralDistance.applyFunction(FourierTransform::SMOOTH);
-	_ftForSpectralDistance.applyFunction(FourierTransform::FREQUENCY_CONVOLVE);
-	_ftForSpectralDistance.endCalculation();
+	_ftForSpectralDistance.setSmoothEffect(0, FourierTransform::SMOOTH);
+	_ftForSpectralDistance.setSmoothEffect(1, FourierTransform::FREQUENCY_CONVOLVE);
+
+	_ftForSpectralDistance.calculateNext();
 	//--
 
 	//make sure enough entries--
@@ -158,7 +152,7 @@ float NoteOnset::spectralDistanceOfHarmonics(bool HFC) {
 		);
 		spectralDistanceConvolvedHarmonics *= one_over_dt;
 
-		knee(spectralDistanceConvolvedHarmonics, 10.0f, 1.0f, 2.0f);
+		knee(spectralDistanceConvolvedHarmonics, 14.0f, 1.0f, 2.0f);
 	}
 	else {
 		spectralDistanceConvolvedHarmonics = Tools::L2distanceMetricIncDimOnly(
@@ -168,7 +162,7 @@ float NoteOnset::spectralDistanceOfHarmonics(bool HFC) {
 		);
 		spectralDistanceConvolvedHarmonics *= one_over_dt;
 
-		knee(spectralDistanceConvolvedHarmonics, 100.0f, 1.0f, 2.0f);
+		knee(spectralDistanceConvolvedHarmonics, 150.0f, 1.0f, 2.0f);
 	}
 
 	return spectralDistanceConvolvedHarmonics;
@@ -177,12 +171,12 @@ float NoteOnset::spectralDistanceOfHarmonics(bool HFC) {
 
 float NoteOnset::similarityMatrixMelSpectrogram()
 {
-	_simMatrix.calculateNext(PRECUSSION, 10.0f);
+	_simMatrix.calculateNext(PERCUSSION, 10.0f);
 
 	float measure = _simMatrix.getSimilarityMeasure();
 	if (isnan(measure) || isinf(measure)) { return 0.0f; } //stop nan virus escaping the lab
 
-	knee(measure, 12.0f, 1.0f, 2.0f);
+	knee(measure, 30.0f, 1.0f, 2.0f);
 	return std::max(measure, 0.0f);
 }
 

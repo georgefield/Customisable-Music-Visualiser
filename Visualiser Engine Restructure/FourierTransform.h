@@ -2,13 +2,39 @@
 #include "Master.h"
 #include "FourierTransformHistory.h"
 #include "Energy.hpp"
+#include "SPvars.h"
 
 class FourierTransform {
 public:
 	static enum FunctionType {
-		TIME_CONVOLVE,
-		SMOOTH,
-		FREQUENCY_CONVOLVE
+		FREQUENCY_CONVOLVE = 0,
+		SMOOTH = 1,
+		TIME_CONVOLVE = 2,
+		NO_FUNCTION = 3
+	};
+
+	struct FTinfo {
+		int id = -1;
+
+		int historySize = 7;
+		float cutoffLow = -1;
+		bool isMinCutoffLow = true;
+		float cutoffHigh = -1;
+		bool isMaxCutoffHigh = true;
+		float cutoffSmoothFrac = 0.0f;
+	
+		FunctionType applyFirst = NO_FUNCTION;
+		FunctionType applySecond = NO_FUNCTION;
+		FunctionType applyThird = NO_FUNCTION;
+
+		//freq convolving vars
+		int freqWindowSize = 5;
+		//smooth vars
+		float attack = 0.15;
+		float release = 0.5;
+		float maxAccelerationPerSecond = 0.5;
+		//time convolving
+		int timeWindowSize = 7;
 	};
 
 	FourierTransform(int transformHistorySize = 7, float cutOffLow = -1.0f, float cutOffHigh = -1.0f, float cutoffSmoothFrac = 0.0f);
@@ -17,25 +43,27 @@ public:
 	void init(Master* master, int FTid = -1);
 	void reInit();
 
-	void beginCalculation(); //applying filters must be between begin and end
+	void calculateNext();
 
-	void endCalculation();
-
-	void applyFunction(FunctionType type); //must be called in every frame to work
-	void applyFunctions(FunctionType* args, int numArgs);
-
+	//set what filters to apply--
+	void setSmoothEffect(int firstSecondOrThird, FunctionType function);
+	void addSmoothEffect(FunctionType function);
+	void removeSmoothEffect();
+	bool canAddSmoothEffect() { return _FTinfo.applyThird == NO_FUNCTION; }
+	bool canRemoveSmoothEffect() { return _FTinfo.applyFirst != NO_FUNCTION; }
+	//--
 
 	//for setting functions for ft vars--
-	void setFrequencyConvolvingVars(int windowSize, Kernel kernel = LINEAR_PYRAMID) {
-		_windowSize = windowSize; _freqKernel = kernel;
+	void setFrequencyConvolvingVars(int windowSize) {
+		_FTinfo.freqWindowSize = windowSize;
 	}
 
 	void setSmoothVars(float attack, float release, float maxAccelerationPerSecond) {
-		_attack = attack; _release = release; _maxAccelerationPerSecond = maxAccelerationPerSecond;
+		_FTinfo.attack = attack; _FTinfo.release = release; _FTinfo.maxAccelerationPerSecond = maxAccelerationPerSecond;
 	}
 
-	void setTimeConvolvingVars(int previousXtransform, Kernel kernel) {
-		_previousXtransforms = previousXtransform; _timeKernel = kernel;
+	void setTimeConvolvingVars(int previousXtransform, Kernel kernel = LINEAR_PYRAMID) {
+		_FTinfo.timeWindowSize = previousXtransform;
 	}
 	//--
 
@@ -47,16 +75,14 @@ public:
 	float* getLowResOutput() const { return _lowResOutputLogScale; }
 	int getLowResOutputSize() const { return _lowResOutputSize; }
 
-	float getCutoffLow() const { return _cutOffLow; }
-	float getCutoffHigh() const { return _cutOffHigh; }
-	float getCutoffSmoothFraction() const { return _cutoffSmoothFrac; }
-
 	Master* getMasterPtr() const { return _m; }
 
-	int getId() const { return _FTid; }
+	int getId() const { return _FTinfo.id; }
 
 	float getEnergy() { return _energyOfFt.getEnergy(); }
 	History<float>* getEnergyHistory() { return _energyOfFt.getHistory(); }
+
+	FTinfo _FTinfo;
 private:
 	FourierTransformHistory* _current;
 	FourierTransformHistory* _next;
@@ -66,12 +92,17 @@ private:
 
 	Energy _energyOfFt;
 
+	//parts of the calculate next function
+	void beginCalculation(); //applying filters must be between begin and end
+	void endCalculation();
+
+	void applyFunction(FunctionType type); //must be called in every frame to work
+	void applyFunctions(FunctionType* args, int numArgs);
+
 	//state vars
 	Master* _m;
 	bool _initialised;
 	bool _useSetters;
-	int _historySize;
-	int _FTid;
 
 	//low res output config
 	int _maxLowResOutputSize;
@@ -80,26 +111,11 @@ private:
 
 	//fourier transform descriptors vars
 	int _numHarmonics;
-	float _cutOffLow, _cutOffHigh;
-	bool _minCutoffLow, _maxCutoffHigh;
 	int _harmonicLow, _harmonicHigh;
-	float _cutoffSmoothFrac;
 
-
-	//transform vars--
-	//frequency convolving vars
-	int _windowSize;
-	Kernel _freqKernel;
-
-	//smooth vars
-	float _attack, _release, _maxAccelerationPerSecond;
+	//smooth arrays
 	float* _smoothedFt; //store seperately as need to remember smoothed array how is was before another filter applied maybe
 	float* _smoothedFtDot;
-
-	//time convolve vars
-	int _previousXtransforms;
-	Kernel _timeKernel;
-	//--
 
 	//apply functions to ft--
 	//defined in .cpp
@@ -110,9 +126,6 @@ private:
 
 	//calculates all the important frequency vars based of cutoffs
 	void setFourierTransformFrequencyInfo();
-
-	//called by init
-	void initDefaultVars();
 
 	//used when getting the cut fourier transform
 	float smoothCutoff(int i);

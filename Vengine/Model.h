@@ -74,7 +74,7 @@ namespace Vengine {
 		void init() override {
 			modelType = Mod_Circle;
 			drawMode = GL_TRIANGLE_STRIP;
-			numVertices = 181;
+			numVertices = 241;
 			vertices = new Vertex[numVertices];
 
 			setBoundingBox(glm::vec2(-0.5), glm::vec2(1));
@@ -83,11 +83,11 @@ namespace Vengine {
 		void setBoundingBox(glm::vec2 Pos, glm::vec2 Dim) override;
 	};
 
-	class Ring45side : public Model { //MAYBE FIX?
+	class Ring120side : public Model { //MAYBE FIX?
 		void init() override {
 			modelType = Mod_Ring;
 			drawMode = GL_TRIANGLE_STRIP;
-			numVertices = 180;
+			numVertices = 242;
 			vertices = new Vertex[numVertices];
 
 			setBoundingBox(glm::vec2(-0.5), glm::vec2(1));

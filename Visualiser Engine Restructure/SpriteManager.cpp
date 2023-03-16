@@ -24,6 +24,7 @@ void SpriteManager::reset()
 
 	_userAddedSpritePtrs.clear();
 	_depthSortedSpritePtrs.clear();
+	_selectedSpriteId = -1;
 }
 
 void SpriteManager::init(Vengine::Viewport* viewport, Vengine::Window* window)
@@ -33,8 +34,14 @@ void SpriteManager::init(Vengine::Viewport* viewport, Vengine::Window* window)
 }
 
 
-void SpriteManager::addSprite(Vengine::ModelType model, glm::vec2 pos, glm::vec2 dim, float depth, std::string textureFilepath)
+void SpriteManager::addSprite(Vengine::ModelType model) //simple adder
 {
+	CustomisableSprite::SpriteInfo defaultInfo;
+	defaultInfo.model = model;
+	addSprite(defaultInfo);
+}
+
+void SpriteManager::addSprite(CustomisableSprite::SpriteInfo spriteInfo) {
 	//id generation
 	int id = _userAddedSpritePtrs.size();
 	while (_userAddedSpritePtrs.find(id) != _userAddedSpritePtrs.end()) {
@@ -44,32 +51,29 @@ void SpriteManager::addSprite(Vengine::ModelType model, glm::vec2 pos, glm::vec2
 	if (_viewport == nullptr) {
 		Vengine::fatalError("Sprite manager class used without first calling SpriteManager::init");
 	}
-	_userAddedSpritePtrs[id] = new CustomisableSprite(id, std::to_string(id), _viewport, _window);
+	_userAddedSpritePtrs[id] = new CustomisableSprite(id, _viewport, _window);
 
 	//init sprite
-	if (model == Vengine::Mod_Quad)
-		_userAddedSpritePtrs[id]->init(new Vengine::Quad(), pos, dim, depth, textureFilepath, GL_DYNAMIC_DRAW);
-	if (model == Vengine::Mod_Triangle)
-		_userAddedSpritePtrs[id]->init(new Vengine::Triangle(), pos, dim, depth, textureFilepath, GL_DYNAMIC_DRAW);
-	if (model == Vengine::Mod_Ring)
-		_userAddedSpritePtrs[id]->init(new Vengine::Ring45side(), pos, dim, depth, textureFilepath, GL_DYNAMIC_DRAW);
-	if (model == Vengine::Mod_Circle)
-		_userAddedSpritePtrs[id]->init(new Vengine::Circle120side(), pos, dim, depth, textureFilepath, GL_DYNAMIC_DRAW);
-
+	_userAddedSpritePtrs[id]->init(spriteInfo);
 
 	//added sprite is the one selected
 	deselectCurrent();
 	_userAddedSpritePtrs[id]->setIfSelected(true);
+	_selectedSpriteId = id;
 
 	updateDepthSortedSprites();
 }
+
 
 void SpriteManager::deselectCurrent() {
 	if (_selectedSpriteId == -1) {
 		return;
 	}
 
-	_userAddedSpritePtrs[_selectedSpriteId]->setIfSelected(false);
+	//just do all to be safe lol
+	for (auto& it : _userAddedSpritePtrs) {
+		it.second->setIfSelected(false);
+	}
 	_selectedSpriteId = -1;
 }
 
@@ -111,7 +115,7 @@ void SpriteManager::drawNoBatching()
 	//draw all user added sprites
 	for (auto& it : _depthSortedSpritePtrs) {
 
-		if (!it->isDeleted()) {
+		if (!it->isDeleted() && it->isShowInEditor()) {
 
 			auto shaderProgram = it->getVisualiserShader()->getProgram();
 
@@ -162,6 +166,7 @@ void SpriteManager::processInput(Vengine::InputManager* inputManager)
 
 void SpriteManager::updateDepthSortedSprites()
 {
+	std::cout << "Sorting";
 	_depthSortedSpritePtrs.clear();
 	_depthSortedSpritePtrs.reserve(_userAddedSpritePtrs.size());
 
@@ -170,6 +175,6 @@ void SpriteManager::updateDepthSortedSprites()
 	}
 
 	std::sort(_depthSortedSpritePtrs.begin(), _depthSortedSpritePtrs.end(), [](CustomisableSprite* a, CustomisableSprite* b) {
-		return (a->getDepth() > b->getDepth());
+		return (a->getDepth()> b->getDepth());
 		}); //sort by depth
 }

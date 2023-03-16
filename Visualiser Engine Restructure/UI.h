@@ -43,14 +43,14 @@ private:
 	//view menu vars
 	bool _fullscreen;
 
-	//ssbo menu vars
+	//shader menu vars
 	bool _showShaderVariablesUi;
-	bool _showImportShaderUi;
-	bool _showCreateShaderUi;
+ 	bool _showCreateShaderUi;
+	bool _showSyntaxErrorsUi;
 
 	void shaderVariablesUi();
-	void importShaderUi();
 	void createShaderUi();
+	void syntaxErrorsUi();
 
 	//signal processing ui
 	bool _showGeneralSignalProcessingUi;

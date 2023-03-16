@@ -5,41 +5,57 @@
 #include <Vengine/Vengine.h>
 
 
+
+
 class CustomisableSprite : public Vengine::Sprite
 {
 public:
-	CustomisableSprite(int id, const std::string& name, Vengine::Viewport* viewport, Vengine::Window* window);
+	CustomisableSprite(int id, Vengine::Viewport* viewport, Vengine::Window* window);
 	const int id; //for sprite manager
 
-	void init(Vengine::Model* model, glm::vec2 pos, glm::vec2 dim, float depth = 0.0f, std::string textureFilepath = "", GLuint glDrawType = GL_DYNAMIC_DRAW);
+	struct SpriteInfo {
+		Vengine::ModelType model = Vengine::ModelType::Mod_Quad;
+		float pos[2] = {-0.5, -0.5};
+		float dim[2] = { 1, 1 };
+		Vengine::ColourRGBA8 colour = { 255, 255, 255, 255 };
+		float depth = 0.0f;
+		bool applyTexture = false;
+		bool useSimilarityMatrixTexture = false;
+		char textureFilename[100] = { NULL };
+		char shaderFilename[100] = { NULL };
+		char name[25] = "unnamed sprite";
+	};
+	SpriteInfo _spriteInfo;
+
+	void init(SpriteInfo info);
 	void draw();
 
 	void processInput(Vengine::InputManager* inputManager);
 
 	//simple setters
-	void setDepth(float depth) { _depth = depth; }
+	void updateSpriteInfoToMatchDepth() { _spriteInfo.depth = _depth; }
 
-	void setIfSelected(bool isSelected) { _selected = isSelected; }
-	void setIfDeleted() { _deleted = true; }
+	void setIfSelected(bool isSelected) { _selected = isSelected; _showUi |= isSelected; _uiOpened = true; }
+	void setDeleted() { _deleted = true; }
 
 	//getters
 	VisualiserShader* getVisualiserShader() const { return _visualiserShader; };
 
+	//ui var getters--
 	bool isSelected() { return _selected; }
-	bool isDeleted() { return _deleted; }
+ 	bool isDeleted() { return _deleted; }
 	bool isShowInEditor() { return _showInEditor; }
 
 	bool* getShowInEditorPtr() { return &_showInEditor; }
-	float* getDepthPtr() { return &_depth; }
-
-	std::string getName() const { return _name; }
-
+	//--
 
 private:
 
 	VisualiserShader* _visualiserShader;
 
 	void drawUi();
+	void updateShader();
+	void updateTexture();
 
 	//called in draw ui
 	void textureChooser();
@@ -50,15 +66,18 @@ private:
 	//enviroment vars--
 	Vengine::Viewport* _viewport;
 	Vengine::Window* _window;
+	//--
 
-	//important information describing sprite--
-	std::string _name;	
+	//imgui vars--
 	bool _justCreated;
 	bool _selected;
 	bool _deleted;
 	bool _showInEditor;
+	bool _resetTextureCombo;
+	bool _resetShaderCombo;
+	bool _showUi;
+	bool _uiOpened;
 
-	//imgui vars--
 	glm::vec4 _optionsRect; //in opengl coords
 
 	bool _isOptionsEnlarged;
@@ -67,10 +86,6 @@ private:
 
 	std::vector<std::string> _textureFileNames;
 	std::vector<std::string> _shaderFileNames;
-
-	bool _useSimilarityMatrixTexture;
-
-	Vengine::ColourRGBA8 _colour; //for ui to pick colour
 	//--
 
 	//selected/dragging vars--
@@ -78,5 +93,9 @@ private:
 	glm::vec2 _posOfSpriteAtClick;
 	int _timerID;
 	//--
+
+	glm::vec2 getPos() { return glm::vec2(_spriteInfo.pos[0], _spriteInfo.pos[1]); }
+	glm::vec2 getDim() { return glm::vec2(_spriteInfo.dim[0], _spriteInfo.dim[1]); }
+
 };
 

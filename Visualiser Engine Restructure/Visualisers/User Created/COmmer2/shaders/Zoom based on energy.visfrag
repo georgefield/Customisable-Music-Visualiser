@@ -1,0 +1,4 @@
+void main(){
+    vis_outputColour = texture(vis_spriteTexture,  vis_fragmentUV);
+    vis_outputColour *= vis_RMS;
+}

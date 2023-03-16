@@ -3,6 +3,7 @@
 #include <functional>
 #include <Vengine/IOManager.h>
 #include <assert.h>
+#include "SignalProcessingManager.h"
 
 #include "imgui.h"
 
@@ -12,7 +13,7 @@ std::string AudioManager::_audioFileName = "";
 bool AudioManager::_audioLoadedThisFrame = false;
 
 int AudioManager::_currentSampleExtraPrecisionTimerId;
-int AudioManager::_stickySample = 0;
+int AudioManager::_stickySample = -1;
 int AudioManager::_currentSample = 0;
 
 float AudioManager::_volume = 1.0f;
@@ -41,6 +42,7 @@ bool AudioManager::load(std::string filePath)
 
 	_audioFileName = filePath.substr(filePath.find_last_of("/") + 1);
 	_audioLoadedThisFrame = true;
+	SignalProcessingManager::computeAudioInterrupt();
 
 	return true;
 }
@@ -56,6 +58,7 @@ void AudioManager::pause()
 {
 	if (miniaudio.isLoaded()) {
 		miniaudio.pauseAudio();
+		Vengine::MyTiming::stopTimer(_currentSampleExtraPrecisionTimerId);
 	}
 }
 
@@ -68,7 +71,9 @@ void AudioManager::seekToSample(int sample) {
 			sample = getNumSamples() - 1;
 
 		miniaudio.seekToSample(sample);
-		
+		_currentSample = sample;
+		_stickySample = -1;
+		SignalProcessingManager::computeAudioInterrupt();
 	}
 }
 
@@ -99,10 +104,8 @@ int AudioManager::getCurrentSample()
 			return _currentSample;
 		}
 
-		//if paused return the current sample or the  miniaudio current sample if its bigger
-		if (!miniaudio.isPlaying()){
-			_currentSample = std::max(_currentSample, miniaudio.getCurrentSample());
-			return _currentSample;
+		if (!miniaudio.isPlaying()) {
+			return _currentSample; 
 		}
 
 		//if playing, interpolate between miniaudio sticky samples by restarting a timer every time miniaudio correctly updates

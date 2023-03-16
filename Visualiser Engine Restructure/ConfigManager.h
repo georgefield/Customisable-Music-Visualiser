@@ -5,6 +5,5 @@
 class ConfigManager {
 public:
 	static bool outputConfigFromVisualiser(std::string configPath);
-	static void inputVisualiserFromConfig(std::vector<std::string>& in);
-private:
+	static bool initVisualiserFromConfig(std::string configPath);
 };

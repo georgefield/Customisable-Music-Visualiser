@@ -14,7 +14,8 @@ public:
 
 	static void init(Vengine::Viewport* viewport, Vengine::Window* window);
 
-	static void addSprite(Vengine::ModelType model, glm::vec2 pos, glm::vec2 dim, float depth = 0.0f, std::string textureFilepath = "");
+	static void addSprite(Vengine::ModelType model);
+	static void addSprite(CustomisableSprite::SpriteInfo spriteInfo);
 
 	static void drawAll();
 
@@ -28,6 +29,8 @@ public:
 
 	//getters
 	static std::vector<CustomisableSprite*> getDepthSortedSprites()  { return _depthSortedSpritePtrs; }
+
+	static std::unordered_map<int, CustomisableSprite*>* getSpriteMap() { return &_userAddedSpritePtrs; }
 
 private:
 	static void drawNoBatching();

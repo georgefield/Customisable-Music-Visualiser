@@ -252,7 +252,7 @@ void TempoDetection::computeAgents(AgentSet* agents, std::vector<Peak>& peaks)
 	float tolPrePercentage = 0.2; //20%
 	float tolPostPercentage = 0.4; //40%
 
-	int maxTolPre = tolPrePercentage * (60.0f / SPvars.MIN_TEMPO) * _m->_sampleRate; //used for optimisation
+	int maxTolPre = tolPrePercentage * (60.0f / SP::vars.MIN_TEMPO) * _m->_sampleRate; //used for optimisation
 
 	int tolInner = 0.05 * _m->_sampleRate; // 50 ms
 

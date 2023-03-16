@@ -5,6 +5,9 @@
 
 std::vector<std::string> UIglobalFeatures::_errorQueue;
 int UIglobalFeatures::_errorMessageTimerId = -1;
+SimMatInfo UIglobalFeatures::_uiSMinfo;
+std::vector<std::string> UIglobalFeatures::_syntaxErrorArray;
+
 
 void UIglobalFeatures::queueError(std::string message)
 {
@@ -63,4 +66,30 @@ bool UIglobalFeatures::ImGuiBetterCombo(std::vector<std::string>& options, int& 
 	ImGui::PopID();
 
 	return ImGui::IsItemEdited();
+}
+
+bool UIglobalFeatures::ImGuiBetterCombo(std::vector<int>& options, int& currentItem, int id)
+{
+	std::string comboStr = "";
+	for (int i = 0; i < options.size(); i++) {
+		comboStr += std::to_string(options.at(i));
+		comboStr += char(NULL); //null character between options
+	}
+
+	ImGui::PushID(id);
+	ImGui::Combo("##", &currentItem, comboStr.c_str(), options.size());
+	ImGui::PopID();
+
+	return ImGui::IsItemEdited();
+}
+
+void UIglobalFeatures::addSyntaxErrorToWindow(const std::string& error) {
+	queueError("Error compiling shader, check 'Show shaders errors' under 'Shader managing' for details");
+	_syntaxErrorArray.push_back(error);
+}
+void UIglobalFeatures::clearSyntaxErrorWindow() {
+	_syntaxErrorArray.clear();
+}
+std::vector<std::string>* UIglobalFeatures::getSyntaxErrorArray() {
+	return &_syntaxErrorArray;
 }

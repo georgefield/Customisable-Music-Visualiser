@@ -6,8 +6,7 @@
 #include "FourierTransform.h"
 #include "MFCCs.h"
 #include "SimilarityMatrixHandler.h"
-#include "RMS.hpp"
-#include "SignalProcessingVars.h"
+#include "SPvars.h"
 
 #include "AudioManager.h"
 
@@ -23,19 +22,22 @@ public:
 
 	static Master* getMasterPtr() { return _master; }
 
-	static RMS* _rms;
 	static NoteOnset* _noteOnset;
 	static TempoDetection* _tempoDetection;
 	static MFCCs* _mfccs;
 	static SimilarityMatrixHandler* _similarityMatrix;
 
-	static int getGeneralHistorySize() { return SPvars._generalHistorySize; }
+	static int getGeneralHistorySize() { return SP::consts._generalHistorySize; }
+
+	static void computeAudioInterrupt() { _hasBeenComputeInterrupt = true; } //call when flow of data changes to reset _nextCalculationSample
 private:
 	static Master* _master;
 
 	static bool _isFirstReset;
 	static int _lagTimerId;
 
+	static bool _hasBeenComputeInterrupt;
+	static int _nextCalculationSample;
 
-	static void initAlgorithmObjects(bool rms, bool noteOnset, bool tempoDetection, bool mfccs, bool similarityMatrix);
+	static void initAlgorithmObjects(bool noteOnset, bool tempoDetection, bool mfccs, bool similarityMatrix);
 };

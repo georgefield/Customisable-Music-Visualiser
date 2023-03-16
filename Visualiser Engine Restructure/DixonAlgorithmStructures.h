@@ -26,8 +26,8 @@ struct DixonAlgVars {
 //returns false if interval too big too small (implies tempo out of range), used in structures and tempoDetection.cpp
 struct DixonAlgFunc {
 	static bool intervalImpliesValidTempo(int interval, int sampleRate) {
-		if (interval >= (60.0f / SPvars.MAX_TEMPO) * sampleRate &&
-			interval <= (60.0f / SPvars.MIN_TEMPO) * sampleRate) {
+		if (interval >= (60.0f / SP::vars.MAX_TEMPO) * sampleRate &&
+			interval <= (60.0f / SP::vars.MIN_TEMPO) * sampleRate) {
 			return true;
 		}
 		return false;

@@ -20,7 +20,7 @@ namespace Vengine {
 		Sprite();
 		~Sprite();
 
-		void init(Model* model, glm::vec2 pos, glm::vec2 dim, float depth = 0.0f, std::string textureFilepath = "", GLuint glDrawType = GL_STATIC_DRAW);
+		void init(ModelType model, glm::vec2 pos, glm::vec2 dim, float depth = 0.0f, std::string textureFilepath = "", GLuint glDrawType = GL_STATIC_DRAW);
 
 		void draw();
 
@@ -39,13 +39,11 @@ namespace Vengine {
 		int getNumVertices() {
 			return _model->numVertices;
 		}
+		float _depth;
 
 	private: 
 		Model* _model;
-
 	protected:
-
-		float _depth;
 
 		GLuint _vboID; //vertex buffer object id
 

@@ -28,7 +28,10 @@ void VisualiserShaderManager::init()
 {
 	Vengine::IOManager::readTextFileToString(VisVars::_shaderPrefixPath, _commonShaderPrefix);
 
-	Vengine::GLSLProgram* prefixProgram = Vengine::ResourceManager::getShaderProgram(VisVars::_commonVertShaderPath, VisVars::_uniformNameScraperShaderPath);
+	std::string errorOut;
+	Vengine::GLSLProgram* prefixProgram = Vengine::ResourceManager::getShaderProgram(VisVars::_commonVertShaderPath, VisVars::_uniformNameScraperShaderPath, errorOut);
+	if (errorOut != "")
+		Vengine::fatalError(errorOut);
 
 	for (auto& it : *prefixProgram->getUniformNames()) {
 		_defaultUniformNames[it] = prefixProgram->getUniformType(it);
@@ -55,16 +58,17 @@ VisualiserShader* VisualiserShaderManager::getShader(std::string fragPath) {
 		return &_shaderCache[fragPath];
 	}
 
-	//if shader from external add to internal shaders folder
-	std::string newFragPath = fragPath;
-	if (!Vengine::IOManager::isInParentDirectory(VisualiserManager::shadersFolder(), fragPath)) {
-		newFragPath = VisualiserManager::shadersFolder() + fragPath.substr(fragPath.find_last_of('/')); //copy to shaders folder of visualiser
-		Vengine::IOManager::copyFile(fragPath, newFragPath);
+	//must be in parent directory
+	assert(Vengine::IOManager::isInParentDirectory(VisualiserManager::shadersFolder(), fragPath));
+
+	if (!_shaderCache[fragPath].init(fragPath, _currentVisualiserPath)) {
+		_shaderCache.erase(fragPath);
+		Vengine::warning("Shader did not compile properly: error in code");
+		return nullptr;
 	}
-	_shaderCache[newFragPath].init(newFragPath, _currentVisualiserPath);
 	std::cout << "Shader " + fragPath + " loaded for first time" << std::endl;
 
-	return &_shaderCache[newFragPath];
+	return &_shaderCache[fragPath];
 }
 
 std::string VisualiserShaderManager::getCommonShaderPrefix()
@@ -80,6 +84,22 @@ bool VisualiserShaderManager::createShader(std::string name)
 	}
 
 	return Vengine::IOManager::copyFile(VisVars::_defaultFragShaderPath, newFileName);
+}
+
+void VisualiserShaderManager::recompileShader(std::string fragPath) {
+	if (_shaderCache.find(fragPath) == _shaderCache.end()) {
+		Vengine::warning("No loaded shader named " + fragPath + " to recompile");
+		return;
+	}
+
+	_shaderCache.erase(fragPath);
+	if (!_shaderCache[fragPath].init(fragPath, _currentVisualiserPath)) {
+		_shaderCache.erase(fragPath);
+		Vengine::warning("Shader did not recompile: error in code");
+		return;
+	}
+
+	std::cout << "Shader " + fragPath + " recompiled" << std::endl;
 }
 
 //***

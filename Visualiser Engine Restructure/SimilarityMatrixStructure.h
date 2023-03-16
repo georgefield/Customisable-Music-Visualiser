@@ -3,7 +3,7 @@
 #include <Vengine/MyErrors.h>
 #include "Tools.h"
 #include "DataTextureCreator.h"
-#include "SignalProcessingVars.h"
+#include "SPvars.h"
 
 class SimilarityMatrixStructure {
 public:
@@ -146,7 +146,7 @@ public:
 		//--
 
 		//update texture if it is created--
-		if (_textureCreator.isCreated()) {
+		if (_textureCreator.isCreated() && SP::vars._computeTexture) {
 			updateTexture();
 		}
 		//--

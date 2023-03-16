@@ -151,8 +151,8 @@
     <ClCompile Include="PFDapi.cpp" />
     <ClCompile Include="SignalProcessingManager.cpp" />
     <ClCompile Include="SelfSimilarityMatrix.cpp" />
-    <ClCompile Include="SignalProcessingVars.cpp" />
     <ClCompile Include="SpriteManager.cpp" />
+    <ClCompile Include="SPvars.cpp" />
     <ClCompile Include="TempoDetection.cpp" />
     <ClCompile Include="UI.cpp" />
     <ClCompile Include="UIglobalFeatures.cpp" />
@@ -176,7 +176,8 @@
     <ClInclude Include="FourierTransformManager.h" />
     <ClInclude Include="miniaudio_api.h" />
     <ClInclude Include="SimilarityMatrixHandler.h" />
-    <ClInclude Include="SignalProcessingVars.h" />
+    <ClInclude Include="SimMatrixStructs.h" />
+    <ClInclude Include="SPvars.h" />
     <ClInclude Include="MFCCs.h" />
     <ClInclude Include="NoteOnset.h" />
     <ClInclude Include="History.h" />
@@ -186,7 +187,6 @@
     <ClInclude Include="Master.h" />
     <ClInclude Include="Peak.h" />
     <ClInclude Include="PFDapi.h" />
-    <ClInclude Include="RMS.hpp" />
     <ClInclude Include="RollingAverage.h" />
     <ClInclude Include="SelfSimilarityMatrix.h" />
     <ClInclude Include="SignalProcessingManager.h" />
