@@ -9,12 +9,13 @@
 class MFCCs
 {
 public:
-	MFCCs() :
+	MFCCs(bool onlyUpToMelSpectrogram = false) :
 		_bandEnergies(nullptr),
 		_melSpectrogram(nullptr),
 		_mfccs(nullptr),
 
-		_sampleLastCalculated(-1)
+		_sampleLastCalculated(-1),
+		_onlyUpToMelSpectrogram(onlyUpToMelSpectrogram)
 	{
 	}
 
@@ -78,6 +79,7 @@ private:
 	Master* _m;
 	FFTWdct _dct;
 
+	bool _onlyUpToMelSpectrogram;
 	bool _useSetters;
 
 	int _sampleLastCalculated;

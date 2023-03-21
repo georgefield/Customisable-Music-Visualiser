@@ -42,7 +42,9 @@ bool AudioManager::load(std::string filePath)
 
 	_audioFileName = filePath.substr(filePath.find_last_of("/") + 1);
 	_audioLoadedThisFrame = true;
-	SignalProcessingManager::computeAudioInterrupt();
+	_currentSample = 0;
+	_stickySample = -1;
+	SignalProcessingManager::computeAudioInterrupt(0);
 
 	return true;
 }
@@ -51,6 +53,7 @@ void AudioManager::play()
 {
 	if (miniaudio.isLoaded()) {
 		miniaudio.playAudio();
+		Vengine::MyTiming::resetTimer(_currentSampleExtraPrecisionTimerId);
 	}
 }
 
@@ -73,7 +76,8 @@ void AudioManager::seekToSample(int sample) {
 		miniaudio.seekToSample(sample);
 		_currentSample = sample;
 		_stickySample = -1;
-		SignalProcessingManager::computeAudioInterrupt();
+		SignalProcessingManager::computeAudioInterrupt(sample);
+		Vengine::MyTiming::resetTimer(_currentSampleExtraPrecisionTimerId);
 	}
 }
 

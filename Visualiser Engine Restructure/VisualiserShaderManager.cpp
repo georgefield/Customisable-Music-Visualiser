@@ -58,8 +58,16 @@ VisualiserShader* VisualiserShaderManager::getShader(std::string fragPath) {
 		return &_shaderCache[fragPath];
 	}
 
+	if (!Vengine::IOManager::fileExists(fragPath)) {
+		Vengine::warning("Shader does not exist " + fragPath);
+		return nullptr;
+	}
+
 	//must be in parent directory
-	assert(Vengine::IOManager::isInParentDirectory(VisualiserManager::shadersFolder(), fragPath));
+	if (!Vengine::IOManager::isInParentDirectory(VisualiserManager::shadersFolder(), fragPath)) {
+		Vengine::warning("Shader .visfrag path points to different parent directory");
+		return nullptr;
+	}
 
 	if (!_shaderCache[fragPath].init(fragPath, _currentVisualiserPath)) {
 		_shaderCache.erase(fragPath);
@@ -240,8 +248,7 @@ void VisualiserShaderManager::Uniforms::setUniformUpdater(std::string uniformNam
 	}
 
 	if (inUniformMap(uniformName)) {
-		Vengine::warning("Uniform with name '" + uniformName + "' already has updater. Uniform updater list not changed.");
-		return;
+		Vengine::warning("Uniform with name '" + uniformName + "' already has updater. Replacing.");
 	}
 
 	_floatUniformUpdaterMap[uniformName].initialise(function);
@@ -255,8 +262,7 @@ void VisualiserShaderManager::Uniforms::setUniformUpdater(std::string uniformNam
 	}
 
 	if (inUniformMap(uniformName)) {
-		Vengine::warning("Uniform with name '" + uniformName + "' already has updater. Uniform updater list not changed.");
-		return;
+		Vengine::warning("Uniform with name '" + uniformName + "' already has updater. Replacing.");
 	}
 
 	_intUniformUpdaterMap[uniformName].initialise(function);
@@ -266,31 +272,31 @@ void VisualiserShaderManager::Uniforms::removeUniformUpdater(std::string uniform
 {
 	GLenum type = NULL;
 	if (inUniformMap(uniformName, &type)) {
-		if (type == GL_INT)
+		if (type == GL_INT) {
 			_intUniformUpdaterMap.erase(uniformName);
-		else if (type == GL_FLOAT)
+			return;
+		}
+		else if (type == GL_FLOAT) {
 			_floatUniformUpdaterMap.erase(uniformName);
-
-		assert(type != NULL);
-
+			return;
+		}
+		Vengine::warning("invalid setter detected");
 		return;
 	}
 
 	Vengine::warning("No updater to remove for '" + uniformName + "'");
-
-
-	_intUniformUpdaterMap.erase(uniformName);
+	return;
 }
 
 void VisualiserShaderManager::Uniforms::getAllUniformNames(std::vector<std::string>& names, GLenum type)
 {
-	if (type != GL_INT) {
+	if (type == GL_FLOAT || type == NULL) {
 		for (auto& it : _floatUniformUpdaterMap) {
 			names.push_back(it.first);
 		}
 	}
 
-	if (type != GL_FLOAT) {
+	if (type == GL_INT || type == NULL) {
 		for (auto& it : _intUniformUpdaterMap) {
 			names.push_back(it.first);
 		}
@@ -410,13 +416,13 @@ bool VisualiserShaderManager::inUniformMap(std::string uniformName, GLenum* type
 
 bool VisualiserShaderManager::inUniformMap(std::string uniformName, GLenum type)
 {
-	if (type != GL_INT) {
+	if (type == GL_FLOAT || type == NULL) {
 		if (_floatUniformUpdaterMap.find(uniformName) != _floatUniformUpdaterMap.end()) {
 			return true;
 		}
 	}
 
-	if (type != GL_FLOAT) {
+	if (type == GL_INT || type == NULL) {
 		if (_intUniformUpdaterMap.find(uniformName) != _intUniformUpdaterMap.end()) {
 			return true;
 		}

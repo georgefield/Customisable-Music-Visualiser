@@ -35,6 +35,7 @@ public:
 	float _peakAmplitude;
 	float _peakAmplitudeDb;
 	float _energy;
+	History<float> _energyHistory;
 	float _RMS;
 	FourierTransformHistory _fftHistory;
 
@@ -47,6 +48,9 @@ public:
 	float sumOfConvolutionOfHistory(History<float>* history, int entries = 0, Kernel kernel = LINEAR_PYRAMID);
 
 	float* getBaseFftOutput();
+	MyComplex* getBaseFftComplexOutput();
+	VectorHistory<MyComplex>* getBaseFftComplexOutputHistory();
+
 	int getBaseFftNumHarmonics();
 	float getEnergy();
 	float getPeakAmplitude();

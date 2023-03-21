@@ -29,7 +29,7 @@ public:
 
 	static int getGeneralHistorySize() { return SP::consts._generalHistorySize; }
 
-	static void computeAudioInterrupt() { _hasBeenComputeInterrupt = true; } //call when flow of data changes to reset _nextCalculationSample
+	static void computeAudioInterrupt(int forceSample = -1) { _nextCalculationSample = forceSample; _hasBeenComputeInterrupt = true; } //call when flow of data changes to reset _nextCalculationSample
 private:
 	static Master* _master;
 

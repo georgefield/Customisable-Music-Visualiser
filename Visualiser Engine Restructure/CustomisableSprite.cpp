@@ -41,7 +41,6 @@ void CustomisableSprite::init(SpriteInfo spriteInfo) {
 
 	if (_spriteInfo.shaderFilename[0] == NULL)
 		strcpy_s(_spriteInfo.shaderFilename, sizeof(SpriteInfo::shaderFilename), VisVars::_defaultFragShaderPath.substr(VisVars::_defaultFragShaderPath.find_last_of("/") + 1).c_str());
-	std::cout << _spriteInfo.shaderFilename << std::endl;
 
 	if (_spriteInfo.textureFilename[0] == NULL)
 		assert(_spriteInfo.useSimilarityMatrixTexture || !_spriteInfo.applyTexture);
@@ -278,10 +277,9 @@ void CustomisableSprite::textureChooser()
 	ImGui::Text("Set texture to pass to shader:");
 
 	//choose whether texture or not
-	static bool applyTexture = _spriteInfo.applyTexture;
-	ImGui::Checkbox("Apply Texture", &applyTexture);
-	if (!applyTexture) {
-		_spriteInfo.applyTexture = applyTexture;
+	ImGui::Checkbox("Apply Texture", &_spriteInfo.applyTexture);
+	if (!_spriteInfo.applyTexture) {
+		_spriteInfo.useSimilarityMatrixTexture = false;
 		return;
 	}
 

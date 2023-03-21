@@ -65,6 +65,7 @@ public:
 		//reset texture if created
 		if (_textureCreator.isCreated()) {
 			deleteTexture();
+			createTexture(SP::vars._fastSimilarityMatrixTexture);
 		}
 
 		//set up correlation window vars again with the passed parameter--
@@ -145,11 +146,9 @@ public:
 		}
 		//--
 
-		//update texture if it is created--
 		if (_textureCreator.isCreated() && SP::vars._computeTexture) {
-			updateTexture();
+			updateTexture(); 
 		}
-		//--
 	}
 
 	void createTexture(bool fast) {
@@ -174,7 +173,6 @@ public:
 			return;
 		}
 
-		_textureCreator.createTexture(_matrixSize, _matrixSize, _dataWindowedCorrelation);
 	}
 	void deleteTexture() {
 		_textureCreator.deleteTexture();
@@ -197,7 +195,9 @@ public:
 		return _data[((_start + i) % _matrixSize) * _matrixSize + ((_start + j) % _matrixSize)];
 	}
 
-	Vengine::GLtexture getMatrixTexture() { return _textureCreator.getTexture(); }
+	Vengine::GLtexture getMatrixTexture() {
+		return _textureCreator.getTexture();
+	}
 
 	int matrixSize() const { return _matrixSize; }
 	bool full() { return (_vectorHistory.entries() == _vectorHistory.totalSize()); }
@@ -225,7 +225,7 @@ private:
 	bool _usingOrderedData;
 
 	int _vectorDim;
-	VectorHistory _vectorHistory;
+	VectorHistory<float> _vectorHistory;
 	History<float> _vectorMagnitudeHistory;
 
 

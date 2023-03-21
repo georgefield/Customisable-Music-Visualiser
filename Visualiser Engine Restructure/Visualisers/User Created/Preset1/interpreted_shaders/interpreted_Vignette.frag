@@ -104,5 +104,5 @@ layout(std430, binding = 9) buffer userVars {
 void main(){
 
     float minimumToBorder = min(1.0f - abs(vis_fragmentPosition.x), 1.0f - abs(vis_fragmentPosition.y));
-    vis_outputColour = (1.0f - minimumToBorder) * vis_similarityMeasure * 0.2 * vis_inColour;
+    vis_outputColour = (1.0f - minimumToBorder) * vis_similarityMeasure * 0.5 * vis_inColour;
 }

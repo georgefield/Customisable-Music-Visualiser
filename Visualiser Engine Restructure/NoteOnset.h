@@ -6,7 +6,7 @@
 #include "MFCCs.h"
 #include "Energy.hpp"
 #include "FourierTransform.h"
-#include "SelfSimilarityMatrix.h"
+#include "SimilarityMatrixHandler.h"
 
 #include "FilterBank.h"
 
@@ -18,9 +18,9 @@ public:
 	static enum DataExtractionAlg {
 		ENERGY = 0,
 		DER_OF_LOG_ENERGY = 1,
-		BANDED_DER_OF_LOG_ENERGY = 2,
+		HFC_DER_OF_LOG_ENERGY = 2,
 		SPECTRAL_DISTANCE = 3,
-		SPECTRAL_DISTANCE_HFC_WEIGHTED = 4,
+		SPECTRAL_DISTANCE_WITH_PHASE = 4,
 		SIM_MATRIX_MEL_SPEC = 5,
 		COMBINATION_FAST = 6,
 		COMBINATION = 7
@@ -36,9 +36,9 @@ public:
 		_thresholder(1000), //approx 10 seconds
 
 		_ftForSpectralDistance(2),
-		_simMatrix(historySize),
+		_simMatrix(true),
 
-		_energy(2)
+		_previousHFCenergy(0)
 	{}
 
 	~NoteOnset() {
@@ -56,23 +56,18 @@ public:
 
 		initSetters();
 
-		//init onset detection function class dependencies
-		_energy.init(_m, -1);
+		//init spectral distance fourier transform with smoothing features--
 		_ftForSpectralDistance.init(_m, -1);
+		_ftForSpectralDistance.setSmoothVars(0.1, 0.3, 0.5);
+		_ftForSpectralDistance.setSmoothEffect(0, FourierTransform::SMOOTH);
+		_ftForSpectralDistance.setFrequencyConvolvingVars(5);
+		_ftForSpectralDistance.setSmoothEffect(1, FourierTransform::FREQUENCY_CONVOLVE);
+		//--
 
-		_derOfLogEnergyBands.init(_m);
-		_derOfLogEnergyBands.add(0.0, 150, 1.0f);
-		_derOfLogEnergyBands.add(100, 600, 1.0f);
-		_derOfLogEnergyBands.add(150, 1500, 1.0f);
-		_derOfLogEnergyBands.add(600, 3000, 1.0f);
-		_derOfLogEnergyBands.add(1500, 6000, 1.0f);
-		_derOfLogEnergyBands.add(3000, 10000, 1.0f);
-		_derOfLogEnergyBands.add(6000, 15000, 1.0f);
-		_derOfLogEnergyBands.add(10000, 20000, 1.0f);
-		_derOfLogEnergyBands.add(15000, 22050, 1.0f);
-
-		_simMatrix.init(2000 / SP::vars._desiredCPS);
-		_simMatrix.linkToMelSpectrogram(_mfcc);
+		_simMatrix._SMinfo._matrixSize = 2000 / SP::vars._desiredCPS;
+		_simMatrix._SMinfo._useFuture = true;
+		_simMatrix.init(_m);
+		_simMatrix.linkToMelSpectrogram();
 	}
 
 	void reInit() {
@@ -83,15 +78,12 @@ public:
 		//thresholding vars
 		_lastAboveThreshold = false;
 
-		//reinit 
-		_energy.reInit();
-
 		_ftForSpectralDistance.reInit();
 
-		_derOfLogEnergyBands.reInit();
-
-		_simMatrix.reInit(2000 / SP::vars._desiredCPS);
-		_simMatrix.linkToMelSpectrogram(_mfcc);
+		_simMatrix._SMinfo._matrixSize = 2000 / SP::vars._desiredCPS;
+		_simMatrix._SMinfo._useFuture = true;
+		_simMatrix.reInit();
+		_simMatrix.linkToMelSpectrogram();
 	}
 
 	void calculateNext(
@@ -110,9 +102,8 @@ public:
 private:
 	Master* _m;
 	MFCCs* _mfcc;
-	Energy _energy;
 
-	SelfSimilarityMatrix _simMatrix;
+	SimilarityMatrixHandler _simMatrix;
 
 	FourierTransform _ftForSpectralDistance;
 
@@ -120,13 +111,13 @@ private:
 	
 	float energy();
 	float derivativeOfLogEnergy();
-	float bandedDerOfLogEnergy();
-	float spectralDistanceOfHarmonics(bool HFC);
+	float HFCderivativeOfLogEnergy();
+	float _previousHFCenergy;
+	float spectralDistance();
+	float spectralDistanceWithPhase();
 	float similarityMatrixMelSpectrogram();
 	float combinationFast();
 	float combination();
-
-	FilterBank _derOfLogEnergyBands;
 
 	History<float> _onsetDetectionHistory;
 	History<float> _CONVonsetDetectionHistory;

@@ -22,19 +22,20 @@ struct UniformSetter {
 		return true;
 	}
 
-	void callUpdater() {
+	bool callUpdater() {
 		//function value does not need to be updated if constant
 		if (!isInitialised) {
 			Vengine::warning("Tried to call updater on uninitiliased uniformSetter");
-			return;
+			return false;
 		}
 
 		if (updaterFunction == nullptr) {
 			Vengine::warning("Updater function called without first being set");
-			return;
+			return false;
 		}
 
 		functionValue = updaterFunction();
+		return true;
 	}
 
 	bool isInitialised;

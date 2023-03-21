@@ -21,8 +21,8 @@ public:
 	}
 
 	bool testThreshold(float value, float topXpercent) {
-		//sqrt get fraction full to increase faster
-		if ((value * sqrt(getFractionFull())) > getTopXpercentValue(topXpercent)) {
+		//1/3 of threshold full then start returning peaks
+		if ((value * std::min((1.8f * getFractionFull()), 1.0f)) > getTopXpercentValue(topXpercent)) {
 			return true;
 		}
 		return false;

@@ -69,8 +69,11 @@ void SignalProcessingManager::calculate()
 	if (SP::vars._computeNoteOnset && SP::vars._onsetDetectionFunctionEnum == NoteOnset::DataExtractionAlg::SIM_MATRIX_MEL_SPEC) { SP::vars._computeMFCCs = true; }
 
 	if (_hasBeenComputeInterrupt) {
-		std::cout << "Interrupt " << AudioManager::getCurrentSample() << std::endl;
-		_nextCalculationSample = AudioManager::getCurrentSample();
+		if (_nextCalculationSample == -1) {
+			std::cout << "Interrupt, next calc. sample = " << AudioManager::getCurrentSample() << std::endl;
+			_nextCalculationSample = AudioManager::getCurrentSample();
+		}
+		std::cout << "Interrupt, forced next calc. sample to " << _nextCalculationSample << std::endl;
 		_hasBeenComputeInterrupt = false;
 	}
 	else if (_nextCalculationSample > AudioManager::getCurrentSample() || _nextCalculationSample >= AudioManager::getNumSamples()) {
@@ -180,7 +183,7 @@ void SignalProcessingManager::initAlgorithmObjects(bool noteOnset, bool tempoDet
 			_similarityMatrix->reInit();
 		}
 		else {
-			_similarityMatrix = new SimilarityMatrixHandler(SP::consts._generalHistorySize);
+			_similarityMatrix = new SimilarityMatrixHandler();
 			_similarityMatrix->init(_master);
 		}
 	}

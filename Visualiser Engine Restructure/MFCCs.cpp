@@ -12,6 +12,9 @@ void MFCCs::calculateNext()
 
 	calculateBandEnergy();
 	calculateMelSpectrogram();
+	if (_onlyUpToMelSpectrogram) {
+
+	}
 	calculateMfccs();
 }
 

@@ -35,6 +35,7 @@ FourierTransform::~FourierTransform()
 
 		if (_useSetters) {
 			removeUpdaters();
+			std::cout << "Removing updaters for ft " << _FTinfo.id << std::endl;
 		}
 	}
 }

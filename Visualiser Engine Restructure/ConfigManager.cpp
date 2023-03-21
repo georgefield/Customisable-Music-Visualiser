@@ -103,7 +103,7 @@ bool ConfigManager::initVisualiserFromConfig(std::string configPath)
 
     UIglobalFeatures::_uiSMinfo = *reinterpret_cast<SimMatInfo*>(SMinfoBuffer); //set ui options to match
     SignalProcessingManager::_similarityMatrix->_SMinfo = *reinterpret_cast<SimMatInfo*>(SMinfoBuffer); //set ui options to match
-    SignalProcessingManager::_similarityMatrix->reInit();
+    SignalProcessingManager::_similarityMatrix->reInit(); 
 
     delete[] SMinfoBuffer;
 

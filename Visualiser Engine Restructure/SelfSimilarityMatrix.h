@@ -43,6 +43,7 @@ public:
 		else {
 			_similarityMatrix->reInit();
 		}
+
 	}
 
 	void setCorrelationWindow(int size) {
@@ -87,6 +88,7 @@ public:
 		if (!_similarityMatrix->isTextureCreated()) {
 			_similarityMatrix->createTexture(SP::vars._fastSimilarityMatrixTexture);
 		}
+
 		return _similarityMatrix->getMatrixTexture();
 	}
 	int getMatrixTextureStartPixelIndex() {

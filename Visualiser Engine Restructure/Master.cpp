@@ -11,14 +11,15 @@ Master::Master() :
 	_audioData(nullptr),
 
 	_fftwAPI(SP::consts._STFTsamples),
-	_fftHistory(1),//store 17 previous fourier transforms
+	_fftHistory(7),//store 7 previous fourier transforms
 
 	_sampleFftLastCalculated(-1),
 	_sampleRate(0),
 
 	_peakAmplitude(0),
 	_sampleOfLastPeak(0),
-	_energy(0)
+	_energy(0),
+	_energyHistory(SP::consts._generalHistorySize)
 {
 }
 
@@ -101,6 +102,7 @@ void Master::calculateEnergy()
 	}
 	_energy /= SP::consts._STFTsamples;
 	_RMS = sqrt(_energy);
+	_energyHistory.add(_energy);
 }
 
 void Master::calculatePeakAmplitude()
@@ -155,6 +157,8 @@ float Master::sumOfConvolutionOfHistory(History<float>* history, int entries, Ke
 
 //simple getters--
 float* Master::getBaseFftOutput() { return _fftHistory.newest(); }
+MyComplex* Master::getBaseFftComplexOutput() { return _fftwAPI.getComplexCoeffsHistory(_currentSample)->newest(); }
+VectorHistory<MyComplex>* Master::getBaseFftComplexOutputHistory() { return _fftwAPI.getComplexCoeffsHistory(_currentSample); }
 int Master::getBaseFftNumHarmonics() { return _fftHistory.numHarmonics(); }
 float Master::getPeakAmplitude(){ return _peakAmplitude; }
 float Master::getPeakAmplitudeDb() { return _peakAmplitudeDb; }

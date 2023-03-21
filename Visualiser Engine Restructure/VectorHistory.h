@@ -2,6 +2,7 @@
 #include "History.h"
 #include <vector>
 
+template <class T>
 class VectorHistory {
 
 public:
@@ -29,8 +30,8 @@ public:
 		_vectorDim = vectorDim;
 
 		for (int i = 0; i < _history.totalSize(); i++) { //allocate memory for history (init memory to 0)
-			_history.add(new float[_vectorDim]);
-			memset(_history.newest(), 0.0f, (_vectorDim * sizeof(float)));
+			_history.add(new T[_vectorDim]);
+			memset(_history.newest(), NULL, (_vectorDim * sizeof(T)));
 		}
 
 		_initialised = true;
@@ -56,7 +57,7 @@ public:
 	
 	void clear() {
 		for (int i = 0; i < _history.totalSize(); i++) {
-			memset(_history.get(i), 0.0f, (_vectorDim * sizeof(float)));
+			memset(_history.get(i), NULL, (_vectorDim * sizeof(T)));
 		}
 		_added = 0;
 	}
@@ -66,7 +67,7 @@ public:
 	
 	//*** working with vector history ***
 
-	float* workingArray() //modify values here in memory
+	T* workingArray() //modify values here in memory
 	{
 		if (_vectorDim == -1) {
 			Vengine::fatalError("Vector history used without being initialised");
@@ -80,13 +81,13 @@ public:
 		_added++;
 	}
 
-	void add(std::vector<float> v) 
+	void add(std::vector<T> v) 
 	{
 		if (v.size() > _vectorDim) {
 			Vengine::fatalError("can only add vectors of same size or less to vector history");
 		}
 
-		memcpy(workingArray(), &(v[0]), sizeof(float) * v.size()); //copy to working array
+		memcpy(workingArray(), &(v[0]), sizeof(T) * v.size()); //copy to working array
 		addWorkingArrayToHistory(); //add to history
 	}
 
@@ -99,21 +100,21 @@ public:
 	//have functionality of history
 	bool isInitialised() const { return _initialised; }
 
-	float* get(int index) {
+	T* get(int index) {
 		if (_vectorDim == -1) {
 			Vengine::fatalError("Vector history used without being initialised");
 		}
 		return _history.get(index);
 	}
-	float* newest() { return _history.get(0); }
-	float* previous() { return _history.get(1); }
+	T* newest() { return _history.get(0); }
+	T* previous() { return _history.get(1); }
 
 	int totalSize() { return _history.totalSize();}
 	int entries() { return std::min(_added, totalSize()); }
 private:
 	int _added;
 	int _vectorDim;
-	History<float*> _history;
+	History<T*> _history;
 
 	bool _initialised;
 };

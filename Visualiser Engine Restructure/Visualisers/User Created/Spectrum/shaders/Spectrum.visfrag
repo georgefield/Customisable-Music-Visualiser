@@ -1,0 +1,12 @@
+void main(){
+    float hzFrac = vis_fragmentUV.y;
+	float screenFrac = pow(vis_FT0_size, hzFrac - 1);
+	int index = int(screenFrac * vis_FT0_size);
+
+    float ftValue = sqrt(sqrt(vis_FT0_harmonics[index]));
+    float r = abs(clamp(ftValue, 0, 1));
+    float g = abs(clamp(ftValue, 0, 1) - 0.5);
+    float b = abs(clamp(ftValue, 0, 1) - 1);
+
+    vis_outputColour = vec4(r,g,b,1.0f);
+}

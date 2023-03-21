@@ -670,14 +670,14 @@ void UI::noteOnsetUi()
 	ImGui::Checkbox("Compute note onset", &SP::vars._computeNoteOnset);
 
 	ImGui::Text("Onset detection function:");
-	ImGui::RadioButton("Energy", &SP::vars._onsetDetectionFunctionEnum, 0);
-	ImGui::RadioButton("Derivative of log energy", &SP::vars._onsetDetectionFunctionEnum, 1);
-	ImGui::RadioButton("Banded derivative of log energy", &SP::vars._onsetDetectionFunctionEnum, 2);
-	ImGui::RadioButton("Spectral distance", &SP::vars._onsetDetectionFunctionEnum, 3);
-	ImGui::RadioButton("Spectral distance high freq. weighted", &SP::vars._onsetDetectionFunctionEnum, 4);
-	ImGui::RadioButton("Similarity matrix", &SP::vars._onsetDetectionFunctionEnum, 5);
-	ImGui::RadioButton("Combination (fast)", &SP::vars._onsetDetectionFunctionEnum, 6);
-	ImGui::RadioButton("Combination", &SP::vars._onsetDetectionFunctionEnum, 7);
+	ImGui::RadioButton("Energy", &SP::vars._onsetDetectionFunctionEnum, NoteOnset::ENERGY);
+	ImGui::RadioButton("Derivative of log energy", &SP::vars._onsetDetectionFunctionEnum, NoteOnset::DER_OF_LOG_ENERGY);
+	ImGui::RadioButton("HFC derivative of log energy", &SP::vars._onsetDetectionFunctionEnum, NoteOnset::HFC_DER_OF_LOG_ENERGY);
+	ImGui::RadioButton("Spectral distance", &SP::vars._onsetDetectionFunctionEnum, NoteOnset::SPECTRAL_DISTANCE);
+	ImGui::RadioButton("Weighted phase deviation", &SP::vars._onsetDetectionFunctionEnum, NoteOnset::SPECTRAL_DISTANCE_WITH_PHASE);
+	ImGui::RadioButton("Similarity matrix", &SP::vars._onsetDetectionFunctionEnum, NoteOnset::SIM_MATRIX_MEL_SPEC);
+	ImGui::RadioButton("Combination (fast)", &SP::vars._onsetDetectionFunctionEnum, NoteOnset::COMBINATION_FAST);
+	ImGui::RadioButton("Combination", &SP::vars._onsetDetectionFunctionEnum, NoteOnset::COMBINATION);
 
 	ImGui::Checkbox("Convolve onset detection", &SP::vars._convolveOnsetDetection);
 	if (SP::vars._convolveOnsetDetection) {

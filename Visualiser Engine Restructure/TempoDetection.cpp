@@ -119,7 +119,7 @@ void TempoDetection::calculateNext() {
 
 
 		//predictions cal
-		if (_agents->_highestScoringAgent != nullptr) {
+		if (_agents->_highestScoringAgent != nullptr && _agents->_highestScoringAgent->_peakHistory != nullptr) {
 			int samplesSinceLastBeat = (_m->_currentSample - _agents->_highestScoringAgent->_peakHistory->newestSample()) % _agents->_highestScoringAgent->_beatInterval;
 			float timeSinceLastBeat = float(samplesSinceLastBeat) / float(_m->_sampleRate);
 			_timeSinceLastBeat = timeSinceLastBeat;

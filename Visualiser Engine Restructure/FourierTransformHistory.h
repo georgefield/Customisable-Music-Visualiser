@@ -43,5 +43,5 @@ public:
 
 	int entries() { return _vecHistory.entries(); }
 private:
-	VectorHistory _vecHistory;
+	VectorHistory<float> _vecHistory;
 };

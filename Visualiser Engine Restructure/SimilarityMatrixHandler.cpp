@@ -5,12 +5,14 @@
 
 #include <Vengine/MyTiming.h>
 
-SimilarityMatrixHandler::SimilarityMatrixHandler(int size)
+SimilarityMatrixHandler::SimilarityMatrixHandler(bool isForNoteOnset)
 	:
-matrix(SP::consts._generalHistorySize),
-_fourierTransform(nullptr),
-_samplesAheadForFutureMatrix(0),
-_counterForDownscale(0)
+	matrix(SP::consts._generalHistorySize),
+	_fourierTransform(nullptr),
+	_samplesAheadForFutureMatrix(0),
+	_counterForDownscale(0),
+	_isForNoteOnset(isForNoteOnset),
+	_futureMFCCs(isForNoteOnset) //only calculate up to mel spectrogram if for note onset
 {
 }
 
@@ -19,7 +21,9 @@ SimilarityMatrixHandler::~SimilarityMatrixHandler()
 	if (_fourierTransform != nullptr) {
 		delete _fourierTransform;
 	}
-	removeUpdaters();
+	if (!_isForNoteOnset) {
+		removeUpdaters();
+	}
 }
 
 void SimilarityMatrixHandler::init(Master* master)
@@ -35,8 +39,9 @@ void SimilarityMatrixHandler::init(Master* master)
 	_futureMFCCs.init(&_futureMaster, SP::consts._numMelBands, 0, 20000, false);
 
 	//fourier transform inited when created
-
-	initUpdaters();
+	if (!_isForNoteOnset) {
+		initUpdaters();
+	}
 }
 
 void SimilarityMatrixHandler::reInit()
@@ -71,6 +76,7 @@ void SimilarityMatrixHandler::calculateNext()
 		_counterForDownscale = (_counterForDownscale + 1) % _SMinfo._downscale;
 		return;
 	}
+	_counterForDownscale = (_counterForDownscale + 1) % _SMinfo._downscale;
 
 	if (_SMinfo._useFuture) {
 
@@ -88,8 +94,12 @@ void SimilarityMatrixHandler::calculateNext()
 		}
 		//--
 
-		matrix.calculateNext(MeasureType(SP::vars._matrixMeasureEnum), SP::vars._similarityMatrixTextureContrastFactor);
-
+		if (!_isForNoteOnset) {
+			matrix.calculateNext(MeasureType(SP::vars._matrixMeasureEnum), SP::vars._similarityMatrixTextureContrastFactor);
+		}
+		else {
+			matrix.calculateNext(PERCUSSION, 20.0f);
+		}
 		_futureMaster.endCalculations();
 	}
 	else {
@@ -100,8 +110,6 @@ void SimilarityMatrixHandler::calculateNext()
 
 		matrix.calculateNext(MeasureType(SP::vars._matrixMeasureEnum), SP::vars._similarityMatrixTextureContrastFactor);
 	}
-
-	_counterForDownscale++;
 }
 
 void SimilarityMatrixHandler::relinkBasedOnSPvars()

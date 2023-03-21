@@ -48,6 +48,16 @@ public:
 		}
 		return ret;
 	}
+	static float L1distanceMetricIncDimOnly(float* v1, float* v2, int dim) {
+
+		float ret = 0;
+		for (int i = 0; i < dim; i++) {
+			if (v2[i] - v1[i] > 0) {
+				ret += v2[i] - v1[i];
+			}
+		}
+		return ret;
+	}
 	static float L2distanceMetric(float* v1, float* v2, int dim) {
 
 		float ret = 0;
@@ -60,7 +70,7 @@ public:
 
 		float ret = 0;
 		for (int i = 0; i < dim; i++) {
-			if (v1[i] - v2[i] > 0) {
+			if (v2[i] - v1[i] > 0) {
 				ret += (v1[i] - v2[i]) * (v1[i] - v2[i]);
 			}
 		}
