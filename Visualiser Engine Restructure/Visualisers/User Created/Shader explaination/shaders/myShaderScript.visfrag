@@ -1,4 +1,0 @@
-void main(){
-
-    vis_outputColour = vis_inColour * vis_RMS * 2;
-}

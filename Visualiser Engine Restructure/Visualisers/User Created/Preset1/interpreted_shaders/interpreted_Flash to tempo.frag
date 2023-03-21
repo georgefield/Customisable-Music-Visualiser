@@ -104,5 +104,5 @@ layout(std430, binding = 9) buffer userVars {
 void main(){
 
 
-    vis_outputColour = vis_inColour * vis_timeSinceLastBeat;
+    vis_outputColour = vis_inColour * (1-vis_timeSinceLastBeat);
 }
