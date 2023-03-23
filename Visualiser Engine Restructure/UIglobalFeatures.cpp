@@ -33,6 +33,7 @@ void UIglobalFeatures::displayErrors() {
 
 	//create window that only displays error text
 	ImGui::SetNextWindowPos(ImVec2(0,ImGui::GetMainViewport()->Size.y - 30));
+	ImGui::SetNextWindowFocus();
 
 	ImGui::Begin("Message", (bool*)0,
 		ImGuiWindowFlags_NoMove |

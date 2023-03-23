@@ -75,7 +75,7 @@ public:
 		energy /= SP::vars._masterFTgain * SP::vars._masterFTgain; //fix the gain applied on transform
 		energy *= 2; // miss out the mirrored half of the fourier transform
 		
-		_energy.add(energy, _m->_currentSample);
+		_energy.add(energy);
 	}
 
 private:

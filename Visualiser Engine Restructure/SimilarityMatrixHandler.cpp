@@ -5,14 +5,13 @@
 
 #include <Vengine/MyTiming.h>
 
-SimilarityMatrixHandler::SimilarityMatrixHandler(bool isForNoteOnset)
+SimilarityMatrixHandler::SimilarityMatrixHandler(bool useSetters)
 	:
 	matrix(SP::consts._generalHistorySize),
 	_fourierTransform(nullptr),
 	_samplesAheadForFutureMatrix(0),
 	_counterForDownscale(0),
-	_isForNoteOnset(isForNoteOnset),
-	_futureMFCCs(isForNoteOnset) //only calculate up to mel spectrogram if for note onset
+	_useSetters(useSetters)
 {
 }
 
@@ -21,7 +20,7 @@ SimilarityMatrixHandler::~SimilarityMatrixHandler()
 	if (_fourierTransform != nullptr) {
 		delete _fourierTransform;
 	}
-	if (!_isForNoteOnset) {
+	if (_useSetters) {
 		removeUpdaters();
 	}
 }
@@ -39,7 +38,7 @@ void SimilarityMatrixHandler::init(Master* master)
 	_futureMFCCs.init(&_futureMaster, SP::consts._numMelBands, 0, 20000, false);
 
 	//fourier transform inited when created
-	if (!_isForNoteOnset) {
+	if (_useSetters) {
 		initUpdaters();
 	}
 }
@@ -94,12 +93,8 @@ void SimilarityMatrixHandler::calculateNext()
 		}
 		//--
 
-		if (!_isForNoteOnset) {
-			matrix.calculateNext(MeasureType(SP::vars._matrixMeasureEnum), SP::vars._similarityMatrixTextureContrastFactor);
-		}
-		else {
-			matrix.calculateNext(PERCUSSION, 20.0f);
-		}
+		matrix.calculateNext(_SMinfo._measureType, _SMinfo._contrastFactor);
+
 		_futureMaster.endCalculations();
 	}
 	else {
@@ -108,7 +103,7 @@ void SimilarityMatrixHandler::calculateNext()
 			_fourierTransform->calculateNext();
 		}
 
-		matrix.calculateNext(MeasureType(SP::vars._matrixMeasureEnum), SP::vars._similarityMatrixTextureContrastFactor);
+		matrix.calculateNext(_SMinfo._measureType, _SMinfo._contrastFactor);
 	}
 }
 

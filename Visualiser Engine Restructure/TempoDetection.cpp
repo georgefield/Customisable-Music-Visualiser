@@ -103,7 +103,7 @@ void TempoDetection::calculateNext() {
 
 
 		//add to rolling avgs
-		if (_agents->_highestScoringAgent != nullptr) {
+		if (_agents->set.size() > 0) {
 			float tempo = 60.0f * float(_m->_sampleRate) / float(_agents->_highestScoringAgent->_beatInterval);
 			_tempoRollingAvg.add(tempo);
 		}
@@ -119,8 +119,8 @@ void TempoDetection::calculateNext() {
 
 
 		//predictions cal
-		if (_agents->_highestScoringAgent != nullptr && _agents->_highestScoringAgent->_peakHistory != nullptr) {
-			int samplesSinceLastBeat = (_m->_currentSample - _agents->_highestScoringAgent->_peakHistory->newestSample()) % _agents->_highestScoringAgent->_beatInterval;
+		if (_agents->set.size() > 0) {
+			int samplesSinceLastBeat = (_m->_currentSample - _agents->_highestScoringAgent->_peakHistory->newest().onset) % _agents->_highestScoringAgent->_beatInterval;
 			float timeSinceLastBeat = float(samplesSinceLastBeat) / float(_m->_sampleRate);
 			_timeSinceLastBeat = timeSinceLastBeat;
 
@@ -254,7 +254,7 @@ void TempoDetection::computeAgents(AgentSet* agents, std::vector<Peak>& peaks)
 
 	int maxTolPre = tolPrePercentage * (60.0f / SP::vars.MIN_TEMPO) * _m->_sampleRate; //used for optimisation
 
-	int tolInner = 0.05 * _m->_sampleRate; // 50 ms
+	int tolInner = 0.04 * _m->_sampleRate; // 40 ms
 
 	int tolPre, tolPost;
 
@@ -289,8 +289,6 @@ void TempoDetection::computeAgents(AgentSet* agents, std::vector<Peak>& peaks)
 					//count this peak as a beat time
 					int error = peak.onset - (*A)->_prediction;
 					float relativeError = (error > 0 ? float(error) / float(tolPost) : -float(error) / float(tolPre)); //error from 0 -> 1 depending on how close to tolerance limits on either side
-
-					//std::cout << " ,relative error: " << relativeError;
 
 					(*A)->add(peak, error, relativeError);
 				}

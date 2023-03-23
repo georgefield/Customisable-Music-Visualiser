@@ -6,6 +6,8 @@
 #include "SpriteManager.h"
 #include "SignalProcessingManager.h"
 
+#define FLOAT_MAX 3.4028235E38F
+
 class UI
 {
 public:
@@ -77,7 +79,7 @@ private:
 	//helper gui functions
 	bool textInputPrompt(const std::string& message, char* buf, int bufSize, bool& isPromptOpen);
 
-	void imguiHistoryPlotter(History<float>* history);
+	void imguiHistoryPlotter(History<float>* history, float scaleMin= FLOAT_MAX, float scaleMax =FLOAT_MAX);
 
 };
 

@@ -1,5 +1,13 @@
 #include "NoteOnset.h"
 
+void compress(float& value, float gain, float thres, float ratio) {
+	value *= gain;
+	if (value > thres) {
+		value -= thres;
+		value /= ratio;
+		value += thres;
+	}
+}
 
 void NoteOnset::calculateNext(DataExtractionAlg dataAlg, bool convolve) {
 
@@ -25,10 +33,10 @@ void NoteOnset::calculateNext(DataExtractionAlg dataAlg, bool convolve) {
 		onsetValue = spectralDistance();
 	}
 	if (dataAlg == DataExtractionAlg::SPECTRAL_DISTANCE_WITH_PHASE) {
-		onsetValue = spectralDistanceWithPhase();
+		onsetValue = weightedPhaseDeviation();
 	}
-	if (dataAlg == DataExtractionAlg::SIM_MATRIX_MEL_SPEC) {
-		onsetValue = similarityMatrixMelSpectrogram();
+	if (dataAlg == DataExtractionAlg::SIM_MATRIX_MFCC) {
+		onsetValue = similarityMatrixMFCC();
 	}
 	if (dataAlg == DataExtractionAlg::COMBINATION_FAST) {
 		onsetValue = combinationFast();
@@ -36,22 +44,22 @@ void NoteOnset::calculateNext(DataExtractionAlg dataAlg, bool convolve) {
 	if (dataAlg == DataExtractionAlg::COMBINATION) {
 		onsetValue = combination();
 	}
+	_rawOnsetDetectionHistory.add(onsetValue); //stores raw algorithm output
 
-	_onsetDetectionHistory.add(onsetValue, _m->_currentSample);
-
+	//filtering functions
 	if (convolve) {
-		_CONVonsetDetectionHistory.add(
-			_m->sumOfConvolutionOfHistory(&_onsetDetectionHistory, SP::vars._convolveWindowSize, LINEAR_PYRAMID),
-			_m->_currentSample
-		);
+		onsetValue = _m->sumOfConvolutionOfHistory(&_rawOnsetDetectionHistory, SP::vars._convolveWindowSize, LINEAR_PYRAMID);
 	}
+	compress(onsetValue, SP::vars._detectionFunctionGain, SP::vars._detectionFunctionCompressionThreshold, SP::vars._detectionFunctionCompressionRatio);
+	if (SP::vars._clampBetween0and1) {
+		onsetValue = std::max(0.0f, std::min(onsetValue, 1.0f));
+	}
+
+	_outOnsetDetectionHistory.add(onsetValue); //add filtered output to main detection history
 	//--
 
 	//peak detection--
-	if (convolve)
-		_thresholder.addValue(_CONVonsetDetectionHistory.newest(), _m->_currentSample);
-	else
-		_thresholder.addValue(onsetValue, _m->_currentSample);
+	_thresholder.addValue(_outOnsetDetectionHistory.newest(), _m->_currentSample);
 
 	Peak lastPeak;
 	bool aboveThreshold;
@@ -64,19 +72,11 @@ void NoteOnset::calculateNext(DataExtractionAlg dataAlg, bool convolve) {
 }
 
 //*** onset algorithms ***
-void knee(float& value, float gain, float thres, float knee) {
-	value *= gain;
-	if (value > thres) {
-		value -= thres;
-		value /= knee;
-		value += thres;
-	}
-}
 
 float NoteOnset::energy()
 {
 	float energy = _m->_energy;
-	knee(energy, 16.0f, 1.0f, 2.0f);
+	compress(energy, 16.0f, 1.0f, 2.0f);
 	return energy;
 }
 
@@ -91,7 +91,7 @@ float NoteOnset::derivativeOfLogEnergy() {
 	derOfLogEnergy *= one_over_dt; // *= 1/dt
 	if (isnan(derOfLogEnergy) || isinf(derOfLogEnergy)) { derOfLogEnergy = 0; } //if an energy is 0, log is -inf, stops cascade of nan/inf
 
-	knee(derOfLogEnergy, 25.0f, 1.0f, 2.5f);
+	compress(derOfLogEnergy, 25.0f, 1.0f, 2.5f);
 
 	return (derOfLogEnergy < 0 ? 0 : derOfLogEnergy); //only take onset (positive change in energy)
 
@@ -116,7 +116,7 @@ float NoteOnset::HFCderivativeOfLogEnergy()
 	derOfLogHFCenergy *= one_over_dt;
 	if (isnan(derOfLogHFCenergy) || isinf(derOfLogHFCenergy)) { derOfLogHFCenergy = 0; } //if an energy is 0, log is -inf, stops cascade of nan/inf
 
-	knee(derOfLogHFCenergy, 15.0f, 1.0f, 2.5f);
+	compress(derOfLogHFCenergy, 15.0f, 1.0f, 2.5f);
 
 	return (derOfLogHFCenergy < 0 ? 0 : derOfLogHFCenergy); //only take onset (positive change in energy)
 }
@@ -136,13 +136,13 @@ float NoteOnset::spectralDistance() {
 	//--
 
 	float spectralDistanceConvolvedHarmonics = Tools::L1distanceMetricIncDimOnly(
-		_ftForSpectralDistance.getHistory()->newest(), 
+		_ftForSpectralDistance.getHistory()->newest(),
 		_ftForSpectralDistance.getHistory()->previous(),
 		_ftForSpectralDistance.getHistory()->numHarmonics()
 	);
 	spectralDistanceConvolvedHarmonics *= one_over_dt;
 
-	knee(spectralDistanceConvolvedHarmonics, 8.0f, 1.0f, 2.0f);
+	compress(spectralDistanceConvolvedHarmonics, 8.0f, 1.0f, 2.0f);
 
 	return spectralDistanceConvolvedHarmonics;
 	//--
@@ -157,7 +157,7 @@ float argumentDistance(float arg1, float arg2) { //wrap around pi
 	return std::min(arg2 - arg1, (pi - arg2) + (-pi - arg1));
 }
 
-float NoteOnset::spectralDistanceWithPhase() {
+float NoteOnset::weightedPhaseDeviation() {
 	float one_over_dt = SP::vars._desiredCPS * 0.001; //do dt in ms as otherwise numbers too big
 
 	VectorHistory<MyComplex>* complexOutputs = _m->getBaseFftComplexOutputHistory();
@@ -166,7 +166,7 @@ float NoteOnset::spectralDistanceWithPhase() {
 	float weightedPhaseDeviationSpread = 0;
 	for (int k = 0; k < numHarmonics; k++) {
 
- 		float phaseDeviation = argumentDistance(complexOutputs->get(0)[k].arg, complexOutputs->get(1)[k].arg) - argumentDistance(complexOutputs->get(1)[k].arg, complexOutputs->get(2)[k].arg); //second derivative
+		float phaseDeviation = argumentDistance(complexOutputs->get(0)[k].arg, complexOutputs->get(1)[k].arg) - argumentDistance(complexOutputs->get(1)[k].arg, complexOutputs->get(2)[k].arg); //second derivative
 
 		weightedPhaseDeviationSpread += fabsf(phaseDeviation) * _m->getBaseFftOutput()[k];
 	}
@@ -174,19 +174,19 @@ float NoteOnset::spectralDistanceWithPhase() {
 
 	weightedPhaseDeviationSpread *= one_over_dt;
 
-	knee(weightedPhaseDeviationSpread, 2000.0f, 1.0f, 2.0f);
+	compress(weightedPhaseDeviationSpread, 2000.0f, 1.0f, 2.0f);
 
 	return weightedPhaseDeviationSpread;
 }
 
-float NoteOnset::similarityMatrixMelSpectrogram()
+float NoteOnset::similarityMatrixMFCC()
 {
 	_simMatrix.calculateNext();
 
 	float measure = _simMatrix.matrix.getSimilarityMeasure();
 	if (isnan(measure) || isinf(measure)) { return 0.0f; } //stop nan virus escaping the lab
 
-	knee(measure, 30.0f, 1.0f, 2.0f);
+	compress(measure, 30.0f, 1.0f, 2.0f);
 	return std::max(measure, 0.0f);
 }
 
@@ -204,9 +204,9 @@ float NoteOnset::combination()
 	//all normalised to be ~1 at peak
 	float HFCdole = HFCderivativeOfLogEnergy();
 	float sd = spectralDistance();
-	float sdwp = spectralDistanceWithPhase();
+	float sdwp = weightedPhaseDeviation();
 	float e = energy();
-	float smms = similarityMatrixMelSpectrogram();
+	float smms = similarityMatrixMFCC();
 	return (HFCdole + 0.7) * (sdwp + 0.4) * (smms + 0.4) * (e + 0.2) - 0.0224;
 }
 

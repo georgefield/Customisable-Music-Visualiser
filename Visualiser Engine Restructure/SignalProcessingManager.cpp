@@ -36,19 +36,21 @@ void SignalProcessingManager::init() {
 
 void SignalProcessingManager::reset()
 {
-	computeAudioInterrupt();
-
 	if (!AudioManager::isAudioLoaded()) {
 		Vengine::warning("Cannot reset as no audio loaded");
 		return;
 	}
 
+	audioInterruptOccured();
+
 	SP::vars._wasSignalProcessingReset = true;
 
-	_master->reInit(AudioManager::getSampleData(), AudioManager::getSampleRate()); //will tell all other algorithms to reinit
+	//reinit everything--
+	_master->reInit(AudioManager::getSampleData(), AudioManager::getSampleRate());
 	FourierTransformManager::reInitAll();
 
 	initAlgorithmObjects(true, true, true, true);
+	//--
 }
 
 void SignalProcessingManager::calculate()
@@ -59,24 +61,25 @@ void SignalProcessingManager::calculate()
 	}
 
 	if (!AudioManager::isAudioPlaying()) {
-		_master->audioIsPaused();
+		_master->audioIsPaused(); //called to do any computations required when audio is paused
 		return;
 	}
 
 	//dependencies
 	if (SP::vars._computeTempoDetection) { SP::vars._computeNoteOnset = true; }
 	if (SP::vars._computeSimilarityMatrix && _similarityMatrix->isRealTime()) { SP::vars._computeMFCCs = true; }
-	if (SP::vars._computeNoteOnset && SP::vars._onsetDetectionFunctionEnum == NoteOnset::DataExtractionAlg::SIM_MATRIX_MEL_SPEC) { SP::vars._computeMFCCs = true; }
 
+	//audio interrupt occured
 	if (_hasBeenComputeInterrupt) {
-		if (_nextCalculationSample == -1) {
-			std::cout << "Interrupt, next calc. sample = " << AudioManager::getCurrentSample() << std::endl;
+		if (_nextCalculationSample == -1)
 			_nextCalculationSample = AudioManager::getCurrentSample();
-		}
-		std::cout << "Interrupt, forced next calc. sample to " << _nextCalculationSample << std::endl;
+
+		std::cout << "Interrupt, next calc. sample = " << _nextCalculationSample << std::endl;
 		_hasBeenComputeInterrupt = false;
 	}
-	else if (_nextCalculationSample > AudioManager::getCurrentSample() || _nextCalculationSample >= AudioManager::getNumSamples()) {
+
+	//if audio has not caught up with audio hop size on this frame, skip frame
+	if (_nextCalculationSample > AudioManager::getCurrentSample()) {
 		return;
 	}
 
@@ -111,6 +114,7 @@ void SignalProcessingManager::calculate()
 
 	//increment sample
 	_nextCalculationSample += float(AudioManager::getSampleRate()) / SP::vars._desiredCPS;
+	_nextCalculationSample = std::min(_nextCalculationSample, AudioManager::getNumSamples() - 1); //next calculation sample cannot be more than song length
 
 	//time how long calculation lags behind frames--
 	if (_nextCalculationSample < AudioManager::getCurrentSample()) {
@@ -127,7 +131,7 @@ void SignalProcessingManager::calculate()
 		SP::vars._desiredCPS *= SP::consts._CPSreduceFactor; //decrease desired cps
 		UIglobalFeatures::queueError("Cannot reach desired audio calculations per second (CPS), reducing CPS to " + std::to_string(SP::vars._desiredCPS)); //show error
 
-		reset(); 
+		reset();
 
 		SP::vars._wasCPSautoDecreased = true;
 		Vengine::MyTiming::resetTimer(_lagTimerId);
@@ -183,7 +187,7 @@ void SignalProcessingManager::initAlgorithmObjects(bool noteOnset, bool tempoDet
 			_similarityMatrix->reInit();
 		}
 		else {
-			_similarityMatrix = new SimilarityMatrixHandler();
+			_similarityMatrix = new SimilarityMatrixHandler(true);
 			_similarityMatrix->init(_master);
 		}
 	}

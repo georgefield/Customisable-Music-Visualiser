@@ -11,7 +11,6 @@
 #include "FilterBank.h"
 
 #include <set>
-#include "Limiter.h"
 
 class NoteOnset {
 public:
@@ -21,22 +20,22 @@ public:
 		HFC_DER_OF_LOG_ENERGY = 2,
 		SPECTRAL_DISTANCE = 3,
 		SPECTRAL_DISTANCE_WITH_PHASE = 4,
-		SIM_MATRIX_MEL_SPEC = 5,
+		SIM_MATRIX_MFCC = 5,
 		COMBINATION_FAST = 6,
 		COMBINATION = 7
 	};
 
 	NoteOnset(int historySize) :
-		_onsetDetectionHistory(historySize),
+		_rawOnsetDetectionHistory(historySize),
 		_onsetPeaks(historySize),
-		_CONVonsetDetectionHistory(historySize),
+		_outOnsetDetectionHistory(historySize),
 		_displayPeaks(historySize),
 
 
-		_thresholder(1000), //approx 10 seconds
+		_thresholder(1000), //~10 seconds
 
 		_ftForSpectralDistance(2),
-		_simMatrix(true),
+		_simMatrix(false), //dont use setters
 
 		_previousHFCenergy(0)
 	{}
@@ -51,9 +50,6 @@ public:
 
 		_sampleLastCalculated = -1;
 
-		//thresholding vars		
-		_lastAboveThreshold = false;
-
 		initSetters();
 
 		//init spectral distance fourier transform with smoothing features--
@@ -64,10 +60,12 @@ public:
 		_ftForSpectralDistance.setSmoothEffect(1, FourierTransform::FREQUENCY_CONVOLVE);
 		//--
 
-		_simMatrix._SMinfo._matrixSize = 2000 / SP::vars._desiredCPS;
+		_simMatrix._SMinfo._matrixSize = 0.15 * SP::vars._desiredCPS;
 		_simMatrix._SMinfo._useFuture = true;
+		_simMatrix._SMinfo._contrastFactor = 10.0f;
+		_simMatrix._SMinfo._measureType = PERCUSSION;
 		_simMatrix.init(_m);
-		_simMatrix.linkToMelSpectrogram();
+		_simMatrix.linkToMFCCs(1, SP::consts._numMelBands);
 	}
 
 	void reInit() {
@@ -75,15 +73,9 @@ public:
 
 		_onsetPeaks.clear();
 
-		//thresholding vars
-		_lastAboveThreshold = false;
-
 		_ftForSpectralDistance.reInit();
 
-		_simMatrix._SMinfo._matrixSize = 2000 / SP::vars._desiredCPS;
-		_simMatrix._SMinfo._useFuture = true;
 		_simMatrix.reInit();
-		_simMatrix.linkToMelSpectrogram();
 	}
 
 	void calculateNext(
@@ -91,11 +83,8 @@ public:
 		bool convolve
 	);
 
-	float getOnset() { return _onsetDetectionHistory.newest(); }
-	History<float>* getOnsetHistory(bool convolved) {
-		if (convolved) return &_CONVonsetDetectionHistory;
-		else return &_onsetDetectionHistory;
-	}
+	float getOnset() { return _outOnsetDetectionHistory.newest(); }
+	History<float>* getOnsetHistory(bool convolved) { return &_outOnsetDetectionHistory; }
 
 	History<Peak>* getPeakHistory() { return &_onsetPeaks; }
 	History<float>* getDisplayPeaks() { return &_displayPeaks; }
@@ -114,19 +103,18 @@ private:
 	float HFCderivativeOfLogEnergy();
 	float _previousHFCenergy;
 	float spectralDistance();
-	float spectralDistanceWithPhase();
-	float similarityMatrixMelSpectrogram();
+	float weightedPhaseDeviation();
+	float similarityMatrixMFCC();
 	float combinationFast();
 	float combination();
 
-	History<float> _onsetDetectionHistory;
-	History<float> _CONVonsetDetectionHistory;
+	History<float> _rawOnsetDetectionHistory;
+	History<float> _outOnsetDetectionHistory;
 
 	Threshold _thresholder;
 
 	History<float> _displayPeaks;
 	History<Peak> _onsetPeaks; //in sample time
-	bool _lastAboveThreshold;
 
 	void initSetters();
 	void deleteSetters();

@@ -125,7 +125,7 @@ public:
 			measure /= (_vectorMagnitudeHistory.newest() * _vectorMagnitudeHistory.get(i));
 
 			//increase contrast
-			measure = 1.0f - (contrastFactor * (1.0f - measure));
+			measure = std::max(1.0f - (contrastFactor * (1.0f - measure)), 0.0f);
 
 			setCoord(i, 0, false, measure);
 			setCoord(0, i, false, measure);

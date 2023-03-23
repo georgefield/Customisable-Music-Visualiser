@@ -5,6 +5,11 @@
 #include "History.h"
 #include "Peak.h"
 
+struct ValueSamplePair {
+	float value;
+	int sample;
+};
+
 class Threshold {
 public:
 	Threshold(int numValuesToAverageOver) :
@@ -15,9 +20,9 @@ public:
 	void addValue(float value, int sample = -1) {
 		_sortedValues.insert(value);
 		if (_valuesAddedInTimeOrder.full()) {
-			removeOneOfValue(_valuesAddedInTimeOrder.oldest());
+			removeOneOfValue(_valuesAddedInTimeOrder.oldest().value);
 		}
-		_valuesAddedInTimeOrder.add(value, sample);
+		_valuesAddedInTimeOrder.add({ value, sample });
 	}
 
 	bool testThreshold(float value, float topXpercent) {
@@ -35,7 +40,7 @@ public:
 	bool getLastPeak(float topXpercent, Peak& out) {
 
 		//when first above threshold clear vectors
-		if (!aboveThreshold && testThreshold(_valuesAddedInTimeOrder.newest(), topXpercent)) {
+		if (!aboveThreshold && testThreshold(_valuesAddedInTimeOrder.newest().value, topXpercent)) {
 			if (!aboveThreshold) {
 				samplesOfPointsAboveThreshold.clear();
 				valuesOfPointsAboveThreshold.clear();
@@ -43,7 +48,7 @@ public:
 			}
 		}
 		//only choose peak onset and salience after value goes to below half the threshold
-		else if (aboveThreshold && !testThreshold(_valuesAddedInTimeOrder.newest() * 2, topXpercent)){
+		else if (aboveThreshold && !testThreshold(_valuesAddedInTimeOrder.newest().value * 2, topXpercent)) {
 			float integral = 0;
 			float weightedSum = 0;
 			float max = 0;
@@ -61,10 +66,10 @@ public:
 
 		//while above threshold add info the vectors that choose the peak
 		if (aboveThreshold) {
-			samplesOfPointsAboveThreshold.push_back(_valuesAddedInTimeOrder.newestSample());
-			valuesOfPointsAboveThreshold.push_back(_valuesAddedInTimeOrder.newest());
+			samplesOfPointsAboveThreshold.push_back(_valuesAddedInTimeOrder.newest().sample);
+			valuesOfPointsAboveThreshold.push_back(_valuesAddedInTimeOrder.newest().value);
 		}
-		
+
 		return false;
 	}
 
@@ -107,9 +112,7 @@ private:
 		}
 	}
 
-	History<float> _valuesAddedInTimeOrder;
-
-
+	History<ValueSamplePair> _valuesAddedInTimeOrder;
 
 	std::multiset<float> _sortedValues;
 };

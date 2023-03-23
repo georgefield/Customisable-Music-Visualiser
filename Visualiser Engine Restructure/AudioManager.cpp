@@ -42,9 +42,11 @@ bool AudioManager::load(std::string filePath)
 
 	_audioFileName = filePath.substr(filePath.find_last_of("/") + 1);
 	_audioLoadedThisFrame = true;
+
 	_currentSample = 0;
 	_stickySample = -1;
-	SignalProcessingManager::computeAudioInterrupt(0);
+
+	SignalProcessingManager::audioInterruptOccured(0);
 
 	return true;
 }
@@ -53,7 +55,8 @@ void AudioManager::play()
 {
 	if (miniaudio.isLoaded()) {
 		miniaudio.playAudio();
-		Vengine::MyTiming::resetTimer(_currentSampleExtraPrecisionTimerId);
+
+		SignalProcessingManager::audioInterruptOccured(_currentSample);
 	}
 }
 
@@ -61,23 +64,27 @@ void AudioManager::pause()
 {
 	if (miniaudio.isLoaded()) {
 		miniaudio.pauseAudio();
-		Vengine::MyTiming::stopTimer(_currentSampleExtraPrecisionTimerId);
+
+		SignalProcessingManager::audioInterruptOccured(_currentSample);
 	}
 }
 
 void AudioManager::seekToSample(int sample) {
 
 	if (miniaudio.isLoaded()){
+		//sanitise input
 		if (sample < 0)
 			sample = 0;
 		if (sample >= getNumSamples())
 			sample = getNumSamples() - 1;
 
 		miniaudio.seekToSample(sample);
+
+		//reset current sample
 		_currentSample = sample;
 		_stickySample = -1;
-		SignalProcessingManager::computeAudioInterrupt(sample);
-		Vengine::MyTiming::resetTimer(_currentSampleExtraPrecisionTimerId);
+
+		SignalProcessingManager::audioInterruptOccured(sample);
 	}
 }
 
@@ -102,31 +109,25 @@ int AudioManager::getCurrentSample()
 {
 	if (miniaudio.isLoaded()) {
 
-		//if finished return length
-		if (miniaudio.isFinished()) {
-			_currentSample = miniaudio.getAudioDataLength() - 1;
-			return _currentSample;
+		if (isAudioPlaying()) {
+			if (_stickySample != miniaudio.getCurrentSample()) { //if mini audio not stuck on same sample
+				_stickySample = miniaudio.getCurrentSample(); //update sticky sample
+
+				Vengine::MyTiming::resetTimer(_currentSampleExtraPrecisionTimerId); //start timer to get extra 
+				Vengine::MyTiming::startTimer(_currentSampleExtraPrecisionTimerId);
+			}
+
+			//add extra samples for extra precision
+			int extraSamples = Vengine::MyTiming::readTimer(_currentSampleExtraPrecisionTimerId) * getSampleRate();
+			_currentSample = miniaudio.getCurrentSample() + extraSamples;
+			
+			//check not over num samples
+			if (_currentSample > getNumSamples()) {
+				_currentSample = getNumSamples() - 1;
+			}
 		}
 
-		if (!miniaudio.isPlaying()) {
-			return _currentSample; 
-		}
-
-		//if playing, interpolate between miniaudio sticky samples by restarting a timer every time miniaudio correctly updates
-		if (_stickySample != miniaudio.getCurrentSample()) {
-			_stickySample = miniaudio.getCurrentSample();
-
-			Vengine::MyTiming::resetTimer(_currentSampleExtraPrecisionTimerId);
-			Vengine::MyTiming::startTimer(_currentSampleExtraPrecisionTimerId);
-
-			_currentSample = miniaudio.getCurrentSample();
-			return _currentSample;
-		}
-	
-		//if on sticky sample for 2 frame add a time calculated amount of samples
-		_currentSample = miniaudio.getCurrentSample() + (Vengine::MyTiming::readTimer(_currentSampleExtraPrecisionTimerId) * miniaudio.getSampleRate());
 		return _currentSample;
-
 	}
 	return -1;
 }

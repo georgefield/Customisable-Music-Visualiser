@@ -225,7 +225,7 @@ void FourierTransform::beginCalculation()
 }
 
 void FourierTransform::endCalculation() {
-	_current->addWorkingArrayToHistory(_m->_currentSample);
+	_current->addWorkingArrayToHistory();
 
 	//calculate low res log scale output
 	memset(_lowResOutputLogScale, 0.0f, _lowResOutputSize * sizeof(float));

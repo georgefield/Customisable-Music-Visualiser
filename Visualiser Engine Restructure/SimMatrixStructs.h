@@ -23,6 +23,8 @@ struct SimMatInfo {
 	float _cutoffHigh = 20000;
 	float _cutoffSmoothFactor = 0.0f;
 	int _downscale = 1;
+	MeasureType _measureType = SIMILARITY;
+	float _contrastFactor = 5.0f;
 
 	friend bool operator==(SimMatInfo info1, SimMatInfo info2) {
 		bool isEqual = info1._useFuture == info2._useFuture &&

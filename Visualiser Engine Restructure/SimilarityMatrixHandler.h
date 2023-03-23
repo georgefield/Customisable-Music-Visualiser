@@ -6,7 +6,7 @@ class SimilarityMatrixHandler
 {
 public:
 
-	SimilarityMatrixHandler(bool isForNoteOnset = false);
+	SimilarityMatrixHandler(bool useSetters);
 	~SimilarityMatrixHandler();
 
 	void init(Master* master);
@@ -37,7 +37,7 @@ private:
 	FourierTransform* _fourierTransform;
 
 	int _samplesAheadForFutureMatrix;
-	bool _isForNoteOnset;
+	bool _useSetters;
 
 	int _counterForDownscale;
 

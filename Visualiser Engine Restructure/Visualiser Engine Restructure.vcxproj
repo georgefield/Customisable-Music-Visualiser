@@ -182,7 +182,6 @@
     <ClInclude Include="NoteOnset.h" />
     <ClInclude Include="History.h" />
     <ClInclude Include="Kernels.h" />
-    <ClInclude Include="Limiter.h" />
     <ClInclude Include="MainProgram.h" />
     <ClInclude Include="Master.h" />
     <ClInclude Include="Peak.h" />

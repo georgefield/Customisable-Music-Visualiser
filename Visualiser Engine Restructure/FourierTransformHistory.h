@@ -23,9 +23,9 @@ public:
 		return _vecHistory.workingArray();
 	}
 
-	void addWorkingArrayToHistory(int currentSample = -1)
+	void addWorkingArrayToHistory()
 	{
-		_vecHistory.addWorkingArrayToHistory(currentSample);
+		_vecHistory.addWorkingArrayToHistory();
 	}
 
 	int numHarmonics() {

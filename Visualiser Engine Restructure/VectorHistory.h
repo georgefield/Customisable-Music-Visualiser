@@ -75,9 +75,9 @@ public:
 		return _history.oldest(); //work on oldest entries
 	}
 
-	void addWorkingArrayToHistory(int currentSample = -1) //call after setting working array values to what you want
+	void addWorkingArrayToHistory() //call after setting working array values to what you want
 	{
-		_history.add(_history.oldest(), currentSample);
+		_history.add(_history.oldest());
 		_added++;
 	}
 

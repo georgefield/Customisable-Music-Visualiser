@@ -229,7 +229,7 @@ struct Agent {
 		_score(0),
 		_prediction(0)
 	{
-		_peakHistory = new History<float>(DixonAlgVars::MAX_AGENT_HISTORY_LENGTH);
+		_peakHistory = new History<Peak>(DixonAlgVars::MAX_AGENT_HISTORY_LENGTH);
 		id = rand();
 	}
 
@@ -246,12 +246,12 @@ struct Agent {
 
 		_score += peak.salience;
 
-		_peakHistory->add(peak.salience, peak.onset);
+		_peakHistory->add({ peak.onset, peak.salience });
 	}
 
 	void updatePeaks(int sampleRate, int currentSample) {
-		while (_peakHistory->entries() > 0 && currentSample - _peakHistory->oldestSample() > sampleRate * DixonAlgVars::MAX_TIME_PEAKS_SCORED) {
-			_score -= _peakHistory->oldest();
+		while (_peakHistory->entries() > 0 && currentSample - _peakHistory->oldest().onset > sampleRate * DixonAlgVars::MAX_TIME_PEAKS_SCORED) {
+			_score -= _peakHistory->oldest().salience;
 			_peakHistory->removeOldest();
 		}
 	}
@@ -261,7 +261,7 @@ struct Agent {
 	int _prediction;
 	float _score;
 	float _accountingForIntervalScore;
-	History<float>* _peakHistory;
+	History<Peak>* _peakHistory;
 };
 
 
@@ -404,7 +404,7 @@ struct AgentSet {
 
 	void removeTimedOutAgents(Peak lastPeak) {
 		for (auto A = set.begin(); A != set.end(); ) {
-			if (lastPeak.onset - (*A)->_peakHistory->newestSample() > DixonAlgVars::SECONDS_UNTIL_TIMEOUT * _sampleRate) {
+			if (lastPeak.onset - (*A)->_peakHistory->newest().onset > DixonAlgVars::SECONDS_UNTIL_TIMEOUT * _sampleRate) {
 				A = erase(A);
 			}
 			else {

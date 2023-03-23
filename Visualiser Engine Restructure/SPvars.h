@@ -20,6 +20,11 @@ struct SPvarsStruct {
 	int _convolveWindowSize = 7;
 	float _thresholdPercentForPeak = 7.5;
 
+	float _detectionFunctionGain = 1.0f;
+	float _detectionFunctionCompressionThreshold = 1.0f;
+	float _detectionFunctionCompressionRatio = 1.0f;
+	bool _clampBetween0and1 = false;
+
 	//tempo detection
 	float MIN_TEMPO = 40;
 	float MAX_TEMPO = 230;
@@ -34,6 +39,7 @@ struct SPvarsStruct {
 	//other properties--
 	float _desiredCPS = 100; //desired calculations per second
 	float _masterFTgain = 8.0f;
+	float _clearColour[3] = { 0.1, 0.1, 0.1 };
 	//--
 };
 

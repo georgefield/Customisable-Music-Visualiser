@@ -69,7 +69,7 @@ float SelfSimilarityMatrix::checkerboardKernel(int i, int j) {
 	}
 
 	//sqrt(2) * middle is max distance from middle - distance from middle * sign 
-	return ((1.414 * middle) - sqrt((i - middle) * (i - middle) + (j - middle) * (j - middle))) * sign;
+	return ((1.414 * middle) - sqrt((i - middle) * (i - middle) + (j - middle) * (j - middle))) * sign / (1.414 * middle); 
 }
 
 void SelfSimilarityMatrix::calculateSimilarityMeasure()
@@ -139,6 +139,11 @@ void SelfSimilarityMatrix::linkToMFCCs(MFCCs* mfcc, int coeffLow, int coeffHigh)
 {
 	_coeffLow = coeffLow;
 	_coeffHigh = coeffHigh;
+
+	//sanity check
+	assert(_coeffLow > 0);
+	assert(_coeffHigh <= SP::consts._numMelBands);
+	assert(_coeffLow < _coeffHigh);
 
 	_mfccsPtr = mfcc;
 	_linkedTo = MFCC;

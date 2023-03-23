@@ -12,23 +12,18 @@ public:
 	History(int size) : _start(size - 1), _size(size), _entries(0), _usingContiguousArray(false) {
 		_data = new T[_size];
 		memset(_data, NULL, _size * sizeof(T));
-
-		_assocSampleData = new int[_size];
-		memset(_assocSampleData, -1, _size * sizeof(int)); //-1 for no entry
 	}
 	~History() {
 		delete[] _data;
-		delete[] _assocSampleData;
 		if (_usingContiguousArray) {
 			delete[] _contiguousArray;
 		}
 	}
 	
 
-	void add(T value, int currentSample = -1) {
+	void add(T value) {
 		_start = (_start == 0 ? _size - 1 : _start - 1);
 		_data[_start] = value;
-		_assocSampleData[_start] = currentSample;
 		_entries = (_entries >= _size ? _entries : _entries + 1);
 	};
 
@@ -40,6 +35,26 @@ public:
 		_start = _size - 1;
 		_entries = 0;
 		if (eraseData) { memset(_data, NULL, _size * sizeof(T)); memset(_data, -1, _size * sizeof(int)); }
+	}
+
+	void resize(int size) {
+
+		T* tmpData = new T[size];
+		getAsContiguousArray();
+		memcpy(tmpData, _contiguousArray, std::min(size, _size) * sizeof(T)); //copy ordered array to new data array
+
+		_usingContiguousArray = false;
+		delete[] _contiguousArray; //delete contiguous array
+
+		if (size > _size) //if new size bigger than current fill rest with NULL
+			memset(&tmpData[_size], NULL, (size - _size) * sizeof(T));
+
+		delete[] _data; //free old data memory
+		_data = tmpData; //point to resized array
+
+		_start = 0; //start is now 0 (as got as contiguous array)
+		_size = size; //set new size
+
 	}
 
 	//getters
@@ -87,14 +102,6 @@ public:
 		if (_entries == 0) { Vengine::warning("Get called on history that has no entries"); }
 		return _data[(_start + recency) % _size]; 
 	}
-	
-	int oldestSample() { return getSample(_entries - 1); };
-	int newestSample() { return getSample(0); }
-	int previousSample() { return getSample(1); }
-	int getSample(int recency) {
-		if (_entries == 0) { Vengine::warning("Get sample called on history that has no entries"); }
-		return _assocSampleData[(_start + recency) % _size];
-	}
 
 	//              Start
 	//                V                                //Start
@@ -111,9 +118,14 @@ public:
 	int entries() { return _entries; }
 	bool full() { return _entries >= _size; }
 	bool empty() { return _entries == 0; }
+
+	void debug() {
+		for (int i = 0; i < totalSize(); i++) {
+			std::cout << get(i) << std::endl;
+		}
+	}
 protected:
 	T* _data;
-	int* _assocSampleData;
 
 	bool _usingContiguousArray;
 	float* _contiguousArray;

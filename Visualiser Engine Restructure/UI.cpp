@@ -10,8 +10,6 @@
 
 #include "PFDapi.h"
 
-#define FLOAT_MAX 3.4028235E38F
-
 
 UI::UI()
 {}
@@ -27,9 +25,6 @@ void UI::init(Vengine::Window* window, Vengine::InputManager* inputManager) {
 	_sidebarSizePx = 200;
 	_toolbarSizePx = _sidebarSizePx/_window->getAspectRatio();
 }
-
-
-
 
 
 void UI::toolbar() {
@@ -149,7 +144,7 @@ void UI::toolbar() {
 	//load song
 	if (ImGui::Button("Load song")) {
 		std::string chosenAudio;
-		SignalProcessingManager::computeAudioInterrupt();
+		SignalProcessingManager::audioInterruptOccured();
 		PFDapi::fileChooser("Choose audio", Vengine::IOManager::getProjectDirectory(), chosenAudio, { "Audio files", "*.wav *.mp3 *.flac" }, true);
 		AudioManager::load(chosenAudio);
 	}
@@ -209,10 +204,9 @@ void UI::toolbar() {
 
 
 	//background colour picker--
-	static float pickedClearColour[3] = { 0.1, 0.1, 0.1 };
-	ImGui::ColorEdit3("Background colour", pickedClearColour, ImGuiColorEditFlags_NoInputs);
+	ImGui::ColorEdit3("Background colour", SP::vars._clearColour, ImGuiColorEditFlags_NoInputs);
 	if (ImGui::IsItemEdited()) {
-		glClearColor(pickedClearColour[0], pickedClearColour[1], pickedClearColour[2], 1.0f);
+		glClearColor(SP::vars._clearColour[0], SP::vars._clearColour[1], SP::vars._clearColour[2], 1.0f);
 	}
 	//--
 
@@ -315,6 +309,7 @@ void UI::displayErrors()
 
 void UI::processInput()
 {
+	//shortcuts always availiable
 	if (_inputManager->isKeyDown(SDLK_LCTRL) && _inputManager->isKeyPressed(SDLK_a)) { //ctrl a fullscreen
 		_showUi = !_showUi;
 	}
@@ -327,7 +322,11 @@ void UI::processInput()
 	if (_inputManager->isKeyDown(SDLK_LCTRL) && _inputManager->isKeyPressed(SDLK_r)) { //ctrl r reset signal processing
 		SignalProcessingManager::reset();
 	}
+	if (_inputManager->isKeyDown(SDLK_LCTRL) && _inputManager->isKeyPressed(SDLK_s)) { //ctrl s save visualiser
+		_save = true;
+	}
 
+	//play/pause audio only when not typing in imgui
 	if (!ImGui::GetIO().WantCaptureKeyboard) {
 
 		if (_inputManager->isKeyPressed(SDLK_SPACE)) {
@@ -342,10 +341,6 @@ void UI::processInput()
 			else {
 				AudioManager::play();
 			}
-		}
-
-		if (_save == false && _inputManager->isKeyDown(SDLK_LCTRL) && _inputManager->isKeyPressed(SDLK_s)) {
-			_save = true;
 		}
 	}
 }
@@ -675,7 +670,7 @@ void UI::noteOnsetUi()
 	ImGui::RadioButton("HFC derivative of log energy", &SP::vars._onsetDetectionFunctionEnum, NoteOnset::HFC_DER_OF_LOG_ENERGY);
 	ImGui::RadioButton("Spectral distance", &SP::vars._onsetDetectionFunctionEnum, NoteOnset::SPECTRAL_DISTANCE);
 	ImGui::RadioButton("Weighted phase deviation", &SP::vars._onsetDetectionFunctionEnum, NoteOnset::SPECTRAL_DISTANCE_WITH_PHASE);
-	ImGui::RadioButton("Similarity matrix", &SP::vars._onsetDetectionFunctionEnum, NoteOnset::SIM_MATRIX_MEL_SPEC);
+	ImGui::RadioButton("Similarity matrix", &SP::vars._onsetDetectionFunctionEnum, NoteOnset::SIM_MATRIX_MFCC);
 	ImGui::RadioButton("Combination (fast)", &SP::vars._onsetDetectionFunctionEnum, NoteOnset::COMBINATION_FAST);
 	ImGui::RadioButton("Combination", &SP::vars._onsetDetectionFunctionEnum, NoteOnset::COMBINATION);
 
@@ -685,9 +680,25 @@ void UI::noteOnsetUi()
 	}
 
 	ImGui::Text("Onset detection function:");
-	imguiHistoryPlotter(SignalProcessingManager::_noteOnset->getOnsetHistory(SP::vars._convolveOnsetDetection));
+	imguiHistoryPlotter(SignalProcessingManager::_noteOnset->getOnsetHistory(SP::vars._convolveOnsetDetection), 0, 1);
 	ImGui::Text("Inferred peaks (passed to tempo):");
-	imguiHistoryPlotter(SignalProcessingManager::_noteOnset->getDisplayPeaks());
+	imguiHistoryPlotter(SignalProcessingManager::_noteOnset->getDisplayPeaks(), 0, 1);
+
+	//detection function compression--
+	if (ImGui::CollapsingHeader("Compression")) {
+		ImGui::SliderFloat("Gain", &SP::vars._detectionFunctionGain, 0.0f, 10.0f, "%.2f");
+		ImGui::SliderFloat("Compression Threshold", &SP::vars._detectionFunctionCompressionThreshold, 0.0f, 1.0f, "%.2f");
+		ImGui::SliderFloat("Compression Ratio", &SP::vars._detectionFunctionCompressionRatio, 0.01f, 10.0f, "%.2f");
+		ImGui::Checkbox("Clamp", &SP::vars._clampBetween0and1);
+
+		if (ImGui::Button("Reset")) {
+			SP::vars._detectionFunctionGain = 1.0f;
+			SP::vars._detectionFunctionCompressionThreshold = 1.0f;
+			SP::vars._detectionFunctionCompressionRatio = 1.0f;
+			SP::vars._clampBetween0and1 = false;
+		}
+	}
+	//--
 
 	ImGui::SliderFloat("Peak threshold (top X%)", &SP::vars._thresholdPercentForPeak, 1.0f, 25.0f);
 
@@ -852,16 +863,16 @@ void UI::selfSimilarityMatrixUi()
 	// changes that dont require reinit--
 	//measure type of similarity matrix
 	ImGui::Text("Matrix measure type:");
-	ImGui::RadioButton("Similarity", &SP::vars._matrixMeasureEnum, SIMILARITY); ImGui::SameLine();
-	ImGui::RadioButton("Percussion", &SP::vars._matrixMeasureEnum, PERCUSSION);
+	ImGui::RadioButton("Similarity", (int*)&SignalProcessingManager::_similarityMatrix->_SMinfo._measureType, SIMILARITY); ImGui::SameLine();
+	ImGui::RadioButton("Percussion", (int*)&SignalProcessingManager::_similarityMatrix->_SMinfo._measureType, PERCUSSION);
+	UIglobalFeatures::_uiSMinfo._measureType = SignalProcessingManager::_similarityMatrix->_SMinfo._measureType;
 
 	//compute texture
 	ImGui::Checkbox("Create texture", &SP::vars._computeTexture);
 	
 	//contrast
-	if (&SP::vars._computeTexture) {
-		ImGui::SliderFloat("Contrast Factor", &SP::vars._similarityMatrixTextureContrastFactor, 1, 100, "%.3f", ImGuiSliderFlags_Logarithmic);
-	}
+	ImGui::SliderFloat("Contrast Factor", &SignalProcessingManager::_similarityMatrix->_SMinfo._contrastFactor, 1, 100, "%.3f", ImGuiSliderFlags_Logarithmic);
+	UIglobalFeatures::_uiSMinfo._contrastFactor = SignalProcessingManager::_similarityMatrix->_SMinfo._contrastFactor;
 	// --
 
 	ImGui::EndChild();
@@ -919,7 +930,7 @@ void UI::processFileMenuSelection()
 	if (_load) {
 
 		std::string visualiserPath = "";
-		SignalProcessingManager::computeAudioInterrupt();
+		SignalProcessingManager::audioInterruptOccured();
 		if (PFDapi::folderChooser("Chooser folder containing the .cfg of the visualiser to load",
 			Vengine::IOManager::getProjectDirectory() + "/Visualisers", visualiserPath, false))
 		{
@@ -970,7 +981,7 @@ bool UI::textInputPrompt(const std::string& message, char* buf, int bufSize, boo
 	return confirmedName; //return true when user either closes window or confirms name of copy
 }
 
-void UI::imguiHistoryPlotter(History<float>* history)
+void UI::imguiHistoryPlotter(History<float>* history, float scaleMin, float scaleMax)
 {
-	ImGui::PlotLines("##", history->dataStartPtr(), history->totalSize(), history->firstPartOffset(), 0, 3.4028235E38F, 3.4028235E38F, ImVec2(360, 60));
+	ImGui::PlotLines("##", history->dataStartPtr(), history->totalSize(), history->firstPartOffset(), 0, scaleMin, scaleMax, ImVec2(360, 60));
 }
