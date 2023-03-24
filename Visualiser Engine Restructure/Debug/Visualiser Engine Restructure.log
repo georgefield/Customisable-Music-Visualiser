@@ -1,5 +1,5 @@
 ﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(517,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (Visualiser.vcxproj).  This can lead to incorrect clean and rebuild behavior.
-  NoteOnset.cpp
+  UI.cpp
 C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(18,14): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
           with
           [
@@ -10,6 +10,8 @@ C:\Users\George\Documents\3rd year project\Project\Vengine\Viewport.h(19,15): wa
           [
               T=float
           ]
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(43,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(50,26): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Tools.h(127,38): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
           with
           [
@@ -50,8 +52,6 @@ C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure
           [
               T=float
           ]
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(43,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Kernels.h(50,26): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Threshold.h(55,22): warning C4018: '<': signed/unsigned mismatch
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\Threshold.h(79,50): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\SPvars.h(42,43): warning C4305: 'initializing': truncation from 'double' to 'float'
@@ -71,12 +71,38 @@ C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(26,3): warning C4091: 'static ': ignored on left of 'NoteOnset::DataExtractionAlg' when no variable is declared
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(57,1): warning C4305: 'argument': truncation from 'double' to 'float'
 C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.h(63,41): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.cpp(65,7): warning C4101: 'aboveThreshold': unreferenced local variable
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.cpp(93,20): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.cpp(112,20): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.cpp(134,20): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.cpp(160,35): warning C4305: 'initializing': truncation from 'double' to 'float'
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.cpp(169,20): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.cpp(207,47): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
-C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\NoteOnset.cpp(218,67): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(52,23): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(61,23): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(166,28): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(171,46): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(175,24): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(176,24): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(242,32): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(276,30): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(277,30): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(383,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(483,37): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(497,35): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(500,39): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\DixonAlgorithmStructures.h(513,18): warning C4018: '<=': signed/unsigned mismatch
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(26,33): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(37,61): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(37,57): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(142,83): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(188,77): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(232,77): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(232,59): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(233,77): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(233,34): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(358,14): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(359,14): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(542,20): warning C4018: '<': signed/unsigned mismatch
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(637,30): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(640,108): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(641,110): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(842,134): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(843,136): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(855,56): warning C4244: '*=': conversion from 'const float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(856,80): warning C4244: '*=': conversion from 'const float' to 'int', possible loss of data
+C:\Users\George\Documents\3rd year project\Project\Visualiser Engine Restructure\UI.cpp(961,53): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
   Visualiser Engine Restructure.vcxproj -> C:\Users\George\Documents\3rd year project\Project\Debug\Visualiser Engine Restructure.exe

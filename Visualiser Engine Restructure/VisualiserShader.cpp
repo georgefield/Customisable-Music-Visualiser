@@ -41,6 +41,77 @@ void VisualiserShader::updateShaderName(std::string path)
 	}
 }
 
+//vvv lots of string manip
+void VisualiserShader::fixErrorMessage(std::string& errorMsg)
+{
+	std::string errorMsgSave = errorMsg; //save in case of failure
+
+	//get message by line in order--
+	std::vector<std::string> msgLineByLine;
+	int nextNL = errorMsg.find_first_of('\n');
+	while (nextNL != -1) {
+		if (nextNL != 0)
+			msgLineByLine.push_back(errorMsg.substr(0, nextNL)); //get error message by line
+		errorMsg = errorMsg.substr(nextNL + 1);
+		nextNL = errorMsg.find_first_of('\n');
+	}
+	if (errorMsg.size()	 != 0)
+		msgLineByLine.push_back(errorMsg); //get final line
+	//--
+
+	//change error line numbers--
+	int count = 0;
+	for (auto& it : msgLineByLine) {
+		if (count == 0) {
+			count++;
+			continue;
+		}
+
+		std::string errorLineNum = it;
+		std::string prefix;
+		std::string postfix;
+		prefix = errorLineNum.substr(0, errorLineNum.find_first_of(":"));
+		errorLineNum = errorLineNum.substr(errorLineNum.find_first_of(":") + 1); //after first 2 colons
+		prefix += errorLineNum.substr(0, errorLineNum.find_first_of(":"));
+		prefix += ":";
+		errorLineNum = errorLineNum.substr(errorLineNum.find_first_of(":") + 1);
+		postfix = ":";
+		postfix += errorLineNum.substr(errorLineNum.find_first_of(":") + 1);
+		errorLineNum = errorLineNum.substr(0, errorLineNum.find_first_of(":")); //before next colon
+
+		int errorLineNumI = -1;
+		try {
+			errorLineNumI = std::stoi(errorLineNum);
+			errorLineNumI -= 103;//number of lines in shader prefix
+		}
+		catch(std::exception e){
+			Vengine::warning("Shader error conversion failed: " + (std::string)e.what());
+			errorMsg = errorMsgSave;
+			return;
+		}
+
+		it = prefix + std::to_string(errorLineNumI) + postfix;
+
+		count++;
+	}
+	//--
+
+	//set error message
+	errorMsg = _shaderName + ".visfrag\n";
+	errorMsg += VisualiserManager::shadersFolder() + "/" + _shaderName + ".visfrag\n";
+
+	count = 0;
+	for (auto& it : msgLineByLine) {
+		if (count == 0) {
+			count++;
+			continue;
+		}
+
+		errorMsg += it + "\n";
+		count++;
+	}
+}
+
 Vengine::GLSLProgram* VisualiserShader::compile()
 {
 	std::string sourceCode;
@@ -55,6 +126,7 @@ Vengine::GLSLProgram* VisualiserShader::compile()
 	std::string errorOut;
 	Vengine::GLSLProgram* program = Vengine::ResourceManager::reloadShaderProgram(VisVars::_commonVertShaderPath, _interpretedShaderSourcePath, errorOut);
 	if (program == nullptr) {
+		fixErrorMessage(errorOut);
 		UIglobalFeatures::addSyntaxErrorToWindow(errorOut);
 	}
 	return program;

@@ -166,7 +166,6 @@ void SpriteManager::processInput(Vengine::InputManager* inputManager)
 
 void SpriteManager::updateDepthSortedSprites()
 {
-	std::cout << "Sorting";
 	_depthSortedSpritePtrs.clear();
 	_depthSortedSpritePtrs.reserve(_userAddedSpritePtrs.size());
 

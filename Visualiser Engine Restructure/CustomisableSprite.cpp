@@ -251,7 +251,7 @@ void CustomisableSprite::updateShader()
 		_visualiserShader = tmp;
 	}
 	else {
-		_resetShaderCombo;
+		_resetShaderCombo = true;
 		strcpy_s(_spriteInfo.shaderFilename, sizeof("simple.visfrag"), "simple.visfrag");
 		_visualiserShader = VisualiserShaderManager::getShader(VisualiserManager::shadersFolder() + "/" + _spriteInfo.shaderFilename);
 	}

@@ -1,5 +1,0 @@
-void main(){
-
-
-    vis_outputColour = vis_inColour * (1-vis_timeSinceLastBeat);
-}

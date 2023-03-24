@@ -16,16 +16,17 @@ void UIglobalFeatures::queueError(std::string message)
 
 const float ERROR_MESSAGE_DISPLAY_TIME = 3.0f;
 void UIglobalFeatures::displayErrors() {
-	if (_errorQueue.size() == 0) { return; }
-
-	//display oldest queued error for 1 second then pop from vector front
 	if (_errorMessageTimerId == -1) {
 		Vengine::MyTiming::createTimer(_errorMessageTimerId);
-		Vengine::MyTiming::startTimer(_errorMessageTimerId);
 	}
-	else if (Vengine::MyTiming::readTimer(_errorMessageTimerId) > ERROR_MESSAGE_DISPLAY_TIME) {
-		Vengine::MyTiming::resetTimer(_errorMessageTimerId);
+
+	if (_errorQueue.size() == 0)
+		return;
+	else
 		Vengine::MyTiming::startTimer(_errorMessageTimerId);
+
+	if (Vengine::MyTiming::readTimer(_errorMessageTimerId) > ERROR_MESSAGE_DISPLAY_TIME) {
+		Vengine::MyTiming::resetTimer(_errorMessageTimerId);
 
 		_errorQueue.erase(_errorQueue.begin());
 		return;
@@ -33,7 +34,6 @@ void UIglobalFeatures::displayErrors() {
 
 	//create window that only displays error text
 	ImGui::SetNextWindowPos(ImVec2(0,ImGui::GetMainViewport()->Size.y - 30));
-	ImGui::SetNextWindowFocus();
 
 	ImGui::Begin("Message", (bool*)0,
 		ImGuiWindowFlags_NoMove |
@@ -41,7 +41,7 @@ void UIglobalFeatures::displayErrors() {
 		ImGuiWindowFlags_AlwaysAutoResize
 	);
 
-	ImGui::Text(("Error: " + _errorQueue[0]).c_str());
+	ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.8f, 1.0f),("Error: " + _errorQueue[0]).c_str());
 
 	ImGui::End();
 }

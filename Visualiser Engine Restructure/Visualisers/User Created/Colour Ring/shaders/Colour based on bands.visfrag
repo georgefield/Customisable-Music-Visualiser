@@ -1,0 +1,5 @@
+void main(){
+
+    vec4 cheems = vec4(vis_FT0_energy, vis_FT1_energy * 8,vis_FT2_energy * 20,1.0f);
+    vis_outputColour = cheems * 8;
+}

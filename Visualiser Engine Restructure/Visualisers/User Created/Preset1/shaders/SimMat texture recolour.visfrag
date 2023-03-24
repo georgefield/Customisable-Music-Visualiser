@@ -1,8 +1,0 @@
-void main(){
-
-    float r = abs(clamp(texture(vis_spriteTexture,  vis_fragmentUV).r, 0, 1));
-    float g = abs(clamp(texture(vis_spriteTexture,  vis_fragmentUV).r, 0, 1) - 0.5);
-    float b = abs(clamp(texture(vis_spriteTexture,  vis_fragmentUV).r, 0, 1) - 1);
-
-    vis_outputColour = vec4(r,g,b,1.0f);
-}

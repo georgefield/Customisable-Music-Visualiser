@@ -37,5 +37,7 @@ private:
 	Vengine::GLSLProgram* _program;
 
 	void updateShaderName(std::string path); //string manip to get name from given path, called when init called
+
+	void fixErrorMessage(std::string& errorMsg);
 };
 

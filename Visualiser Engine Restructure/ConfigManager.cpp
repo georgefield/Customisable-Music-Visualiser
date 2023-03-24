@@ -91,7 +91,8 @@ bool ConfigManager::initVisualiserFromConfig(std::string configPath)
     SP::vars = *reinterpret_cast<SPvarsStruct*>(SPvarsBuffer); //lol
 
     delete[] SPvarsBuffer;
-
+    //set backgrounf colour
+    glClearColor(SP::vars._clearColour[0], SP::vars._clearColour[1], SP::vars._clearColour[2], 1.0f);
 
     //get SimMat data
     unsigned char* SMinfoBuffer = new unsigned char[sizeof(SimMatInfo)];

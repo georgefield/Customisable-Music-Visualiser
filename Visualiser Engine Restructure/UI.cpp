@@ -446,7 +446,7 @@ void UI::createShaderUi()
 
 void UI::syntaxErrorsUi()
 {
-	ImGui::Begin("Syntax errors", &_showSyntaxErrorsUi, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::Begin("Shader errors", &_showSyntaxErrorsUi, ImGuiWindowFlags_AlwaysAutoResize);
 
 	std::vector<std::string>* errorArr = UIglobalFeatures::getSyntaxErrorArray();
 	ImGui::Text(("Error history (" + std::to_string(errorArr->size()) + " entries)").c_str());
@@ -582,7 +582,7 @@ void UI::fourierTransformsUi()
 					smoothType = FourierTransform::SMOOTH;
 					ImGui::SliderFloat("Attack (s)", &ft->_FTinfo.attack, 0.0f, 2.0f);
 					ImGui::SliderFloat("Release (s)", &ft->_FTinfo.release, 0.0f, 2.0f);
-					ImGui::SliderFloat("Acceleration (max/s)", &ft->_FTinfo.maxAccelerationPerSecond, 0.0f, 2.0f);
+					ImGui::SliderFloat("Acceleration (max/s)", &ft->_FTinfo.maxAccelerationPerSecond, 0.0f, 5.0f);
 				}
 				else if (smoothTypeIndex == 2) {
 					smoothType = FourierTransform::TIME_CONVOLVE;
