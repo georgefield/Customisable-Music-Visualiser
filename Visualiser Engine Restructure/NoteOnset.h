@@ -9,6 +9,7 @@
 #include "SimilarityMatrixHandler.h"
 
 #include "FilterBank.h"
+#include "AudioManager.h"
 
 #include <set>
 
@@ -61,7 +62,7 @@ public:
 		//--
 
 		_simMatrix._SMinfo._matrixSize = 0.15 * SP::vars._desiredCPS;
-		_simMatrix._SMinfo._useFuture = true;
+		_simMatrix._SMinfo._useFuture = !AudioManager::isUsingLoopback();
 		_simMatrix._SMinfo._contrastFactor = 10.0f;
 		_simMatrix._SMinfo._measureType = PERCUSSION;
 		_simMatrix.init(_m);
@@ -75,6 +76,7 @@ public:
 
 		_ftForSpectralDistance.reInit();
 
+		_simMatrix._SMinfo._useFuture = !AudioManager::isUsingLoopback();
 		_simMatrix.reInit();
 	}
 

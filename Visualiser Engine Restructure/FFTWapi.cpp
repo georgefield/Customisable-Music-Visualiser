@@ -18,18 +18,18 @@ FFTWfft::FFTWfft(int windowSize) : //N is window size
 	_myComplexOutputHistory.init(_numHarmonics);
 }
 
-void FFTWfft::calculate(float* audioData, int currentSample, float* storage, float gain, float (*slidingWindowFunction)(float))
+void FFTWfft::calculate(float* audioData, int startPos, float* storage, float gain, float (*slidingWindowFunction)(float))
 {
 	//sliding window function = nullptr => no window function, use samples no function (rectangle window)
 	float* arrayToUse;
 	if (slidingWindowFunction == nullptr) {
-		arrayToUse = &(audioData[currentSample]); //saves copying samples to another array
+		arrayToUse = &(audioData[startPos]); //saves copying samples to another array
 	}
 	else {
 		//if not copy to new array applying window function
 		memset(_samplesAfterWindowFunction, 0.0f, sizeof(float) * _windowSize);
 		for (int i = 0; i < _windowSize; i++) {
- 			_samplesAfterWindowFunction[i] = slidingWindowFunction(float(i) / float(_windowSize)) * audioData[currentSample + i];
+ 			_samplesAfterWindowFunction[i] = slidingWindowFunction(float(i) / float(_windowSize)) * audioData[startPos + i];
 		}
 		arrayToUse = _samplesAfterWindowFunction;
 	}

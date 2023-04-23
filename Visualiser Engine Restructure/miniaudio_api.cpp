@@ -1,4 +1,5 @@
 #include "miniaudio_api.h"
+#include "SPvars.h"
 
 #define MINIAUDIO_IMPLEMENTATION
 #include <miniaudio.h>
@@ -18,7 +19,7 @@ miniaudio_api::miniaudio_api() :
     _fileLoaded(false),
     _memoryAllocated(false),
     _filePath(""),
-    _normalisedAudioData(nullptr)
+    _loadedAudioData(nullptr)
 {
 }
 
@@ -57,19 +58,19 @@ bool miniaudio_api::loadAudio(const std::string& filePath)
         Vengine::warning("Audio longer than max audio allowed (2,147,483,647 samples)");
         return false;
     }
-    _audioDataLength = int(numPCMframes); //we know it can be safely truncated, int32 max gives us ~6 hours audio max length
+    _loadedAudioDataLength = int(numPCMframes); //we know it can be safely truncated, int32 max gives us ~6 hours audio max length
 
-    _normalisedAudioData = new float[_audioDataLength];
+    _loadedAudioData = new float[_loadedAudioDataLength];
     _memoryAllocated = true;
 
     ma_uint64 framesRead;
-    ma_result resultGetData = ma_decoder_read_pcm_frames(&_decoder, _normalisedAudioData, _audioDataLength, &framesRead);
+    ma_result resultGetData = ma_decoder_read_pcm_frames(&_decoder, _loadedAudioData, _loadedAudioDataLength, &framesRead);
     if (resultGetData != MA_SUCCESS) {
         Vengine::warning("Could not get audio data");
         return false;
     }
 
-    if (framesRead != _audioDataLength) {
+    if (framesRead != _loadedAudioDataLength) {
         Vengine::warning("frames read =/= num frames, possible problem, file still loaded");
     }
 
@@ -96,7 +97,7 @@ void miniaudio_api::unloadAudio()
     }
 
     if (_memoryAllocated) {
-        delete[] _normalisedAudioData;
+        delete[] _loadedAudioData;
         _memoryAllocated = false;
     }
 }
@@ -119,7 +120,7 @@ void miniaudio_api::seekToSample(int sample)
 {
     assert(_fileLoaded);
     assert(sample >= 0);
-    assert(sample < _audioDataLength);
+    assert(sample < _loadedAudioDataLength);
 
     ma_sound_seek_to_pcm_frame(&_sound, sample);
 }
@@ -167,14 +168,14 @@ float* miniaudio_api::getAudioData()
 {
     assert(_fileLoaded);
 
-    return _normalisedAudioData;
+    return _loadedAudioData;
 }
 
 int miniaudio_api::getAudioDataLength()
 {
     assert(_fileLoaded);
 
-    return _audioDataLength;
+    return _loadedAudioDataLength;
 }
 
 int miniaudio_api::getSampleRate() {
@@ -184,55 +185,9 @@ int miniaudio_api::getSampleRate() {
     return _decoder.outputSampleRate;
 }
 
-void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
+void my_data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
 {
     ma_device_handle_backend_data_callback(pDevice, pOutput, pInput, frameCount);
-}
-
-void miniaudio_api::getDevices()
-{
-    ma_context context;
-    if (ma_context_init(NULL, 0, NULL, &context) != MA_SUCCESS) {
-        // Error.
-        printf("ERRRR");
-    }
-
-    ma_device_info* pPlaybackInfos;
-    ma_uint32 playbackCount;
-    ma_device_info* pCaptureInfos;
-    ma_uint32 captureCount;
-    if (ma_context_get_devices(&context, &pPlaybackInfos, &playbackCount, &pCaptureInfos, &captureCount) != MA_SUCCESS) {
-        // Error.
-        printf("EROOR");
-    }
-
-    // Loop over each device info and do something with it. Here we just print the name with their index. You may want
-    // to give the user the opportunity to choose which device they'd prefer.
-    for (ma_uint32 iDevice = 0; iDevice < playbackCount; iDevice += 1) {
-        printf("playback: %d - %s\n", iDevice, pPlaybackInfos[iDevice].name);
-    }
-
-    for (ma_uint32 iDevice = 0; iDevice < captureCount; iDevice += 1) {
-        printf("capture: %d - %s\n", iDevice, pCaptureInfos[iDevice].name);
-    }
-
-    ma_device_config config = ma_device_config_init(ma_device_type_capture);
-    config.capture.pDeviceID = &pPlaybackInfos[0].id;
-    config.capture.channelMixMode = ma_channel_mix_mode_default;
-    config.capture.format = ma_format_f32;
-    config.dataCallback = data_callback;
-    config.sampleRate = 44100;
-    config.pUserData = NULL;
-
-    ma_device device;
-    if (ma_device_init(&context, &config, &device) != MA_SUCCESS) {
-        // Error
-        printf("EOROR");
-    }
-
-    ma_device_start(&device);
-
-    
 }
 
 //private-----------
@@ -272,3 +227,87 @@ bool miniaudio_api::initSoundFromFile()
     }
     return true;
 }
+
+
+//loopback recording (completely separate) ---
+
+History<float> _loopbackAudioData(SP::consts._requiredLoopbackCacheLength + SP::consts._loopbackCacheSafetyBuffer);
+int _samplesAddedSinceGetLoopbackDataCall= 0;
+
+void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
+{
+    const float* f32pInput = (const float*)pInput;
+    _samplesAddedSinceGetLoopbackDataCall += frameCount;
+
+    for (ma_uint32 i = 0; i < frameCount; ++i) {
+        // Access the left and right channels.
+        float left = f32pInput[i * pDevice->capture.channels];
+        float right = f32pInput[i * pDevice->capture.channels + 1];
+
+        float avg = (left + right) * 0.5f;
+
+        _loopbackAudioData.add(avg);
+    }
+
+    (void)pOutput;
+}
+
+bool loopbackStarted = false;
+ma_device loopbackDevice;
+
+bool miniaudio_api::startLoopback(int& internalSampleRate, std::string& loopbackDeviceName)
+{
+    ma_result result;
+    ma_device_config deviceConfig;
+
+    internalSampleRate = -1; //default to -1
+
+    /* Loopback mode is currently only supported on WASAPI. */
+    ma_backend backends[] = {
+        ma_backend_wasapi
+    };
+
+    deviceConfig = ma_device_config_init(ma_device_type_loopback);
+    deviceConfig.capture.pDeviceID = NULL; //use default device
+    deviceConfig.capture.format = ma_format_f32;
+    deviceConfig.capture.channels = 2;
+    deviceConfig.sampleRate = NULL; //use default device sample rate
+    deviceConfig.dataCallback = data_callback;
+
+    result = ma_device_init_ex(backends, sizeof(backends) / sizeof(backends[0]), NULL, &deviceConfig, &loopbackDevice);
+    if (result != MA_SUCCESS) {
+        printf("Failed to initialize loopback device.\n");
+        return false;
+    }
+
+    result = ma_device_start(&loopbackDevice);
+    if (result != MA_SUCCESS) {
+        ma_device_uninit(&loopbackDevice);
+        printf("Failed to start device.\n");
+        return false;
+    }
+
+    internalSampleRate = loopbackDevice.capture.internalSampleRate;
+    loopbackDeviceName = loopbackDevice.capture.name;
+
+    loopbackStarted = true;
+
+    return true;
+}
+
+void miniaudio_api::stopLoopback()
+{
+    if (loopbackStarted) {
+        ma_device_uninit(&loopbackDevice);
+    }
+    loopbackStarted = false;
+}
+
+History<float>* miniaudio_api::getLoopbackDataHistoryPtr(int& numNewSamples)
+{
+    numNewSamples = _samplesAddedSinceGetLoopbackDataCall;
+    _samplesAddedSinceGetLoopbackDataCall = 0;
+    return &_loopbackAudioData;
+}
+
+//---

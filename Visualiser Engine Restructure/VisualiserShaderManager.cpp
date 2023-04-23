@@ -380,10 +380,11 @@ void VisualiserShaderManager::setShaderUniforms(VisualiserShader* shader)
 
 void VisualiserShaderManager::updateUniformValuesToOutput()
 {
+	int counter = 0;
 	for (auto& it : _floatUniformUpdaterMap) {
 		it.second.callUpdater();
 	}
-
+	counter = 0;
 	for (auto& it : _intUniformUpdaterMap) {
 		it.second.callUpdater();
 	}

@@ -8,7 +8,7 @@
 #include "SPvars.h"
 
 Master::Master() :
-	_audioData(nullptr),
+	_audioDataPtr(nullptr),
 
 	_fftwAPI(SP::consts._STFTsamples),
 	_fftHistory(7),//store 7 previous fourier transforms
@@ -30,11 +30,10 @@ Master::~Master()
 	}
 }
 
-void Master::init(float* audioData, int sampleRate, bool useSetters)
+void Master::init(int sampleRate, bool useSetters)
 {
 	_fftHistory.init(_fftwAPI.numHarmonics());
 
-	_audioData = audioData;
 	_sampleRate = sampleRate;
 
 	_useSetters = useSetters;
@@ -43,19 +42,20 @@ void Master::init(float* audioData, int sampleRate, bool useSetters)
 	}
 }
 
-void Master::reInit(float* audioData, int sampleRate) {
+void Master::reInit(int sampleRate) {
 
-	_audioData = audioData;
 	_sampleRate = sampleRate;
 
 	_previousSample = -1;
 	_sampleFftLastCalculated = -1;
 }
 
-void Master::beginCalculations(int currentSample) {
+void Master::beginCalculations(int calculationSample, float* audioDataPtr, int audioDataLength) {
 
 	assert(_sampleRate > 0);
-	_currentSample = currentSample;
+	_audioDataPtr = audioDataPtr;
+	_audioDataLength = audioDataLength;
+	_currentSample = calculationSample;
 
 	if (_currentSample == _previousSample) {
 		Vengine::warning("No change in sample between begin calculation calls");
@@ -69,9 +69,8 @@ float hanningWindow(float frac){ //reduces noise
 
 void Master::calculateFourierTransform() {
 
-	//dont calculate if at end
-	if (_currentSample + SP::consts._STFTsamples >= AudioManager::getNumSamples()) {
-		return;
+	if (SP::consts._STFTsamples > _audioDataLength) {
+		return; //not enough space to calculate
 	}
 
 	//make sure not called twice on same frame
@@ -80,7 +79,7 @@ void Master::calculateFourierTransform() {
 	}
 	_sampleFftLastCalculated = _currentSample;
 
-	_fftwAPI.calculate(_audioData, _currentSample, _fftHistory.workingArray(), SP::vars._masterFTgain, hanningWindow); //use fftw api to calculate fft
+	_fftwAPI.calculate(_audioDataPtr, 0, _fftHistory.workingArray(), SP::vars._masterFTgain, hanningWindow); //use fftw api to calculate fft
 	_fftHistory.addWorkingArrayToHistory();
 	//updates _fftHistory ^^^
 }
@@ -88,17 +87,16 @@ void Master::calculateFourierTransform() {
 //accounts for hanning window so calculations from samples and transforms are equivalent
 void Master::calculateEnergy()
 {
-	//dont calculate if at end
-	if (_currentSample + SP::consts._STFTsamples >= AudioManager::getNumSamples()) {
-		return;
+	if (SP::consts._STFTsamples > _audioDataLength) {
+		return; //not enough space to calculate
 	}
 
 	_energy = 0;
 	float hanningWindowFactor = 0;
 
-	for (int i = _currentSample; i < _currentSample + SP::consts._STFTsamples; i++) {
+	for (int i = 0; i < SP::consts._STFTsamples; i++) {
 		hanningWindowFactor = hanningWindow(float(i - _currentSample) / float(SP::consts._STFTsamples));
-		_energy += _audioData[i] * _audioData[i] * hanningWindowFactor * hanningWindowFactor;
+		_energy += _audioDataPtr[i] * _audioDataPtr[i] * hanningWindowFactor * hanningWindowFactor;
 	}
 	_energy /= SP::consts._STFTsamples;
 	_RMS = sqrt(_energy);
@@ -107,25 +105,25 @@ void Master::calculateEnergy()
 
 void Master::calculatePeakAmplitude()
 {
-	//dont calculate if at end
-	if (_currentSample >= AudioManager::getNumSamples()) {
-		return;
+	if (SP::consts._peakAmplitudeWindowSizeInSamples > _audioDataLength) {
+		std::cout << "not enough space";
+		return; //not enough space to calculate
 	}
 
 	if (_currentSample - _sampleOfLastPeak > _sampleRate * 0.1f) { //after waiting 0.1 seconds at peak
 		_peakAmplitude *= expf(-30.0f / SP::vars._desiredCPS); //0->-30db in 1 second
 	}
 	
-	for (int i = _previousSample; i < _currentSample; i++) {
-		if (fabsf(_audioData[i]) > _peakAmplitude) {
-			_peakAmplitude = fabsf(_audioData[i]);
+	for (int i = 0; i < SP::consts._peakAmplitudeWindowSizeInSamples; i++) {
+		if (fabsf(_audioDataPtr[i]) > _peakAmplitude) {
+			_peakAmplitude = fabsf(_audioDataPtr[i]);
 			_sampleOfLastPeak = i;
 		}
 	}
 
 	_peakAmplitude = std::min(10.0f, _peakAmplitude);
 
-	_peakAmplitudeDb = log(_peakAmplitude);
+	_peakAmplitudeDb = 20*log10f(_peakAmplitude);
 }
 
 void Master::audioIsPaused()

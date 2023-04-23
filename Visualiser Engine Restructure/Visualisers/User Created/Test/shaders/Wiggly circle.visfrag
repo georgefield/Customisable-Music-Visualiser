@@ -1,0 +1,25 @@
+void main(){
+
+    const float innerRadius = 0.3;
+    const float outerRadius = 0.5;    
+
+    //get polar coordinates
+    float radius = sqrt(pow(vis_fragmentPosition.x, 2) + pow(vis_fragmentPosition.y, 2));
+    float theta = acos(vis_fragmentPosition.x / radius); //cosine angle formula
+    if (vis_fragmentPosition.y < 0)
+        theta = (2*3.1415) - theta;
+
+    //audio feature usage
+    theta += vis_timeInAudio; //circle rotates with time
+    float wiggleSize = 0.05 * vis_peakAmplitude; //wiggle size tracks with volume
+    const float wiggleFrequency = 20;
+
+    //create wiggly circle
+    float radiusWithWiggle = radius + (wiggleSize*cos(theta * wiggleFrequency));
+    if (radiusWithWiggle > innerRadius && radiusWithWiggle < outerRadius){
+        vis_outputColour = vis_inColour;
+    }
+    else{
+        vis_outputColour = vec4(0,0,0,0);
+    }
+}

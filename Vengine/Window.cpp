@@ -67,6 +67,25 @@ int Window::create(std::string windowName, int screenWidth, int screenHeight, Ui
 	return 0; //could return error code for now just return 0
 }
 
+void Vengine::Window::setWindowSize(int screenWidth, int screenHeight)
+{
+	_screenWidth = screenWidth;
+	_screenHeight = screenHeight;
+	SDL_SetWindowSize(_window, _screenWidth, _screenHeight);
+}
+
+void Vengine::Window::setWindowFullscreen(bool fullscreen)
+{
+	if (fullscreen) {
+		SDL_SetWindowFullscreen(_window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+		SDL_GetWindowSize(_window, &_screenWidth, &_screenHeight);
+	}
+	else {
+		SDL_SetWindowFullscreen(_window, 0);
+		SDL_GetWindowSize(_window, &_screenWidth, &_screenHeight);
+	}
+}
+
 
 void Window::nextFrame() {
 	//clear last frame before rendering

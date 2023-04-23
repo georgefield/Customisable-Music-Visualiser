@@ -8,9 +8,7 @@ bool PFDapi::folderChooser(std::string message, std::string startPath, std::stri
 {
 	// Check that a backend is available
 	if (!pfd::settings::available())
-	{
 		Vengine::fatalError("Portable File Dialogs are not available on this platform");
-	}
 
 	std::replace(startPath.begin(), startPath.end(), '/', '\\');
 
@@ -34,9 +32,7 @@ bool PFDapi::fileChooser(std::string message, std::string startPath, std::string
 {
 	// Check that a backend is available
 	if (!pfd::settings::available())
-	{
 		Vengine::fatalError("Portable File Dialogs are not available on this platform");
-	}
 
 	std::replace(startPath.begin(), startPath.end(), '/', '\\');
 
@@ -58,6 +54,42 @@ bool PFDapi::fileChooser(std::string message, std::string startPath, std::string
 	//standard is '/' instead of '\' throughout code so rereplace
 	std::replace(filePath.begin(), filePath.end(), '\\', '/');
 	out = filePath;
+
+	return true;
+}
+
+static pfd::open_file* dialogPtr = nullptr;
+static bool dialogOpen = false;
+
+void PFDapi::openAsyncFileExplorer(std::string message, std::string startPath)
+{
+	if (dialogOpen) {
+		Vengine::warning("Async file explorer already open- cannot open another");
+		return;
+	}
+
+	// Check that a backend is available
+	if (!pfd::settings::available())
+		Vengine::fatalError("Portable File Dialogs are not available on this platform");
+
+	std::replace(startPath.begin(), startPath.end(), '/', '\\');
+
+	dialogPtr = new pfd::open_file(message, startPath, { "", "*" }, pfd::opt::force_path);
+	dialogOpen = true;
+
+	if (dialogPtr == nullptr)
+		Vengine::fatalError("dialogPtr still nullptr");
+}
+
+bool PFDapi::isAsyncFileExplorerAlive()
+{
+	if (!dialogOpen)
+		return false;
+
+	if (dialogPtr->ready()) {
+		dialogOpen = false;
+		return false;
+	}
 
 	return true;
 }

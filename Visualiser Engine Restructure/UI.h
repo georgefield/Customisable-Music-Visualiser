@@ -5,6 +5,7 @@
 
 #include "SpriteManager.h"
 #include "SignalProcessingManager.h"
+#include "UIglobalFeatures.h"
 
 #define FLOAT_MAX 3.4028235E38F
 
@@ -20,7 +21,7 @@ public:
 	void processInput();
 
 	//getters
-	bool getShowUi() const { return _showUi; }
+	bool getShowUi() const { return UIglobalFeatures::_showUI; }
 	bool getShowInfoBoxes() const { return _showInfoBoxes; }
 		
 	Vengine::Viewport getViewport();
@@ -30,7 +31,6 @@ private:
 	Vengine::Window* _window;
 	Vengine::InputManager* _inputManager;
 
-	bool _showUi;
 	bool _showInfoBoxes;
 
 	//ImGui variables--
@@ -46,10 +46,13 @@ private:
 	bool _fullscreen;
 
 	//shader menu vars
+	bool _showShaderHelpUi;
+	bool _openShaderFolder;
 	bool _showShaderVariablesUi;
  	bool _showCreateShaderUi;
 	bool _showSyntaxErrorsUi;
 
+	void shaderHelpUi();
 	void shaderVariablesUi();
 	void createShaderUi();
 	void syntaxErrorsUi();
@@ -75,6 +78,10 @@ private:
 
 	//process functions
 	void processFileMenuSelection();
+	void processDisplayAdjustments();
+
+	//other function
+	void openAsyncFileExplorer();
 
 	//helper gui functions
 	bool textInputPrompt(const std::string& message, char* buf, int bufSize, bool& isPromptOpen);

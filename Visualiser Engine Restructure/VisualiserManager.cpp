@@ -4,11 +4,11 @@
 
 Visualiser VisualiserManager::_current;
 int VisualiserManager::_timeSinceSaveTimerId;
+bool VisualiserManager::_saved = false;
 
 void VisualiserManager::init()
 {
 	Vengine::MyTiming::createTimer(_timeSinceSaveTimerId);
-	Vengine::MyTiming::startTimer(_timeSinceSaveTimerId);
 }
 
 bool VisualiserManager::createNewVisualiser(std::string name)
@@ -50,6 +50,7 @@ bool VisualiserManager::save()
 	if (_current.save()) {
 		Vengine::MyTiming::resetTimer(_timeSinceSaveTimerId);
 		Vengine::MyTiming::startTimer(_timeSinceSaveTimerId);
+		_saved = true;
 		return true;
 	}
 	return false;
@@ -62,18 +63,25 @@ bool VisualiserManager::saveAsNew(std::string name)
 		Vengine::warning("Visualiser with that name already exists in user created visualisers, no copy made");
 		return false;
 	}
-	printf("SAVE AS");
+
 	//set current visualiser to be a save of whats being worked on now in a different folder
 	if (_current.initNewAsCurrentVis(VisVars::_userCreatedVisualiserPath + name)) {
 		Vengine::MyTiming::resetTimer(_timeSinceSaveTimerId);
 		Vengine::MyTiming::startTimer(_timeSinceSaveTimerId);
+		_saved = true;
 		return true;
 	}
 	return false;
 }
 
 bool VisualiserManager::recentlySaved(){
-	return Vengine::MyTiming::readTimer(_timeSinceSaveTimerId) < 2;
+	if (Vengine::MyTiming::readTimer(_timeSinceSaveTimerId) < 2 && _saved)
+		return true;
+	
+	if (_saved == true)
+		_saved = false;
+
+	return false;
 }
 
 std::string VisualiserManager::externalToInternalTexture(std::string texturePath)

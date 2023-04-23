@@ -26,8 +26,8 @@ public:
 	}
 
 	bool testThreshold(float value, float topXpercent) {
-		//1/3 of threshold full then start returning peaks
-		if ((value * std::min((1.8f * getFractionFull()), 1.0f)) > getTopXpercentValue(topXpercent)) {
+		//1/2 of threshold full then start returning peaks
+		if ((value * std::min((2.0f * getFractionFull()), 1.0f)) > getTopXpercentValue(topXpercent)) {
 			return true;
 		}
 		return false;
@@ -40,15 +40,23 @@ public:
 	bool getLastPeak(float topXpercent, Peak& out) {
 
 		//when first above threshold clear vectors
-		if (!aboveThreshold && testThreshold(_valuesAddedInTimeOrder.newest().value, topXpercent)) {
-			if (!aboveThreshold) {
-				samplesOfPointsAboveThreshold.clear();
-				valuesOfPointsAboveThreshold.clear();
-				aboveThreshold = true;
-			}
+		if (goneBelowFractionOfThreshold && testThreshold(_valuesAddedInTimeOrder.newest().value, topXpercent)) {
+			samplesOfPointsAboveThreshold.clear();
+			valuesOfPointsAboveThreshold.clear();
+			aboveThreshold = true;
+			goneBelowFractionOfThreshold = false;
 		}
+
+		if (!testThreshold(_valuesAddedInTimeOrder.newest().value, topXpercent)) {
+			aboveThreshold = false;
+		}
+
+		if (!testThreshold(_valuesAddedInTimeOrder.newest().value * 1.5, topXpercent)) {
+			goneBelowFractionOfThreshold = true;
+		}
+
 		//only choose peak onset and salience after value goes to below half the threshold
-		else if (aboveThreshold && !testThreshold(_valuesAddedInTimeOrder.newest().value * 2, topXpercent)) {
+		if (goneBelowFractionOfThreshold) {
 			float integral = 0;
 			float weightedSum = 0;
 			float max = 0;
@@ -60,7 +68,6 @@ public:
 			out.onset = int(weightedSum / integral);
 			out.salience = max;
 
-			aboveThreshold = false;
 			return true;
 		}
 
@@ -97,6 +104,7 @@ public:
 
 private:
 
+	bool goneBelowFractionOfThreshold;
 	bool aboveThreshold;
 	std::vector<int> samplesOfPointsAboveThreshold;
 	std::vector<float> valuesOfPointsAboveThreshold;

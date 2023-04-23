@@ -22,16 +22,19 @@ public:
 	Master();
 	~Master();
 
-	void init(float* audioData, int sampleRate, bool initSetters = true);
-	void reInit(float* audioData, int sampleRate);
+	void init(int sampleRate, bool initSetters = true);
+	void reInit(int sampleRate);
 
-	void beginCalculations(int currentSample);
+	void beginCalculations(int calculationSample, float* audioDataPtr, int audioDataLength);
 	void endCalculations();
 
-	float* _audioData;
+	float* _audioDataPtr;
+	int _audioDataLength;
+
 	int _sampleRate;
 	int _previousSample;
 	int _currentSample;
+
 	float _peakAmplitude;
 	float _peakAmplitudeDb;
 	float _energy;

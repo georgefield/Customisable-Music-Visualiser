@@ -2,6 +2,7 @@
 #include "AudioManager.h"
 #include "SignalProcessingManager.h"
 #include "SPvars.h"
+#include "UIglobalFeatures.h"
 
 #include <Vengine/MyTiming.h>
 
@@ -33,7 +34,7 @@ void SimilarityMatrixHandler::init(Master* master)
 
 	matrix.init(_SMinfo._matrixSize);
 
-	_futureMaster.init(AudioManager::getSampleData(), AudioManager::getSampleRate(), false);
+	_futureMaster.init(AudioManager::_currentPlaybackInfo->sampleRate, false);
 
 	_futureMFCCs.init(&_futureMaster, SP::consts._numMelBands, 0, 20000, false);
 
@@ -50,7 +51,7 @@ void SimilarityMatrixHandler::reInit()
 	matrix.reInit(_SMinfo._matrixSize);
 	relinkBasedOnSPvars();
 
-	_futureMaster.reInit(AudioManager::getSampleData(), AudioManager::getSampleRate());
+	_futureMaster.reInit(AudioManager::_currentPlaybackInfo->sampleRate);
 
 	_futureMFCCs.reInit();
 
@@ -61,7 +62,12 @@ void SimilarityMatrixHandler::reInit()
 
 void SimilarityMatrixHandler::calculateNext()
 {
-	if (AudioManager::getCurrentSample() + _samplesAheadForFutureMatrix > AudioManager::getNumSamples()) {
+	if (AudioManager::isUsingLoopback() && _SMinfo._useFuture) {
+		_SMinfo._useFuture = false;
+		UIglobalFeatures::queueError("Cannot use future matrix when using PC audio");
+	}
+
+	if (!AudioManager::isUsingLoopback() && AudioManager::_currentPlaybackInfo->sampleCounter + _samplesAheadForFutureMatrix > AudioManager::_currentPlaybackInfo->sampleDataArrayLength) {
 		Vengine::warning("Cannot calculate future as samples ahead puts it above song size");
 		return;
 	}
@@ -80,7 +86,11 @@ void SimilarityMatrixHandler::calculateNext()
 	if (_SMinfo._useFuture) {
 
 		//std::cout << "Samples ahead: " << _samplesAhead << std::endl;
-		_futureMaster.beginCalculations(AudioManager::getCurrentSample() + _samplesAheadForFutureMatrix);
+		_futureMaster.beginCalculations(
+			AudioManager::_currentPlaybackInfo->nextCalculationSample + _samplesAheadForFutureMatrix,
+			&AudioManager::_currentPlaybackInfo->sampleDataArrayPtr[AudioManager::_currentPlaybackInfo->sampleDataArrayStartPosition + _samplesAheadForFutureMatrix],
+			AudioManager::_currentPlaybackInfo->sampleDataArrayLength - (AudioManager::_currentPlaybackInfo->sampleDataArrayStartPosition + _samplesAheadForFutureMatrix)
+		);
 
 		//handling calculating future of audio features for similarity matrix--
 		_futureMaster.calculateFourierTransform(); //ft needed for both

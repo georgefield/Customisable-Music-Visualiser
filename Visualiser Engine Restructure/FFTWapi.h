@@ -29,7 +29,7 @@ class FFTWfft
 {
 public:
 	FFTWfft(int windowSize);
-	void calculate(float* audioData, int currentSample, float* store, float gain = 1.0f, float (*slidingWindowFunction)(float) = nullptr);
+	void calculate(float* audioData, int startPos, float* store, float gain = 1.0f, float (*slidingWindowFunction)(float) = nullptr);
 	~FFTWfft();
 	VectorHistory<MyComplex>* getComplexCoeffsHistory(int currentSample);
 

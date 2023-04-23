@@ -7,6 +7,7 @@ std::vector<std::string> UIglobalFeatures::_errorQueue;
 int UIglobalFeatures::_errorMessageTimerId = -1;
 SimMatInfo UIglobalFeatures::_uiSMinfo;
 std::vector<std::string> UIglobalFeatures::_syntaxErrorArray;
+bool UIglobalFeatures::_showUI = true;
 
 
 void UIglobalFeatures::queueError(std::string message)

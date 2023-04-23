@@ -29,15 +29,11 @@ public:
 
 	static int getGeneralHistorySize() { return SP::consts._generalHistorySize; }
 
-	static void audioInterruptOccured(int nextSample = -1) { _nextCalculationSample = nextSample; _hasBeenComputeInterrupt = true; } //call when flow of data changes to reset _nextCalculationSample
 private:
 	static Master* _master;
 
 	static bool _isFirstReset;
 	static int _lagTimerId;
-
-	static bool _hasBeenComputeInterrupt;
-	static int _nextCalculationSample;
 
 	static void initAlgorithmObjects(bool noteOnset, bool tempoDetection, bool mfccs, bool similarityMatrix);
 };

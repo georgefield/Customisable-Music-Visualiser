@@ -88,6 +88,7 @@ float NoteOnset::derivativeOfLogEnergy() {
 	//good for detecting beats of music with 4 to floor drum pattern
 
 	float derOfLogEnergy = (logf(_m->_energyHistory.newest()) - logf(_m->_energyHistory.previous())); // d(log(E))
+
 	derOfLogEnergy *= one_over_dt; // *= 1/dt
 	if (isnan(derOfLogEnergy) || isinf(derOfLogEnergy)) { derOfLogEnergy = 0; } //if an energy is 0, log is -inf, stops cascade of nan/inf
 

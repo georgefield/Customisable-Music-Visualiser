@@ -14,6 +14,8 @@ namespace Vengine {
 		~Window();
 
 		int create(std::string windowName, int screenWidth, int screenHeight, Uint32 flags);
+		void setWindowSize(int screenWidth, int screenHeight);
+		void setWindowFullscreen(bool fullscreen);
 
 		void nextFrame();
 		void swapBuffer();

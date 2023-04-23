@@ -18,6 +18,7 @@ public:
 	static std::vector<std::string>* getSyntaxErrorArray();
 
 	static SimMatInfo _uiSMinfo;
+	static bool _showUI;
 private:
 
 	static int _errorMessageTimerId;

@@ -29,6 +29,7 @@ public:
 private:
 	static Visualiser _current;
 
+	static bool _saved;
 	static int _timeSinceSaveTimerId;
 };
 

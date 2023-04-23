@@ -1,0 +1,4 @@
+void main(){
+
+    vis_outputColour = vis_inColour * mod(vis_timeSinceLoad, 1);
+}

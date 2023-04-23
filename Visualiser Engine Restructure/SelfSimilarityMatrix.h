@@ -71,6 +71,8 @@ public:
 	float getSimilarityMeasure() {
 		if (_linkedTo == NONE)
 			return 0.0f;
+		if (_similarityMeasureHistory.entries() == 0)
+			return 0.0f;
 		return _similarityMeasureHistory.newest();
 	}
 	History<float>* getSimilarityMeasureHistory() {

@@ -14,7 +14,7 @@ static enum MeasureType {
 };
 
 struct SimMatInfo {
-	bool _useFuture = true;
+	bool _useFuture = false;
 	LinkedTo _linkedTo = LinkedTo::MFCC;
 	int _matrixSize = 100;
 	int _coeffLow = 4;

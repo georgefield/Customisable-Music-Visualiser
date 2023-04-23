@@ -270,6 +270,7 @@ struct AgentSet {
 	AgentSet(int sampleRate) :
 		_sampleRate(sampleRate),
 		_highestScoringAgent(nullptr),
+		_highestScoringAgentExists(false),
 		_confidenceInBestAgent(0.0f),
 		_sortedBy(UNSORTED)
 	{
@@ -311,6 +312,10 @@ struct AgentSet {
 			debugInfo.push_back(info);
 			count++;
 		}
+	}
+
+	bool highestScoringAgentExists() {
+		return _highestScoringAgentExists;
 	}
 
 	void prepareForCompute() {
@@ -366,7 +371,6 @@ struct AgentSet {
 
 		//prevent errors caused by set being too small
 		if (set.size() <= 1) {
-			Vengine::warning("1 or 0 agents in set");
 			return;
 		}
 
@@ -452,6 +456,7 @@ struct AgentSet {
 
 			//set highest scoring agent variable
 			if (_highestScoringAgent == nullptr || (*it)->_accountingForIntervalScore > _highestScoringAgent->_accountingForIntervalScore) {
+				_highestScoringAgentExists = true;
 				_highestScoringAgent = (*it);
 			}
 		}
@@ -525,10 +530,14 @@ struct AgentSet {
 			(*it)->_score *= factor;
 		}
 	}
+
+	void endCalculationRound() {
+	}
 private:
 	//duplicate thresholds
 	int _tempoMinDifference;
 	int _phaseMinDifference;
+	bool _highestScoringAgentExists;
 
 	int _sampleRate;
 

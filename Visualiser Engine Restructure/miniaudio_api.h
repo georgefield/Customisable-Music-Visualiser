@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+#include "History.h"
+
 class miniaudio_api
 {
 public:
@@ -27,7 +29,13 @@ public:
 	int getSampleRate();
 	//--
 
-	void getDevices();
+	//loopback recording--
+	bool startLoopback(int& internalSampleRate, std::string& loopbackDeviceName);
+	void stopLoopback();
+	History<float>* getLoopbackDataHistoryPtr(int& numNewSamples);
+	bool isNewLoopbackData();
+	//--
+
 private:
 	std::string _filePath;
 	bool _initialised;
@@ -38,8 +46,8 @@ private:
 	bool _decoderInitialised;
 	bool _memoryAllocated;
 
-	float* _normalisedAudioData;
-	int _audioDataLength;
+	float* _loadedAudioData;
+	int _loadedAudioDataLength;
 
 	bool initEngine();
 	bool initDecoderFromFile();

@@ -103,12 +103,14 @@ void TempoDetection::calculateNext() {
 
 
 		//add to rolling avgs
-		if (_agents->set.size() > 0) {
+		if (_agents->highestScoringAgentExists()) {
 			float tempo = 60.0f * float(_m->_sampleRate) / float(_agents->_highestScoringAgent->_beatInterval);
 			_tempoRollingAvg.add(tempo);
 		}
 
 		_confidenceRollingAvg.add(_agents->_confidenceInBestAgent);
+
+		_agents->endCalculationRound();
 	}
 
 	//add values to histories, do every call if initialised
@@ -117,9 +119,8 @@ void TempoDetection::calculateNext() {
 		//set confidence value
 		_tempoConfidence = _confidenceRollingAvg.get();
 
-
 		//predictions cal
-		if (_agents->set.size() > 0) {
+		if (_agents->highestScoringAgentExists()) {
 			int samplesSinceLastBeat = (_m->_currentSample - _agents->_highestScoringAgent->_peakHistory->newest().onset) % _agents->_highestScoringAgent->_beatInterval;
 			float timeSinceLastBeat = float(samplesSinceLastBeat) / float(_m->_sampleRate);
 			_timeSinceLastBeat = timeSinceLastBeat;

@@ -1,0 +1,32 @@
+void main(){
+    //split sprite into thirds
+    bool low = vis_fragmentUV.x < 0.33;
+    bool mid = vis_fragmentUV.x >= 0.33 && vis_fragmentUV.x < 0.66;
+    bool high = vis_fragmentUV.x >= 0.66;
+
+    const float gain = 5;
+
+    vis_outputColour = vec4(0,0,0,0);
+
+    if (low){ //lows in red
+        vis_outputColour.r = 1;
+
+        float lowVolume = sqrt(vis_FT0_energy) * gain;
+        if (vis_fragmentUV.y < lowVolume)
+            vis_outputColour.a = lowVolume;
+    }
+    if (mid){ //mids in green
+        vis_outputColour.g = 1;
+
+        float midVolume = sqrt(vis_FT1_energy) * gain;
+        if (vis_fragmentUV.y < midVolume)
+            vis_outputColour.a = midVolume;
+    }
+    if (high){ //highs in blue
+        vis_outputColour.b = 1;
+
+        float highVolume = sqrt(vis_FT2_energy) * gain;
+        if (vis_fragmentUV.y < highVolume)
+            vis_outputColour.a = highVolume;
+    }
+}

@@ -22,7 +22,7 @@ CustomisableSprite::CustomisableSprite(int id, Vengine::Viewport* viewport, Veng
 	_showInEditor(true),
 	_resetTextureCombo(true),
 	_resetShaderCombo(true),
-	_showUi(true),
+	_isNotDraggingSprite(true),
 	_uiOpened(true),
 	id(id),
 
@@ -64,7 +64,7 @@ void CustomisableSprite::init(SpriteInfo spriteInfo) {
 void CustomisableSprite::draw() {
 
 	//draw imgui
-	if (_selected && _showUi) {
+	if (_selected && _isNotDraggingSprite && UIglobalFeatures::_showUI) {
 		drawUi();
 	}
 
@@ -416,7 +416,7 @@ void CustomisableSprite::processInput(Vengine::InputManager* inputManager) {
 				Vengine::MyTiming::startTimer(_timerID);
 				_posOfMouseAtClick = mousePos;
 				_posOfSpriteAtClick = getModelPos();
-				_showUi = false;
+				_isNotDraggingSprite = false;
 			}
 			else if (Tools::posWithinRect(mousePos, _optionsRect) && _selected) {
 				//do nothing if pos within settings rect
@@ -434,7 +434,7 @@ void CustomisableSprite::processInput(Vengine::InputManager* inputManager) {
 		}
 
 		if (inputManager->isKeyReleased(SDL_BUTTON_LEFT) && Tools::posWithinRect(mousePos, getModelBoundingBox())) {
-			_showUi = true;
+			_isNotDraggingSprite = true;
 			if (Vengine::MyTiming::readTimer(_timerID) < 0.2) {
 				_selected = !_selected;
 			}

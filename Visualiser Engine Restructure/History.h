@@ -99,7 +99,9 @@ public:
 	T newest() { return get(0); }
 	T previous() { return get(1); }
 	T get(int recency) { 
-		if (_entries == 0) { Vengine::warning("Get called on history that has no entries"); }
+		if (_entries == 0) { 
+			Vengine::warning("Get called on history that has no entries"); 
+		}
 		return _data[(_start + recency) % _size]; 
 	}
 

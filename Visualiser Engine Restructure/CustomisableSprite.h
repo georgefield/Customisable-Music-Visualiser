@@ -35,7 +35,7 @@ public:
 	//simple setters
 	void updateSpriteInfoToMatchDepth() { _spriteInfo.depth = _depth; }
 
-	void setIfSelected(bool isSelected) { _selected = isSelected; _showUi |= isSelected; _uiOpened = true; }
+	void setIfSelected(bool isSelected) { _selected = isSelected; _isNotDraggingSprite |= isSelected; _uiOpened = true; }
 	void setDeleted() { _deleted = true; }
 
 	//getters
@@ -75,7 +75,7 @@ private:
 	bool _showInEditor;
 	bool _resetTextureCombo;
 	bool _resetShaderCombo;
-	bool _showUi;
+	bool _isNotDraggingSprite;
 	bool _uiOpened;
 
 	glm::vec4 _optionsRect; //in opengl coords

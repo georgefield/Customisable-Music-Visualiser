@@ -16,20 +16,20 @@ UI::UI()
 
 
 void UI::init(Vengine::Window* window, Vengine::InputManager* inputManager) {
-	_showUi = true;
+	UIglobalFeatures::_showUI = true;
 	_showInfoBoxes = true;
 
 	_window = window;
 	_inputManager = inputManager;
 
 	_sidebarSizePx = 200;
-	_toolbarSizePx = _sidebarSizePx/_window->getAspectRatio();
+	_toolbarSizePx = _sidebarSizePx / _window->getAspectRatio();
 }
 
 
 void UI::toolbar() {
 
-	if (!_showUi) {
+	if (!UIglobalFeatures::_showUI) {
 		return;
 	}
 
@@ -60,27 +60,36 @@ void UI::toolbar() {
 	}
 
 	if (ImGui::BeginMenu("View")) {
-		ImGui::MenuItem("Toggle UI (ctrl+a)", NULL, &_showUi);
-		ImGui::MenuItem("Toggle Info Boxes (ctrl+x)", NULL, &_showInfoBoxes);
-		ImGui::MenuItem("Fullscreen", NULL, &_fullscreen); //todo
+		ImGui::MenuItem("Show UI (ctrl+a)", NULL, &UIglobalFeatures::_showUI);
+		ImGui::MenuItem("Show Info Boxes (ctrl+x)", NULL, &_showInfoBoxes);
+		ImGui::MenuItem("Fullscreen", NULL, &_fullscreen);
 		ImGui::EndMenu();
 	}
 
+	processDisplayAdjustments();
 
-	if (ImGui::BeginMenu("Shader Managing")) {
-		ImGui::MenuItem("Shader variables", NULL, &_showShaderVariablesUi);
+
+	if (ImGui::BeginMenu("Shader managing")) {
+		ImGui::MenuItem("Shader help", NULL, &_showShaderHelpUi);
 		ImGui::MenuItem("Create shader", NULL, &_showCreateShaderUi);
+		ImGui::MenuItem("Open shader folder", NULL, &_openShaderFolder);
+		ImGui::MenuItem("Shader keywords", NULL, &_showShaderVariablesUi);
 		ImGui::MenuItem("Show shader errors", NULL, &_showSyntaxErrorsUi);
 		ImGui::EndMenu();
 	}
 
+
 	if (_showInfoBoxes) {
+		if (_showShaderHelpUi)
+			shaderHelpUi();
 		if (_showShaderVariablesUi)
 			shaderVariablesUi();
 		if (_showCreateShaderUi)
 			createShaderUi();
 		if (_showSyntaxErrorsUi)
 			syntaxErrorsUi();
+		if (_openShaderFolder)
+			openAsyncFileExplorer();
 	}
 
 	if (ImGui::BeginMenu("Signal Processing")) {
@@ -139,47 +148,77 @@ void UI::toolbar() {
 	ImGui::SameLine();
 
 	//audio playback ui--
-	ImGui::BeginChild("playback child", ImVec2(250, ImGui::GetContentRegionAvail().y / 1.5), false);
+	ImGui::BeginChild("playback child", ImVec2(280, ImGui::GetContentRegionAvail().y / 1.3), false);
 
-	//load song
-	if (ImGui::Button("Load song")) {
-		std::string chosenAudio;
-		SignalProcessingManager::audioInterruptOccured();
-		PFDapi::fileChooser("Choose audio", Vengine::IOManager::getProjectDirectory(), chosenAudio, { "Audio files", "*.wav *.mp3 *.flac" }, true);
-		AudioManager::load(chosenAudio);
-	}
-
-	//music name
-	std::string audioInfo = "\"" + AudioManager::getAudioFileName() + "\"";
-	ImGui::Text(audioInfo.c_str());
-
-	//audio scrubbing
-	ImGui::SetNextItemWidth(100);
-
-	static int scrubber = 0;
-	ImGui::DragInt("##", &scrubber, 5000.0f, 0, AudioManager::getNumSamples(), "%d", ImGuiSliderFlags_AlwaysClamp);
+	//choose whether to use loopback or not--
+	static enum AudioMode { FromFile, Loopback };
+	static int currentAudioMode = FromFile;
+	const char* modeNames[2] = { "Audio From File", "PC Audio" };
+	const char* currentModeName = (currentAudioMode >= 0 && currentAudioMode < 2) ? modeNames[currentAudioMode] : "Unknown";
+	ImGui::PushID(3);
+	ImGui::SliderInt("##", &currentAudioMode, 0, 1, currentModeName);
+	ImGui::PopID();
 	if (ImGui::IsItemEdited()) {
-		AudioManager::seekToSample(scrubber);
+		AudioManager::setUseLoopback(currentAudioMode == Loopback);
+		SignalProcessingManager::reset();
 	}
-	if (!ImGui::IsItemActive() && AudioManager::isAudioPlaying()) {
-		scrubber = AudioManager::getCurrentSample();
+	//--
+
+	if (AudioManager::isUsingLoopback()) {
+		//display which audio device loopback is using
+		ImGui::Text("Using audio device:");
+		std::string shortenedDeviceName = AudioManager::getLoopbackDeviceName();
+		if (shortenedDeviceName.size() > 40)
+			shortenedDeviceName = (shortenedDeviceName.substr(0, 37) + "...");
+		ImGui::TextColored(ImVec4(0.8f, 0.8f, 1.0f, 1.0f), shortenedDeviceName.c_str());
+		//display how many samples have been used from loopback so far
+		ImGui::Text((std::to_string(AudioManager::_currentPlaybackInfo->sampleCounter) + " samples used").c_str());
 	}
+	else {
+		//load song
+		if (ImGui::Button("Load song")) {
+			std::string chosenAudio;
+			PFDapi::fileChooser("Choose audio", Vengine::IOManager::getProjectDirectory(), chosenAudio, { "Audio files", "*.wav *.mp3 *.flac" }, true);
+			AudioManager::load(chosenAudio);
+		}
 
-	ImGui::SameLine();
+		//music name
+		std::string audioInfo = "\"" + AudioManager::getAudioFileName() + "\"";
+		ImGui::Text(audioInfo.c_str());
 
-	//audio play/pause
-	if (!AudioManager::isAudioPlaying() && ImGui::ArrowButton("Play", ImGuiDir_Right)) {
-		AudioManager::play();
+		//audio scrubbing
+		ImGui::SetNextItemWidth(100);
+
+		static int scrubber = 0;
+		ImGui::PushID(4);
+		ImGui::DragInt("##", &scrubber, 5000.0f, 0, AudioManager::_currentPlaybackInfo->sampleDataArrayLength, "%d", ImGuiSliderFlags_AlwaysClamp);
+		ImGui::PopID();
+		if (ImGui::IsItemEdited() || ImGui::IsItemDeactivated()) {
+			AudioManager::seekToSample(scrubber);
+		}
+		if (!ImGui::IsItemActive() && AudioManager::_currentPlaybackInfo->isAudioPlaying) {
+			scrubber = AudioManager::getCurrentSample();
+		}
+		if (ImGui::IsItemActive()) {
+			std::string scrubberSampleInfoStr = std::to_string(scrubber) + " / " + std::to_string(AudioManager::_currentPlaybackInfo->sampleDataArrayLength);
+			ImGui::SetTooltip(("Go to sample " + scrubberSampleInfoStr).c_str());
+		}
+
+		ImGui::SameLine();
+
+		//audio play/pause
+		if (!AudioManager::_currentPlaybackInfo->isAudioPlaying && ImGui::ArrowButton("Play", ImGuiDir_Right)) {
+			AudioManager::play();
+		}
+		else if (AudioManager::_currentPlaybackInfo->isAudioPlaying && ImGui::ArrowButton("Pause", ImGuiDir_Square)) {
+			AudioManager::pause();
+		}
+
+		ImGui::SameLine();
+
+		//music info
+		ImGui::Text(AudioManager::getAudioTimeInfoStr(scrubber).c_str());
 	}
-	else if (AudioManager::isAudioPlaying() && ImGui::ArrowButton("Pause", ImGuiDir_Square)) {
-		AudioManager::pause();
-	}
-
-	ImGui::SameLine();
-
-	//music info
-	ImGui::Text(AudioManager::getAudioTimeInfoStr(scrubber).c_str());
-
 
 	ImGui::EndChild();
 
@@ -189,10 +228,13 @@ void UI::toolbar() {
 
 	float logAmplitude = SignalProcessingManager::getMasterPtr()->getPeakAmplitudeDb() + 12;
 	ImGui::PlotHistogram("0 db\n-3 db\n-6 db\n-9 db", &logAmplitude, 1, 0, "##", 0, 13, ImVec2(20, 65));
+	//get correct tooltip value (take away 12)
+	if (ImGui::IsItemHovered())
+		ImGui::SetTooltip((std::to_string(logAmplitude - 12) + " db").c_str());
 
 	ImGui::SameLine();
 
-	static float volume = 1; 
+	static float volume = 1;
 	ImGui::VSliderFloat("Volume", ImVec2(30, 65), &volume, 0, 1, "%.2f", ImGuiSliderFlags_AlwaysClamp);
 	AudioManager::setVolume(volume);
 
@@ -202,7 +244,6 @@ void UI::toolbar() {
 	ImGui::SameLine();
 
 
-
 	//background colour picker--
 	ImGui::ColorEdit3("Background colour", SP::vars._clearColour, ImGuiColorEditFlags_NoInputs);
 	if (ImGui::IsItemEdited()) {
@@ -210,14 +251,15 @@ void UI::toolbar() {
 	}
 	//--
 
-	//visualiser name--
+
+	//visualiser name, new line--
 	ImGui::Text(VisualiserManager::path().c_str());
 	//--
 
 	ImGui::SameLine();
 
 	if (VisualiserManager::recentlySaved()) {
-		ImGui::TextColored(ImVec4(0.5,1,0.5,1),"Save successful");
+		ImGui::TextColored(ImVec4(0.5, 1, 0.5, 1), "Save successful");
 	}
 
 	ImGui::End();
@@ -225,7 +267,7 @@ void UI::toolbar() {
 
 
 void UI::sidebar() {
-	if (!_showUi) {
+	if (!UIglobalFeatures::_showUI) {
 		return;
 	}
 
@@ -240,7 +282,7 @@ void UI::sidebar() {
 
 	ImGui::Text("Sprites");
 	ImGui::Text("Ctrl+d to deselect all");
-	ImGui::BeginChild("Sprites", ImVec2(ImGui::GetContentRegionAvail().x, std::min(_window->getScreenHeight() * 0.8f, 500.0f)), true);
+	ImGui::BeginChild("Sprites", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y), true, ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
 	bool sortRequired = false;
 	for (int i = spritesByDepthOrder.size() - 1; i >= 0; i--) {
@@ -297,8 +339,6 @@ void UI::sidebar() {
 
 	//--
 
-
-
 	ImGui::End();
 }
 
@@ -309,9 +349,9 @@ void UI::displayErrors()
 
 void UI::processInput()
 {
-	//shortcuts always availiable
-	if (_inputManager->isKeyDown(SDLK_LCTRL) && _inputManager->isKeyPressed(SDLK_a)) { //ctrl a fullscreen
-		_showUi = !_showUi;
+	//shortcuts always availiable (even when typing)
+	if (_inputManager->isKeyDown(SDLK_LCTRL) && _inputManager->isKeyPressed(SDLK_a)) { //ctrl a remove all ui
+		UIglobalFeatures::_showUI = !UIglobalFeatures::_showUI;
 	}
 	if (_inputManager->isKeyDown(SDLK_LCTRL) && _inputManager->isKeyPressed(SDLK_x)) { //ctrl x dont show info boxes
 		_showInfoBoxes = !_showInfoBoxes;
@@ -326,14 +366,15 @@ void UI::processInput()
 		_save = true;
 	}
 
-	//play/pause audio only when not typing in imgui
+	//shortcuts availiable only when not typing
 	if (!ImGui::GetIO().WantCaptureKeyboard) {
 
+		//play/pause audio with space
 		if (_inputManager->isKeyPressed(SDLK_SPACE)) {
-			if (AudioManager::isAudioPlaying()) {
+			if (AudioManager::_currentPlaybackInfo->isAudioPlaying) {
 				AudioManager::pause();
 			}
-			else if (AudioManager::isAudioFinished()){
+			else if (AudioManager::_currentPlaybackInfo->isAudioFinished) {
 				//restart
 				AudioManager::seekToSample(0);
 				AudioManager::play();
@@ -342,13 +383,18 @@ void UI::processInput()
 				AudioManager::play();
 			}
 		}
+
+		//exit fullscreen with esc
+		if (_fullscreen && _inputManager->isKeyPressed(SDLK_ESCAPE)) {
+			_fullscreen = false;
+		}
 	}
 }
 
 
 Vengine::Viewport UI::getViewport()
 {
-	if (!_showUi) {
+	if (!UIglobalFeatures::_showUI) {
 		return Vengine::Viewport(_window->getScreenWidth(), _window->getScreenHeight());
 	}
 
@@ -365,13 +411,41 @@ Vengine::Viewport UI::getViewport()
 
 //*** SHADER UI ***
 
+void UI::shaderHelpUi()
+{
+	ImGui::Begin("Shader help", &_showShaderHelpUi, ImGuiWindowFlags_AlwaysAutoResize);
+
+	ImGui::Text("Shader scripts are written in a modified GLSL, a C-like language.");
+	ImGui::Text("To get started, use the 'Create shader' option from the 'Shader manager' menu.");
+	ImGui::Text("Note - first you must create a new visualiser or load an existing one.");
+	ImGui::Text("\n");
+	ImGui::Text("Now you will need to open the shader file.");
+	ImGui::Text("To find the shader, use the 'Open shader folder' option- this will bring up file explorer.");
+	ImGui::Text("Right click on the shader you just created, and open with a text editor of your choice.");
+	ImGui::Text("I recommend using notepad++ or vs code and installing a GLSL syntax highlighting plugin.");
+	ImGui::Text("\n");
+	ImGui::Text("Upon opening you will see the simplest possible shader (the same code as simple.visfrag).");
+	ImGui::Text("To see how your shader acts, add a sprite and set its shader to your created shader.");
+	ImGui::Text("In the shader, try multiplying vis_outputColour by vis_peakAmplitude.");
+	ImGui::Text("Click the recompile button in the sprite info window (next to the shader selector).");
+	ImGui::Text("Play some music!");
+	ImGui::Text("Try multiplying vis_outputColour.r by vis_fragmentPosition.x");
+	ImGui::Text("Try multiplying vis_outputColour.g by vis_fragmentPosition.y");
+	ImGui::Text("Recompile!");
+	ImGui::Text("\n");
+	ImGui::Text("A full list of shader variables is available under the 'Shader keywords' options");
+	ImGui::Text("Look at logEq.visfrag for an example of a more complicated shader");
+
+	ImGui::End();
+}
+
 void UI::shaderVariablesUi()
 {
 	//*** SHOW CURRENT BINDINGS ***
 
-	ImGui::Begin("Shader variables", &_showShaderVariablesUi, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::Begin("Shader keywords", &_showShaderVariablesUi, ImGuiWindowFlags_AlwaysAutoResize);
 
-	ImGui::Text("These are the variables that you can use in a .visfrag shader");
+	ImGui::Text("Keywords that you can use in a .visfrag shader");
 
 	if (ImGui::CollapsingHeader("Input sprite info")) {
 		ImGui::Text("Information about the current pixel and sprite the shader is being run on");
@@ -509,16 +583,21 @@ void UI::generalSignalProcessingUi()
 
 	//add ability to change fourier transform window size; use combo to choose from 1024 samples to 16192
 
-	if (ImGui::Button("Reset signal processing")) {
+	if (ImGui::Button("Reset signal processing (ctrl+r)")) {
 		SignalProcessingManager::reset();
 	}
 
 	ImGui::Separator();
 
-	if (AudioManager::isAudioLoaded()) {
-		std::string info = "Sample rate: " + std::to_string(AudioManager::getSampleRate()) + ", Current sample: " + std::to_string(AudioManager::getCurrentSample()) + " / " + std::to_string(AudioManager::getNumSamples());
-		ImGui::Text(info.c_str());
-		ImGui::PlotLines("data", &(AudioManager::getSampleData()[std::max(0, AudioManager::getCurrentSample() - AudioManager::getSampleRate())]), AudioManager::getSampleRate(), 0, 0, -1, 1, ImVec2(350, 40));
+	if (AudioManager::_currentPlaybackInfo->isAudioLoaded) {
+		std::string sampleRateInfoStr = "Sample rate: " + std::to_string(AudioManager::_currentPlaybackInfo->sampleRate);
+		std::string currentSampleInfoStr = "Current sample: " + std::to_string(AudioManager::_currentPlaybackInfo->sampleCounter);
+		if (!AudioManager::isUsingLoopback()) //add out of when not using loopback
+			currentSampleInfoStr += " / " + std::to_string(AudioManager::_currentPlaybackInfo->sampleDataArrayLength);
+
+		ImGui::Text((sampleRateInfoStr + ", " + currentSampleInfoStr).c_str());
+
+		ImGui::PlotLines("data", &(AudioManager::_currentPlaybackInfo->sampleDataArrayPtr[AudioManager::_currentPlaybackInfo->sampleDataArrayStartPosition]), SP::consts._finalLoopbackStorageSize, 0, 0, -1, 1, ImVec2(350, 40));
 	}
 	else {
 		ImGui::Text("No audio loaded");
@@ -529,9 +608,9 @@ void UI::generalSignalProcessingUi()
 
 void UI::fourierTransformsUi()
 {
-	ImGui::Begin("Fourier Tranforms", &_showFourierTransformUi, ImGuiWindowFlags_AlwaysAutoResize);
+	ImGui::Begin("Frequency Bands", &_showFourierTransformUi, ImGuiWindowFlags_AlwaysAutoResize);
 
-	ImGui::Checkbox("Compute Fourier Transforms", &SP::vars._computeFourierTransform);
+	ImGui::Checkbox("Compute frequeny bands", &SP::vars._computeFourierTransform);
 
 	//get id array
 	std::vector<int> fourierTransformIds = FourierTransformManager::idArr();
@@ -566,7 +645,7 @@ void UI::fourierTransformsUi()
 			ImGui::Text(("Cutoff smooth fraction: " + std::to_string(cutoffSmooth)).c_str());
 			//--
 
-			if (ImGui::CollapsingHeader("Smoothing options", ImGuiTreeNodeFlags_Leaf)) {
+			if (ImGui::CollapsingHeader("Smoothing options")) {
 				//more options for ft--
 				static std::vector<std::string> smoothOptions = { "Average of neighbours", "A.R.A. smoothing", "Time convolve" };
 				static int smoothTypeIndex = 0;
@@ -596,7 +675,7 @@ void UI::fourierTransformsUi()
 				ImGui::Text("Smoothing pipeline:");
 				if (ft->_FTinfo.applyFirst != FourierTransform::NO_FUNCTION) {
 					std::string idStr = smoothOptions[ft->_FTinfo.applyFirst];
-					ImGui::TextColored(ImVec4(1.0f,0.5f,1.0f,1.0f),(" " + idStr).c_str());
+					ImGui::TextColored(ImVec4(1.0f, 0.5f, 1.0f, 1.0f), (" " + idStr).c_str());
 				}
 				if (ft->_FTinfo.applySecond != FourierTransform::NO_FUNCTION) {
 					std::string idStr = smoothOptions[ft->_FTinfo.applySecond];
@@ -640,10 +719,12 @@ void UI::fourierTransformsUi()
 	ImGui::SliderFloat("Cutoff Hz low", &nextCutoffLow, 0.0f, SignalProcessingManager::getMasterPtr()->nyquist(), "%.1f", ImGuiSliderFlags_AlwaysClamp);
 	ImGui::SliderFloat("Cutoff Hz high", &nextCutoffHigh, 0.0f, SignalProcessingManager::getMasterPtr()->nyquist(), "%.1f", ImGuiSliderFlags_AlwaysClamp);
 	ImGui::SliderFloat("Cutoff smooth fraction", &nextCutoffSmoothFactor, 0.0f, 1.0f, "%.2f", ImGuiSliderFlags_AlwaysClamp);
-	
+
 	std::vector<int> availiableIds = FourierTransformManager::availiableIdArr();
 	static int nextId = 0;
 	UIglobalFeatures::ImGuiBetterCombo(availiableIds, nextId, 2);
+	ImGui::SameLine();
+	ImGui::Text("Frequency band id");
 
 	if (ImGui::Button("Create new")) {
 		if (nextCutoffHigh < nextCutoffLow) {
@@ -770,7 +851,7 @@ void UI::mfccUi()
 
 	static bool show0thMFCC = true;
 
-	ImGui::PlotHistogram("Mel band energies", SignalProcessingManager::_mfccs->getBandEnergies(), SignalProcessingManager::_mfccs->getNumMelBands(), 0, 0, 0, 1, ImVec2(320,40) );
+	ImGui::PlotHistogram("Mel band energies", SignalProcessingManager::_mfccs->getBandEnergies(), SignalProcessingManager::_mfccs->getNumMelBands(), 0, 0, 0, 1, ImVec2(320, 40));
 	ImGui::PlotHistogram("Mel spectrogram", SignalProcessingManager::_mfccs->getMelSpectrogram(), SignalProcessingManager::_mfccs->getNumMelBands(), 0, 0, FLOAT_MAX, FLOAT_MAX, ImVec2(320, 40));
 	ImGui::PlotHistogram("MFCCs", &(SignalProcessingManager::_mfccs->getMfccs()[!show0thMFCC]), SignalProcessingManager::_mfccs->getNumMelBands() - !show0thMFCC, 0, 0, FLOAT_MAX, FLOAT_MAX, ImVec2(320, 40));
 
@@ -799,8 +880,8 @@ void UI::selfSimilarityMatrixUi()
 
 	//which one to calculate (future or real time)--
 	ImGui::Text("Link to:");
-	ImGui::RadioButton("Real time", (int*) &UIglobalFeatures::_uiSMinfo._useFuture, int(false)); ImGui::SameLine();
-	ImGui::RadioButton("Future (recommended)", (int*) &UIglobalFeatures::_uiSMinfo._useFuture, int(true));
+	ImGui::RadioButton("Real time", (int*)&UIglobalFeatures::_uiSMinfo._useFuture, int(false)); ImGui::SameLine();
+	ImGui::RadioButton("Future (file audio only)", (int*)&UIglobalFeatures::_uiSMinfo._useFuture, int(true));
 	//--
 
 	//matrix size & resolution--
@@ -845,8 +926,8 @@ void UI::selfSimilarityMatrixUi()
 	}
 	//--
 
-	if ((!(UIglobalFeatures::_uiSMinfo == SignalProcessingManager::_similarityMatrix->_SMinfo) )
-		&& ImGui::Button("Confirm", ImVec2(80,25))) 
+	if ((!(UIglobalFeatures::_uiSMinfo == SignalProcessingManager::_similarityMatrix->_SMinfo))
+		&& ImGui::Button("Confirm", ImVec2(80, 25)))
 	{
 		SignalProcessingManager::_similarityMatrix->_SMinfo = UIglobalFeatures::_uiSMinfo;
 		SignalProcessingManager::_similarityMatrix->reInit();
@@ -854,7 +935,7 @@ void UI::selfSimilarityMatrixUi()
 	if (SP::vars._wasCPSautoDecreased) {
 		UIglobalFeatures::_uiSMinfo._matrixSize *= SP::consts._CPSreduceFactor;
 		SignalProcessingManager::_similarityMatrix->_SMinfo._matrixSize *= SP::consts._CPSreduceFactor;
-		
+
 		if (UIglobalFeatures::_uiSMinfo == SignalProcessingManager::_similarityMatrix->_SMinfo) { //reinit if only thing changed was cps
 			SignalProcessingManager::_similarityMatrix->reInit();
 		}
@@ -869,7 +950,7 @@ void UI::selfSimilarityMatrixUi()
 
 	//compute texture
 	ImGui::Checkbox("Create texture", &SP::vars._computeTexture);
-	
+
 	//contrast
 	ImGui::SliderFloat("Contrast Factor", &SignalProcessingManager::_similarityMatrix->_SMinfo._contrastFactor, 1, 100, "%.3f", ImGuiSliderFlags_Logarithmic);
 	UIglobalFeatures::_uiSMinfo._contrastFactor = SignalProcessingManager::_similarityMatrix->_SMinfo._contrastFactor;
@@ -911,7 +992,7 @@ void UI::processFileMenuSelection()
 	if (_save) {
 		if (!VisualiserManager::save()) {
 			UIglobalFeatures::queueError("Failed to save");
-		} 
+		}
 		_save = false;
 		return;
 	}
@@ -929,8 +1010,9 @@ void UI::processFileMenuSelection()
 
 	if (_load) {
 
+		AudioManager::audioInterruptOccured(0);
+
 		std::string visualiserPath = "";
-		SignalProcessingManager::audioInterruptOccured();
 		if (PFDapi::folderChooser("Chooser folder containing the .cfg of the visualiser to load",
 			Vengine::IOManager::getProjectDirectory() + "/Visualisers", visualiserPath, false))
 		{
@@ -951,6 +1033,31 @@ void UI::processFileMenuSelection()
 		return;
 	}
 }
+
+void UI::processDisplayAdjustments()
+{
+	//set fullscreen--
+	static bool isCurrentlyFullscreen = false;
+	if (_fullscreen != isCurrentlyFullscreen) {
+		_window->setWindowFullscreen(_fullscreen);
+		isCurrentlyFullscreen = _fullscreen;
+	}
+	//--
+}
+
+
+void UI::openAsyncFileExplorer()
+{
+	_openShaderFolder = false;
+
+	if (PFDapi::isAsyncFileExplorerAlive()) {
+		UIglobalFeatures::queueError("Shader folder already open");
+		return;
+	}
+
+	PFDapi::openAsyncFileExplorer("Shaders folder", Vengine::IOManager::getProjectDirectory() + "/" + VisualiserManager::shadersFolder());
+}
+
 
 bool UI::textInputPrompt(const std::string& message, char* buf, int bufSize, bool& isPromptOpen)
 {

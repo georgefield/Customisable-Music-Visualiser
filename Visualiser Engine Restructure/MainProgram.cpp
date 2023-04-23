@@ -10,18 +10,13 @@
 #include "VisVars.h"
 
 
-const int screenWidth = 1024;
-const int screenHeight = 768;
-
 MainProgram::MainProgram() :
 	_gameState(ProgramState::RUNNING),
 	_UI(),
-	_viewport(screenWidth, screenHeight)
+	_viewport(SP::consts.defaultSW, SP::consts.defaultSH)
 {
 }
 
-
-const std::string STARTUP_MUSIC_FILEPATH = "Resources/Audio/metronome.wav";
 
 
 void MainProgram::run() {
@@ -39,7 +34,7 @@ void MainProgram::init()
 void MainProgram::initSystems() {
 
 	//use Vengine to create window
-	_window.create("visualiser", screenWidth, screenHeight, SDL_WINDOW_OPENGL);
+	_window.create("visualiser", SP::consts.defaultSW, SP::consts.defaultSH, SDL_WINDOW_OPENGL);
 
 	_frameBufferIDs = new GLuint[_numFrameBuffers];
 	_frameBufferTextureIDs = new GLuint[_numFrameBuffers];
@@ -59,6 +54,7 @@ void MainProgram::initSystems() {
 	Vengine::MyTiming::setFPSlimit(200);
 
 	Vengine::MyTiming::createTimer(_timeSinceLoadTimerId);
+	Vengine::MyTiming::startTimer(_timeSinceLoadTimerId);
 }
 
 void MainProgram::initManagers()
@@ -67,7 +63,6 @@ void MainProgram::initManagers()
 	VisualiserShaderManager::init();
 
 	AudioManager::init();
-	AudioManager::load(STARTUP_MUSIC_FILEPATH); //program works by always having a song loaded
 
 	SignalProcessingManager::init();
 
@@ -91,7 +86,7 @@ void MainProgram::initGenericUpdaters()
 	VisualiserShaderManager::Uniforms::setUniformUpdater("vis_currentSample", currentSampleUpdaterFunction);
 
 	//total samples
-	std::function<int()> totalSamplesUpdaterFunction = &AudioManager::getNumSamples;
+	std::function<int()> totalSamplesUpdaterFunction = &AudioManager::getTotalAudioDataLength;
 	VisualiserShaderManager::Uniforms::setUniformUpdater("vis_totalSamples", totalSamplesUpdaterFunction);
 
 	//sample rate
@@ -176,6 +171,9 @@ void MainProgram::endFrame() {
 	//display what has just been drawn to screen
 	_window.swapBuffer();
 
+	//needs to update information every frame
+	AudioManager::updateCurrentAudioInfo();
+
 	//to count frame timings
 	Vengine::MyTiming::frameDone();
 }
@@ -190,6 +188,9 @@ void MainProgram::drawVis() {
 
 	//signal processing tmp
 	SignalProcessingManager::calculate();
+
+	//set vis values that will be sent to shader
+	VisualiserShaderManager::updateUniformValuesToOutput();
 
 	//batch if not showing ui
 	SpriteManager::drawAll();

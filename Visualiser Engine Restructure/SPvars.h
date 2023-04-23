@@ -45,9 +45,14 @@ struct SPvarsStruct {
 
 const struct SPconstsStruct {
 	//consts
+	//resolution options--
+	const int defaultSW = 1024;
+	const int defaultSH = 768;
+	//--
+
 	const int _generalHistorySize = 1000;
 
-	const int _numMelBands = 25;
+	const int _numMelBands = 40;
 
 	const int _STFTsamples = 4096;
 
@@ -56,6 +61,12 @@ const struct SPconstsStruct {
 	const float _CPSreduceFactor = 0.75;
 	
 	const int _maxFourierTransforms = 4;
+
+	const int _requiredLoopbackCacheLength = 8192; //usually does 441/480 samples at a time , 10x for safety
+	const int _loopbackCacheSafetyBuffer = 2000; //~0.1 seconds, delay for this long after recieving loopback samples
+	const int _finalLoopbackStorageSize = 4096;
+
+	const int _peakAmplitudeWindowSizeInSamples = 4096;
 };
 
 struct SP {

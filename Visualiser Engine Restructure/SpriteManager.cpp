@@ -174,6 +174,6 @@ void SpriteManager::updateDepthSortedSprites()
 	}
 
 	std::sort(_depthSortedSpritePtrs.begin(), _depthSortedSpritePtrs.end(), [](CustomisableSprite* a, CustomisableSprite* b) {
-		return (a->getDepth()> b->getDepth());
+		return (a->getDepth() > b->getDepth());
 		}); //sort by depth
 }
