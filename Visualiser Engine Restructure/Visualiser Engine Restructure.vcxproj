@@ -152,7 +152,6 @@
     <ClCompile Include="SignalProcessingManager.cpp" />
     <ClCompile Include="SelfSimilarityMatrix.cpp" />
     <ClCompile Include="SpriteManager.cpp" />
-    <ClCompile Include="SPvars.cpp" />
     <ClCompile Include="TempoDetection.cpp" />
     <ClCompile Include="UI.cpp" />
     <ClCompile Include="UIglobalFeatures.cpp" />
@@ -160,6 +159,7 @@
     <ClCompile Include="VisualiserShader.cpp" />
     <ClCompile Include="VisualiserManager.cpp" />
     <ClCompile Include="VisualiserShaderManager.cpp" />
+    <ClCompile Include="VisPaths.cpp" />
     <ClCompile Include="VisVars.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -177,11 +177,11 @@
     <ClInclude Include="miniaudio_api.h" />
     <ClInclude Include="SimilarityMatrixHandler.h" />
     <ClInclude Include="SimMatrixStructs.h" />
-    <ClInclude Include="SPvars.h" />
+    <ClInclude Include="VisVars.h" />
     <ClInclude Include="MFCCs.h" />
     <ClInclude Include="NoteOnset.h" />
     <ClInclude Include="History.h" />
-    <ClInclude Include="Kernels.h" />
+    <ClInclude Include="Kernel.h" />
     <ClInclude Include="MainProgram.h" />
     <ClInclude Include="Master.h" />
     <ClInclude Include="Peak.h" />
@@ -194,7 +194,7 @@
     <ClInclude Include="SSBOsetter.h" />
     <ClInclude Include="TempoDetection.h" />
     <ClInclude Include="Threshold.h" />
-    <ClInclude Include="Tools.h" />
+    <ClInclude Include="MyMaths.h" />
     <ClInclude Include="UI.h" />
     <ClInclude Include="UIglobalFeatures.h" />
     <ClInclude Include="UniformSetter.h" />
@@ -203,7 +203,8 @@
     <ClInclude Include="VisualiserShader.h" />
     <ClInclude Include="VisualiserManager.h" />
     <ClInclude Include="VisualiserShaderManager.h" />
-    <ClInclude Include="VisVars.h" />
+    <ClInclude Include="VisPaths.h" />
+    <ClInclude Include="WindowCoordinateConversions.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

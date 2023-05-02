@@ -17,8 +17,8 @@ struct SimMatInfo {
 	bool _useFuture = false;
 	LinkedTo _linkedTo = LinkedTo::MFCC;
 	int _matrixSize = 100;
-	int _coeffLow = 4;
-	int _coeffHigh = 13;
+	int _coeffLow = 1;
+	int _coeffHigh = 10;
 	float _cutoffLow = 0;
 	float _cutoffHigh = 20000;
 	float _cutoffSmoothFactor = 0.0f;

@@ -1,7 +1,6 @@
 #pragma once
 #include "MFCCs.h"
 #include "FourierTransform.h"
-#include "Tools.h"
 #include "History.h"
 
 #include <Vengine/MyTiming.h>
@@ -88,7 +87,7 @@ public:
 
 	Vengine::GLtexture getMatrixTexture() {
 		if (!_similarityMatrix->isTextureCreated()) {
-			_similarityMatrix->createTexture(SP::vars._fastSimilarityMatrixTexture);
+			_similarityMatrix->createTexture(Vis::vars._fastSimilarityMatrixTexture);
 		}
 
 		return _similarityMatrix->getMatrixTexture();

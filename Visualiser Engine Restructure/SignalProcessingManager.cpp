@@ -15,6 +15,8 @@ SimilarityMatrixHandler* SignalProcessingManager::_similarityMatrix = nullptr;
 
 bool SignalProcessingManager::_isFirstReset = true;
 int SignalProcessingManager::_lagTimerId = -1;
+int SignalProcessingManager::_calculationFrameTimerId = -1;
+RollingAverage SignalProcessingManager::_calculationFrameTimeAvg(250); //average over last 250 calculations ~2.5 seconds
 
 
 void SignalProcessingManager::init() {
@@ -25,6 +27,7 @@ void SignalProcessingManager::init() {
 	}
 
 	Vengine::MyTiming::createTimer(_lagTimerId);
+	Vengine::MyTiming::createTimer(_calculationFrameTimerId);
 
 	_master = new Master();
 	_master->init(AudioManager::_currentPlaybackInfo->sampleRate);
@@ -41,7 +44,7 @@ void SignalProcessingManager::reset()
 
 	AudioManager::audioInterruptOccured(AudioManager::_currentPlaybackInfo->sampleCounter);
 
-	SP::vars._wasSignalProcessingReset = true;
+	Vis::comms._wasSignalProcessingReset = true;
 
 	//reinit everything--
 	_master->reInit(AudioManager::_currentPlaybackInfo->sampleRate);
@@ -64,11 +67,14 @@ void SignalProcessingManager::calculate()
 	}
 
 	//dependencies
-	if (SP::vars._computeTempoDetection) { SP::vars._computeNoteOnset = true; }
-	if (SP::vars._computeSimilarityMatrix && _similarityMatrix->isRealTime()) { SP::vars._computeMFCCs = true; }
+	if (Vis::vars._computeTempoDetection) { Vis::vars._computeNoteOnset = true; }
+	if (Vis::vars._computeSimilarityMatrix && _similarityMatrix->isRealTime()) { Vis::vars._computeMFCCs = true; }
+
 
 	//if audio has not caught up with audio hop size on this frame, skip frame
 	if (!AudioManager::_currentPlaybackInfo->doSignalProcessing) {
+		Vengine::MyTiming::resetTimer(_calculationFrameTimerId);
+		Vengine::MyTiming::startTimer(_calculationFrameTimerId);
 		return;
 	}
 
@@ -80,26 +86,30 @@ void SignalProcessingManager::calculate()
 	_master->calculatePeakAmplitude();
 	_master->calculateEnergy();
 
-
 	//all other signal processing done between begin and end--
-	if (SP::vars._computeFourierTransform) {
+	if (Vis::vars._computeFrequencyBands) {
 		FourierTransformManager::calculateFourierTransforms();
 	}
-	if (SP::vars._computeNoteOnset) {
-		_noteOnset->calculateNext(NoteOnset::DataExtractionAlg(SP::vars._onsetDetectionFunctionEnum), SP::vars._convolveOnsetDetection);
+	if (Vis::vars._computeNoteOnset) {
+		_noteOnset->calculateNext(NoteOnset::DataExtractionAlg(Vis::vars._onsetDetectionFunctionEnum), Vis::vars._convolveOnsetDetection);
 	}
-	if (SP::vars._computeTempoDetection) {
+	if (Vis::vars._computeTempoDetection) {
 		_tempoDetection->calculateNext();
 	}
-	if (SP::vars._computeMFCCs) {
+	if (Vis::vars._computeMFCCs) {
 		_mfccs->calculateNext();
 	}
-	if (SP::vars._computeSimilarityMatrix) {
+	if (Vis::vars._computeSimilarityMatrix) {
 		_similarityMatrix->calculateNext();
 	}
 	//--
 
 	_master->endCalculations();
+
+
+	//get frame time for a calculation frame
+	_calculationFrameTimeAvg.add(Vengine::MyTiming::readTimer(_calculationFrameTimerId));
+	Vis::comms._calculationFrameTime = _calculationFrameTimeAvg.get();
 }
 
 
@@ -118,7 +128,7 @@ void SignalProcessingManager::initAlgorithmObjects(bool noteOnset, bool tempoDet
 		}
 		else {
 			_mfccs = new MFCCs();
-			_mfccs->init(_master, SP::consts._numMelBands, 0, 20000);
+			_mfccs->init(_master, Vis::consts._numMelBands, 0, 20000);
 		}
 	}
 
@@ -128,7 +138,7 @@ void SignalProcessingManager::initAlgorithmObjects(bool noteOnset, bool tempoDet
 			_noteOnset->reInit();
 		}
 		else {
-			_noteOnset = new NoteOnset(SP::consts._generalHistorySize);
+			_noteOnset = new NoteOnset(Vis::consts._generalHistorySize);
 			_noteOnset->init(_master, _mfccs);
 		}
 	}

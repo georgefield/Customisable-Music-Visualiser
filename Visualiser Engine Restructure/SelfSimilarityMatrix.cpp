@@ -142,7 +142,7 @@ void SelfSimilarityMatrix::linkToMFCCs(MFCCs* mfcc, int coeffLow, int coeffHigh)
 
 	//sanity check
 	assert(_coeffLow > 0);
-	assert(_coeffHigh <= SP::consts._numMelBands);
+	assert(_coeffHigh <= Vis::consts._numMelBands);
 	assert(_coeffLow < _coeffHigh);
 
 	_mfccsPtr = mfcc;

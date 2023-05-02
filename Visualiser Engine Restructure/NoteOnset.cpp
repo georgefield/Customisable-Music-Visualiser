@@ -1,4 +1,5 @@
 #include "NoteOnset.h"
+#include "MyMaths.h"
 
 void compress(float& value, float gain, float thres, float ratio) {
 	value *= gain;
@@ -35,23 +36,26 @@ void NoteOnset::calculateNext(DataExtractionAlg dataAlg, bool convolve) {
 	if (dataAlg == DataExtractionAlg::SPECTRAL_DISTANCE_WITH_PHASE) {
 		onsetValue = weightedPhaseDeviation();
 	}
-	if (dataAlg == DataExtractionAlg::SIM_MATRIX_MFCC) {
-		onsetValue = similarityMatrixMFCC();
-	}
-	if (dataAlg == DataExtractionAlg::COMBINATION_FAST) {
-		onsetValue = combinationFast();
-	}
 	if (dataAlg == DataExtractionAlg::COMBINATION) {
 		onsetValue = combination();
 	}
 	_rawOnsetDetectionHistory.add(onsetValue); //stores raw algorithm output
 
-	//filtering functions
+	//filtering functions--
 	if (convolve) {
-		onsetValue = _m->sumOfConvolutionOfHistory(&_rawOnsetDetectionHistory, SP::vars._convolveWindowSize, LINEAR_PYRAMID);
+
+		Kernel kernel;
+		kernel.setUp(LINEAR_PYRAMID, Vis::vars._convolveWindowSize);
+
+		onsetValue = 0;
+		for (int i = 0; i < Vis::vars._convolveWindowSize; i++) {
+			onsetValue += _rawOnsetDetectionHistory.get(i) * kernel.getValueAt(i);
+		}
 	}
-	compress(onsetValue, SP::vars._detectionFunctionGain, SP::vars._detectionFunctionCompressionThreshold, SP::vars._detectionFunctionCompressionRatio);
-	if (SP::vars._clampBetween0and1) {
+
+	compress(onsetValue, Vis::vars._detectionFunctionGain, Vis::vars._detectionFunctionCompressionThreshold, Vis::vars._detectionFunctionCompressionRatio);
+	
+	if (Vis::vars._clampBetween0and1) {
 		onsetValue = std::max(0.0f, std::min(onsetValue, 1.0f));
 	}
 
@@ -63,7 +67,7 @@ void NoteOnset::calculateNext(DataExtractionAlg dataAlg, bool convolve) {
 
 	Peak lastPeak;
 	bool aboveThreshold;
-	if (_thresholder.getLastPeak(SP::vars._thresholdPercentForPeak, lastPeak)) {
+	if (_thresholder.getLastPeak(Vis::vars._thresholdPercentForPeak, lastPeak)) {
 		_onsetPeaks.add(lastPeak);
 	}
 
@@ -82,7 +86,7 @@ float NoteOnset::energy()
 
 float NoteOnset::derivativeOfLogEnergy() {
 
-	float one_over_dt = SP::vars._desiredCPS * 0.001; //do dt in ms as otherwise numbers too big
+	float one_over_dt = Vis::vars._desiredCPS * 0.001; //do dt in ms as otherwise numbers too big
 
 	//--change of energy per second, using log scale as human ear is log scale
 	//good for detecting beats of music with 4 to floor drum pattern
@@ -102,13 +106,13 @@ float NoteOnset::derivativeOfLogEnergy() {
 
 float NoteOnset::HFCderivativeOfLogEnergy()
 {
-	float one_over_dt = SP::vars._desiredCPS * 0.001; //do dt in ms as otherwise numbers too big
+	float one_over_dt = Vis::vars._desiredCPS * 0.001; //do dt in ms as otherwise numbers too big
 
 	float HFCenergy = 0.0f;
 	for (int k = 0; k < _m->_fftHistory.numHarmonics(); k++) {
 		HFCenergy += k * k * _m->_fftHistory.newest()[k] * _m->_fftHistory.newest()[k]; //weight by k for kth harmonic [masri]
 	}
-	HFCenergy /= SP::vars._masterFTgain * SP::vars._masterFTgain; //fix the gain applied on transform
+	HFCenergy /= Vis::vars._masterFTgain * Vis::vars._masterFTgain; //fix the gain applied on transform
 	HFCenergy *= 2; // miss out the mirrored half of the fourier transform
 
 	float derOfLogHFCenergy = (logf(HFCenergy) - logf(_previousHFCenergy));
@@ -124,26 +128,22 @@ float NoteOnset::HFCderivativeOfLogEnergy()
 
 
 float NoteOnset::spectralDistance() {
-	float one_over_dt = SP::vars._desiredCPS * 0.001; //do dt in ms as otherwise numbers too big
-
-	//calculate the fourier transform to use for spectral distance--
-	_ftForSpectralDistance.calculateNext();
-	//--
+	float one_over_dt = Vis::vars._desiredCPS * 0.001; //do dt in ms as otherwise numbers too big
 
 	//make sure enough entries--
-	if (_ftForSpectralDistance.getHistory()->entries() < 2) {
+	if (_m->_fftHistory.entries() < 2) {
 		return 0.0f;
 	}
 	//--
 
-	float spectralDistanceConvolvedHarmonics = Tools::L1distanceMetricIncDimOnly(
-		_ftForSpectralDistance.getHistory()->newest(),
-		_ftForSpectralDistance.getHistory()->previous(),
-		_ftForSpectralDistance.getHistory()->numHarmonics()
+	float spectralDistanceConvolvedHarmonics = MyMaths::L1distanceMetricIncDimOnly(
+		_m->_fftHistory.newest(),
+		_m->_fftHistory.previous(),
+		_m->_fftHistory.numHarmonics()
 	);
 	spectralDistanceConvolvedHarmonics *= one_over_dt;
 
-	compress(spectralDistanceConvolvedHarmonics, 8.0f, 1.0f, 2.0f);
+	compress(spectralDistanceConvolvedHarmonics, 5.0f, 1.0f, 2.0f);
 
 	return spectralDistanceConvolvedHarmonics;
 	//--
@@ -159,7 +159,7 @@ float argumentDistance(float arg1, float arg2) { //wrap around pi
 }
 
 float NoteOnset::weightedPhaseDeviation() {
-	float one_over_dt = SP::vars._desiredCPS * 0.001; //do dt in ms as otherwise numbers too big
+	float one_over_dt = Vis::vars._desiredCPS * 0.001; //do dt in ms as otherwise numbers too big
 
 	VectorHistory<MyComplex>* complexOutputs = _m->getBaseFftComplexOutputHistory();
 	int numHarmonics = complexOutputs->vectorDim();
@@ -180,35 +180,39 @@ float NoteOnset::weightedPhaseDeviation() {
 	return weightedPhaseDeviationSpread;
 }
 
-float NoteOnset::similarityMatrixMFCC()
-{
-	_simMatrix.calculateNext();
 
-	float measure = _simMatrix.matrix.getSimilarityMeasure();
-	if (isnan(measure) || isinf(measure)) { return 0.0f; } //stop nan virus escaping the lab
-
-	compress(measure, 30.0f, 1.0f, 2.0f);
-	return std::max(measure, 0.0f);
-}
-
-float NoteOnset::combinationFast()
-{
-	//all normalised to be ~1 at peak
-	float dole = derivativeOfLogEnergy();
-	float sd = spectralDistance();
-	float e = energy();
-	return (dole + 0.5) * (sd + 0.2) * (e + 0.3) - 0.03;
+float lerp(float v1, float v2, float t) {
+	return (1 - t)*v1 + t * v2;
 }
 
 float NoteOnset::combination()
 {
 	//all normalised to be ~1 at peak
-	float HFCdole = HFCderivativeOfLogEnergy();
-	float sd = spectralDistance();
-	float sdwp = weightedPhaseDeviation();
-	float e = energy();
-	float smms = similarityMatrixMFCC();
-	return (HFCdole + 0.7) * (sdwp + 0.4) * (smms + 0.4) * (e + 0.2) - 0.0224;
+	float e = 0;
+	float dole = 0;
+	float HFCdole = 0;
+	float sd = 0;
+	float wpd = 0;
+
+	if (Vis::vars._energyMixAmount > 0)
+		e = energy();
+	if (Vis::vars._doleMixAmount > 0)
+		dole = derivativeOfLogEnergy();
+	if (Vis::vars._HFCdoleMixAmount > 0)
+		HFCdole = HFCderivativeOfLogEnergy();
+	if (Vis::vars._sdMixAmount > 0)
+		sd = spectralDistance();
+	if (Vis::vars._wpdMixAmount > 0)
+		wpd = weightedPhaseDeviation();
+
+	float combination =
+		lerp(1, e, Vis::vars._energyMixAmount) *		//energy
+		lerp(1, dole, Vis::vars._doleMixAmount) *		//derivative of log energy
+		lerp(1, HFCdole, Vis::vars._HFCdoleMixAmount) * //high frequency weightedd erivative of log energy
+		lerp(1, sd, Vis::vars._sdMixAmount) *			//spectral distance
+		lerp(1, wpd, Vis::vars._wpdMixAmount)			//weighted phase deviation
+		- Vis::vars._leftoverConstantFactor;			//- possible constant factor
+	return combination;
 }
 
 //***

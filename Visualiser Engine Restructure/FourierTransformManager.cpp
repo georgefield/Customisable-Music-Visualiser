@@ -16,7 +16,7 @@ void FourierTransformManager::createFourierTransformFromStruct(FourierTransform:
 
 void FourierTransformManager::createFourierTransform(int id, int historySize, float cutOffLow, float cutOffHigh, float cutoffSmoothFrac)
 {
-	if (id >= SP::consts._maxFourierTransforms) {
+	if (id >= Vis::consts._maxFourierTransforms) {
 		Vengine::warning("id greater than max fourier transforms");
 		return;
 	}
@@ -88,7 +88,7 @@ std::vector<int> FourierTransformManager::idArr()
 std::vector<int> FourierTransformManager::availiableIdArr()
 {
 	std::vector<int> availiableFTids;
-	for (int i = 0; i < SP::consts._maxFourierTransforms; i++) {
+	for (int i = 0; i < Vis::consts._maxFourierTransforms; i++) {
 		if (!fourierTransformExists(i)) {
 			availiableFTids.push_back(i);
 		}

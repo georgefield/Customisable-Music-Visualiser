@@ -74,62 +74,60 @@ void TempoDetection::calculateNext() {
 		return;
 	}
 
-	//only calculate in new peaks exist
-	if (_noteOnset->getPeakHistory()->newest().onset != _lastPeakOnset) {
+	//beat times need to be updated every calculation cycle if best agent variables set
+	if (_agents->bestAgentVarsSet()) {
+		int samplesSinceLastBeat = (_m->_currentSample - _agents->_bestAgentBeatInterval) % _agents->_bestAgentBeatInterval;
+		float timeSinceLastBeat = float(samplesSinceLastBeat) / float(_m->_sampleRate);
+		_timeSinceLastBeat = timeSinceLastBeat;
 
-		_lastPeakOnset = _noteOnset->getPeakHistory()->newest().onset;
-
-
-		//new peak => calculate
-		if (_noteOnset->getPeakHistory()->entries() < DixonAlgVars::NUM_PEAKS_NEEDED_BEFORE_START) { //8 onsets atleast before starting to calculate
-			_confidenceRollingAvg.add(0.0f); //want to start confidence as low
-			return;
-		}
-
-		//do dixon alg
-		if (!_initialCalculated) {
-			_initialCalculated = true;
-			initialDixonAlg();
-		}
-		else {
-			continuousDixonAlg();
-		}
-
-		_agents->calculateScoresAccountingForClusterIntervalScores(_clusters);
-		_agents->sortAgentsByScoresAccountingForIntervalScores();
-		_agents->shrinkSetToSize(DixonAlgVars::MAX_AGENTS_STORED); //only keep this many best agents after every round
-		_agents->calculateConfidenceInBestAgent(_clusters->_clusterRadius);
-		_agents->devalueScores(DixonAlgVars::SCORE_FACTOR_PER_NEW_BEAT); //multiply each agent score by this factor. (0.954 means 15 beats to half)
-
-
-		//add to rolling avgs
-		if (_agents->highestScoringAgentExists()) {
-			float tempo = 60.0f * float(_m->_sampleRate) / float(_agents->_highestScoringAgent->_beatInterval);
-			_tempoRollingAvg.add(tempo);
-		}
-
-		_confidenceRollingAvg.add(_agents->_confidenceInBestAgent);
-
-		_agents->endCalculationRound();
+		float timeToNextBeat = float(_agents->_bestAgentBeatInterval - samplesSinceLastBeat) / float(_m->_sampleRate);
+		_timeToNextBeat = timeToNextBeat;
 	}
 
-	//add values to histories, do every call if initialised
-	if (_initialCalculated) {
-		_tempo = _tempoRollingAvg.get();
-		//set confidence value
-		_tempoConfidence = _confidenceRollingAvg.get();
-
-		//predictions cal
-		if (_agents->highestScoringAgentExists()) {
-			int samplesSinceLastBeat = (_m->_currentSample - _agents->_highestScoringAgent->_peakHistory->newest().onset) % _agents->_highestScoringAgent->_beatInterval;
-			float timeSinceLastBeat = float(samplesSinceLastBeat) / float(_m->_sampleRate);
-			_timeSinceLastBeat = timeSinceLastBeat;
-
-			float timeToNextBeat = float(_agents->_highestScoringAgent->_beatInterval - samplesSinceLastBeat) / float(_m->_sampleRate);
-			_timeToNextBeat = timeToNextBeat;
-		}
+	//only calculate if new peaks exist
+	if (_noteOnset->getPeakHistory()->newest().onset == _lastPeakOnset) {
+		return;
 	}
+
+	_lastPeakOnset = _noteOnset->getPeakHistory()->newest().onset;
+
+	//only calculate if enough peaks
+	if (_noteOnset->getPeakHistory()->entries() < DixonAlgVars::NUM_PEAKS_NEEDED_BEFORE_START) { //8 onsets atleast before starting to calculate
+		_confidenceRollingAvg.add(0.0f); //want to start confidence as low
+		return;
+	}
+
+	//do dixon alg
+	if (!_initialCalculated) {
+		_initialCalculated = true;
+		initialDixonAlg();
+	}
+	else {
+		continuousDixonAlg();
+	}
+
+	_agents->calculateScoresAndSetBestAgent(_clusters);
+	_agents->sortAgentsByScores();
+	_agents->shrinkSetToSize(DixonAlgVars::MAX_AGENTS_STORED); //only keep this many best agents after every round
+	_agents->calculateConfidenceInBestAgent(_clusters->_clusterRadius * 2); //2 * cluster radius
+	_agents->devalueScores(DixonAlgVars::SCORE_FACTOR_PER_NEW_BEAT); //multiply each agent score by this factor. (0.954 means 15 beats to half)
+
+	//only set best agents vars if found a best agent
+	if (!_agents->bestAgentVarsSet()) {
+		return;
+	}
+
+	//add to rolling avgs
+	float tempo = 60.0f * float(_m->_sampleRate) / float(_agents->_bestAgentBeatInterval);
+
+	//set tempo and confidence values
+	_tempoRollingAvg.add(tempo);
+	_confidenceRollingAvg.add(_agents->_confidenceInBestAgent);
+
+	_tempo = _tempoRollingAvg.get();
+	_tempoConfidence = _confidenceRollingAvg.get();
 }
+
 
 //*** dixon algorithm ***
 
@@ -157,8 +155,10 @@ int f(int d) {
 void TempoDetection::initialDixonAlg() {
 
 	_peaks.clear();
-	for (int i = _noteOnset->getPeakHistory()->entries() - 1; i >= 0; i--) {
+	int i = 0;
+	while (i < DixonAlgVars::MAX_PEAKS_STORED && i < _noteOnset->getPeakHistory()->entries()){
 		_peaks.push_back(_noteOnset->getPeakHistory()->get(i)); //oldest first, important for agent alg
+		i++;
 	}
 
 	//*** tempo induction ***
@@ -181,7 +181,7 @@ void TempoDetection::initialDixonAlg() {
 void TempoDetection::continuousDixonAlg()
 {
 	//remove oldest add newest (still oldest first)
-	if (_peaks.size() >= DixonAlgVars::MAX_PEAKS_STORED) {
+	while (_peaks.size() >= DixonAlgVars::MAX_PEAKS_STORED) {
 		_peaks.erase(_peaks.begin());
 	}
 	_peaks.push_back(_noteOnset->getPeakHistory()->newest()); //time and salience
@@ -238,11 +238,12 @@ void TempoDetection::computeClusters(ClusterSet* clusters, std::vector<Peak>& pe
 				//if |it.interval - k*itBelow.interval| < clusterRadius
 				if (fabsf(difference) <= clusters->_clusterRadius) {
 					(*smaller)._score += f(k) * (*larger)._IOIs.size();
-					(*larger)._score += f(k) * (*smaller)._IOIs.size();
 				}
 			}
 		}
 	}
+
+	
 
 }
 
@@ -253,9 +254,9 @@ void TempoDetection::computeAgents(AgentSet* agents, std::vector<Peak>& peaks)
 	float tolPrePercentage = 0.2; //20%
 	float tolPostPercentage = 0.4; //40%
 
-	int maxTolPre = tolPrePercentage * (60.0f / SP::vars.MIN_TEMPO) * _m->_sampleRate; //used for optimisation
+	int maxTolPre = tolPrePercentage * (60.0f / Vis::vars.MIN_TEMPO) * _m->_sampleRate; //used for optimisation
 
-	int tolInner = 0.04 * _m->_sampleRate; // 40 ms
+	int tolInner = 0.025 * _m->_sampleRate; // 25 ms
 
 	int tolPre, tolPost;
 

@@ -1,9 +1,9 @@
 #pragma once
 #include "VectorHistory.h"
 #include <Vengine/MyErrors.h>
-#include "Tools.h"
+#include "MyMaths.h"
 #include "DataTextureCreator.h"
-#include "SPvars.h"
+#include "VisVars.h"
 
 class SimilarityMatrixStructure {
 public:
@@ -65,7 +65,7 @@ public:
 		//reset texture if created
 		if (_textureCreator.isCreated()) {
 			deleteTexture();
-			createTexture(SP::vars._fastSimilarityMatrixTexture);
+			createTexture(Vis::vars._fastSimilarityMatrixTexture);
 		}
 
 		//set up correlation window vars again with the passed parameter--
@@ -114,14 +114,14 @@ public:
 
 		memcpy(_vectorHistory.workingArray(), v, sizeof(float) * _vectorDim);
 		_vectorHistory.addWorkingArrayToHistory();
-		_vectorMagnitudeHistory.add(Tools::L2norm(v, _vectorDim));
+		_vectorMagnitudeHistory.add(MyMaths::L2norm(v, _vectorDim));
 
 		//calculate measure and add to similarity matrix--
 		setCoord(0, 0, false, 1.0f);
 
 		for (int i = 1; i < _vectorHistory.entries(); i++) {
 			//similarity measure
-			float measure = Tools::dot(_vectorHistory.newest(), _vectorHistory.get(i), _vectorDim);
+			float measure = MyMaths::dot(_vectorHistory.newest(), _vectorHistory.get(i), _vectorDim);
 			measure /= (_vectorMagnitudeHistory.newest() * _vectorMagnitudeHistory.get(i));
 
 			//increase contrast
@@ -146,7 +146,7 @@ public:
 		}
 		//--
 
-		if (_textureCreator.isCreated() && SP::vars._computeTexture) {
+		if (_textureCreator.isCreated() && Vis::vars._computeTexture) {
 			updateTexture(); 
 		}
 	}

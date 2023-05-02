@@ -1,0 +1,34 @@
+void main(){
+	
+	float hzFrac = vis_ragmentUV.x;
+	float sceenFrac = pow(vis_FT0_size, hzFrac - 1);
+	int index = int(screenFrac * vis_FT0_size);
+	float fIndex = screenFrac * vis_FT0_size;
+	int indexL = index - 1;
+	if (indexL < 0){ indexL = 0; }
+
+	//split into 3
+	float newHarmonicValue;
+	float middleVal = (vis_FT0_harmonics[index] + vis_FT0_harmonics[indexL]) * 0.5;
+	if (fIndex - index < 0.33333){
+		newHarmonicValue = mix(vis_FT0_harmonics[indexL], middleVal, (3*(fIndex - index)));
+	}
+	else if (fIndex - index < 0.66666){
+		newHarmonicValue = middleVal;
+	}
+	else{
+		newHarmonicValue = mix(middleVal, vis_FT0_harmonics[index], (3*((fIndex - index) - 0.66666)));
+	}
+	newHarmonicValue = sqrt(newHarmonicValue);
+
+	
+	//cool colour mixing stuff
+	float opacity = 1;
+	if (vis_fragmentUV.y < newHarmonicValue){
+		opacity = vis_fragmentUV.y / abs(newHarmonicValue);
+	}else{
+		opacity = 0;
+	}
+	
+	vis_outputColour = mix(vec4(0,0,1,1), vis_inColour, opacity) * sqrt(opacity);
+}

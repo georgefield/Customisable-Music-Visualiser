@@ -1,14 +1,14 @@
 #include "SimilarityMatrixHandler.h"
 #include "AudioManager.h"
 #include "SignalProcessingManager.h"
-#include "SPvars.h"
+#include "VisVars.h"
 #include "UIglobalFeatures.h"
 
 #include <Vengine/MyTiming.h>
 
 SimilarityMatrixHandler::SimilarityMatrixHandler(bool useSetters)
 	:
-	matrix(SP::consts._generalHistorySize),
+	matrix(Vis::consts._generalHistorySize),
 	_fourierTransform(nullptr),
 	_samplesAheadForFutureMatrix(0),
 	_counterForDownscale(0),
@@ -30,13 +30,13 @@ void SimilarityMatrixHandler::init(Master* master)
 {
 	_master = master;
 
-	_samplesAheadForFutureMatrix = _SMinfo._downscale * (float(_SMinfo._matrixSize) / (2.0f * SP::vars._desiredCPS)) * _master->_sampleRate;
+	_samplesAheadForFutureMatrix = _SMinfo._downscale * (float(_SMinfo._matrixSize) / (2.0f * Vis::vars._desiredCPS)) * _master->_sampleRate;
 
 	matrix.init(_SMinfo._matrixSize);
 
 	_futureMaster.init(AudioManager::_currentPlaybackInfo->sampleRate, false);
 
-	_futureMFCCs.init(&_futureMaster, SP::consts._numMelBands, 0, 20000, false);
+	_futureMFCCs.init(&_futureMaster, Vis::consts._numMelBands, 0, 20000, false);
 
 	//fourier transform inited when created
 	if (_useSetters) {
@@ -46,7 +46,7 @@ void SimilarityMatrixHandler::init(Master* master)
 
 void SimilarityMatrixHandler::reInit()
 {
-	_samplesAheadForFutureMatrix = _SMinfo._downscale * (float(_SMinfo._matrixSize) / (2.0f * SP::vars._desiredCPS)) * _master->_sampleRate;
+	_samplesAheadForFutureMatrix = _SMinfo._downscale * (float(_SMinfo._matrixSize) / (2.0f * Vis::vars._desiredCPS)) * _master->_sampleRate;
 
 	matrix.reInit(_SMinfo._matrixSize);
 	relinkBasedOnSPvars();

@@ -143,6 +143,13 @@ void Vengine::MyTiming::resetTimer(int id)
 	_timerPauseTicks[id] = MyTiming::ticksSinceEpoch();
 }
 
+void Vengine::MyTiming::setTimer(int id, float time)
+{
+	assert(_timerStartTicks.find(id) != _timerStartTicks.end());
+
+	_timerStartTicks[id] = MyTiming::ticksSinceEpoch() - secondsToTicks(time);
+	_timerPauseTicks[id] = MyTiming::ticksSinceEpoch();
+}
 
 bool Vengine::MyTiming::timerReadLastFrame(int id)
 {
@@ -159,6 +166,11 @@ long long MyTiming::ticksSinceEpoch() { //in nanoseconds
 float MyTiming::ticksToSeconds(long long ticks) {
 
 	return ticks * 0.000000001f;
+}
+
+long long MyTiming::secondsToTicks(float seconds) {
+
+	return seconds * 1000000000.0f;
 }
 
 void Vengine::MyTiming::updateWhenRead()

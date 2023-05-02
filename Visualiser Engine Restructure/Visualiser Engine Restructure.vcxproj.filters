@@ -132,14 +132,14 @@
     <ClCompile Include="UIglobalFeatures.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="VisVars.cpp">
+    <ClCompile Include="VisPaths.cpp">
       <Filter>Source Files\Visualiser Managing</Filter>
     </ClCompile>
     <ClCompile Include="ConfigManager.cpp">
       <Filter>Source Files\Visualiser Managing</Filter>
     </ClCompile>
-    <ClCompile Include="SPvars.cpp">
-      <Filter>Source Files\Signal Processing Managing</Filter>
+    <ClCompile Include="VisVars.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -176,10 +176,10 @@
     <ClInclude Include="History.h">
       <Filter>Header Files\Data Structures</Filter>
     </ClInclude>
-    <ClInclude Include="Tools.h">
+    <ClInclude Include="MyMaths.h">
       <Filter>Header Files\Tools</Filter>
     </ClInclude>
-    <ClInclude Include="Kernels.h">
+    <ClInclude Include="Kernel.h">
       <Filter>Header Files\Tools</Filter>
     </ClInclude>
     <ClInclude Include="MFCCs.h">
@@ -245,9 +245,6 @@
     <ClInclude Include="SimilarityMatrixHandler.h">
       <Filter>Header Files\Signal Processing Algorithms\Self Similarity Matrix</Filter>
     </ClInclude>
-    <ClInclude Include="SPvars.h">
-      <Filter>Header Files\Signal Processing Managing</Filter>
-    </ClInclude>
     <ClInclude Include="DataTextureCreator.h">
       <Filter>Header Files\Signal Processing Algorithms\Self Similarity Matrix</Filter>
     </ClInclude>
@@ -260,11 +257,17 @@
     <ClInclude Include="UIglobalFeatures.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="VisVars.h">
+    <ClInclude Include="VisPaths.h">
       <Filter>Header Files\Visualiser Managing</Filter>
     </ClInclude>
     <ClInclude Include="SimMatrixStructs.h">
       <Filter>Header Files\Signal Processing Algorithms\Self Similarity Matrix</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowCoordinateConversions.h">
+      <Filter>Header Files\Sprite Managing</Filter>
+    </ClInclude>
+    <ClInclude Include="VisVars.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

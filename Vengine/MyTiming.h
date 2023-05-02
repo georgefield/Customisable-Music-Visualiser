@@ -26,6 +26,7 @@ namespace Vengine {
 		static void startTimer(int id);
 		static void stopTimer(int id);
 		static void resetTimer(int id);
+		static void setTimer(int id, float time);
 
 		static bool timerReadLastFrame(int id);
 
@@ -34,6 +35,7 @@ namespace Vengine {
 
 		static long long ticksSinceEpoch();
 		static float ticksToSeconds(long long ticks);
+		static long long secondsToTicks(float seconds);
 
 		static const std::chrono::time_point<std::chrono::steady_clock> _epochTimePoint;
 

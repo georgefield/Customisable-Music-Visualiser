@@ -1,2 +1,5 @@
-﻿  Window.cpp
+﻿  Audio.cpp
+  MyTiming.cpp
+C:\Users\George\Documents\3rd year project\Project\Vengine\MyTiming.cpp(173,17): warning C4244: 'return': conversion from 'float' to '__int64', possible loss of data
+  Generating Code...
   Vengine.vcxproj -> C:\Users\George\Documents\3rd year project\Project\Debug\Vengine.lib

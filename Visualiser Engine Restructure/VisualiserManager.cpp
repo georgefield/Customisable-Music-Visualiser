@@ -1,5 +1,5 @@
 #include "VisualiserManager.h"
-#include "VisVars.h"
+#include "VisPaths.h"
 #include <Vengine/IOManager.h>
 
 Visualiser VisualiserManager::_current;
@@ -14,13 +14,13 @@ void VisualiserManager::init()
 bool VisualiserManager::createNewVisualiser(std::string name)
 {
 	//check it doesnt exist already
-	if ( Vengine::IOManager::directoryExists(VisVars::_userCreatedVisualiserPath + name)){
+	if ( Vengine::IOManager::directoryExists(VisPaths::_userCreatedVisualiserPath + name)){
 		Vengine::warning("Cannot create visualiser, visualiser with name '" + name + "' already exists.");
 		return false;
 	}
 
 	//init if it does
-	return _current.initNewBlankVis(VisVars::_userCreatedVisualiserPath + name);
+	return _current.initNewBlankVis(VisPaths::_userCreatedVisualiserPath + name);
 }
 
 bool VisualiserManager::loadVisualiser(std::string path)
@@ -42,7 +42,7 @@ bool VisualiserManager::save()
 		return false;
 	}
 
-	if (_current.getPath() == VisVars::_startupVisualiserPath) {
+	if (_current.getPath() == VisPaths::_startupVisualiserPath) {
 		Vengine::warning("Cannot save over startup visualiser");
 		return false;
 	}
@@ -59,13 +59,13 @@ bool VisualiserManager::save()
 bool VisualiserManager::saveAsNew(std::string name)
 {
 	//check if visualiser with that name exists already
-	if (Vengine::IOManager::directoryExists(VisVars::_userCreatedVisualiserPath + name)) {
+	if (Vengine::IOManager::directoryExists(VisPaths::_userCreatedVisualiserPath + name)) {
 		Vengine::warning("Visualiser with that name already exists in user created visualisers, no copy made");
 		return false;
 	}
 
 	//set current visualiser to be a save of whats being worked on now in a different folder
-	if (_current.initNewAsCurrentVis(VisVars::_userCreatedVisualiserPath + name)) {
+	if (_current.initNewAsCurrentVis(VisPaths::_userCreatedVisualiserPath + name)) {
 		Vengine::MyTiming::resetTimer(_timeSinceSaveTimerId);
 		Vengine::MyTiming::startTimer(_timeSinceSaveTimerId);
 		_saved = true;

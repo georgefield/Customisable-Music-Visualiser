@@ -6,7 +6,8 @@
 #include "FourierTransform.h"
 #include "MFCCs.h"
 #include "SimilarityMatrixHandler.h"
-#include "SPvars.h"
+#include "VisVars.h"
+#include "RollingAverage.h"
 
 #include "AudioManager.h"
 
@@ -27,13 +28,15 @@ public:
 	static MFCCs* _mfccs;
 	static SimilarityMatrixHandler* _similarityMatrix;
 
-	static int getGeneralHistorySize() { return SP::consts._generalHistorySize; }
+	static int getGeneralHistorySize() { return Vis::consts._generalHistorySize; }
 
 private:
 	static Master* _master;
 
 	static bool _isFirstReset;
 	static int _lagTimerId;
+	static int _calculationFrameTimerId;
+	static RollingAverage _calculationFrameTimeAvg;
 
 	static void initAlgorithmObjects(bool noteOnset, bool tempoDetection, bool mfccs, bool similarityMatrix);
 };

@@ -7,13 +7,13 @@
 #include "FourierTransformManager.h"
 #include "VisualiserShaderManager.h"
 #include "VisualiserManager.h"
-#include "VisVars.h"
+#include "VisPaths.h"
 
 
 MainProgram::MainProgram() :
 	_gameState(ProgramState::RUNNING),
 	_UI(),
-	_viewport(SP::consts.defaultSW, SP::consts.defaultSH)
+	_viewport(Vis::consts.defaultSW, Vis::consts.defaultSH)
 {
 }
 
@@ -34,7 +34,7 @@ void MainProgram::init()
 void MainProgram::initSystems() {
 
 	//use Vengine to create window
-	_window.create("visualiser", SP::consts.defaultSW, SP::consts.defaultSH, SDL_WINDOW_OPENGL);
+	_window.create("visualiser", Vis::consts.defaultSW, Vis::consts.defaultSH, SDL_WINDOW_OPENGL);
 
 	_frameBufferIDs = new GLuint[_numFrameBuffers];
 	_frameBufferTextureIDs = new GLuint[_numFrameBuffers];
@@ -66,7 +66,7 @@ void MainProgram::initManagers()
 
 	SignalProcessingManager::init();
 
-	VisualiserManager::loadVisualiser(VisVars::_startupVisualiserPath);
+	VisualiserManager::loadVisualiser(VisPaths::_startupVisualiserPath);
 
 	SpriteManager::init(&_viewport, &_window);
 }

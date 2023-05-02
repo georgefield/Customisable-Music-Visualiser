@@ -1,5 +1,5 @@
 #include "ConfigManager.h"
-#include "SPvars.h"
+#include "VisVars.h"
 #include "SpriteManager.h"
 #include <fstream>
 #include <Vengine/MyErrors.h>
@@ -21,7 +21,7 @@ bool ConfigManager::outputConfigFromVisualiser(std::string configPath)
     }
 
     //write SPvars struct to file
-    out.write(reinterpret_cast<const char*>(&SP::vars), sizeof(SPvarsStruct));
+    out.write(reinterpret_cast<const char*>(&Vis::vars), sizeof(VisVariables));
 
     //write SMinfo struct to file
     out.write(reinterpret_cast<const char*>(&SignalProcessingManager::_similarityMatrix->_SMinfo), sizeof(SimMatInfo));
@@ -29,7 +29,7 @@ bool ConfigManager::outputConfigFromVisualiser(std::string configPath)
     //write fourier transform data
     char* nullArray = new char[sizeof(FourierTransform::FTinfo)];
     memset(nullArray, NULL, sizeof(FourierTransform::FTinfo));
-    for (int id = 0; id < SP::consts._maxFourierTransforms; id++) {
+    for (int id = 0; id < Vis::consts._maxFourierTransforms; id++) {
         if (FourierTransformManager::fourierTransformExists(id)){
             auto ft = FourierTransformManager::getFourierTransform(id);
             out.write(reinterpret_cast<const char*>(&ft->_FTinfo), sizeof(FourierTransform::FTinfo));
@@ -71,28 +71,28 @@ bool ConfigManager::initVisualiserFromConfig(std::string configPath)
 
     int fileSize = in.tellg(); //get size
     in.seekg(0, std::ios::beg); //go back to beginning
-    std::cout << "Check for corruption: " << fileSize << " - " << sizeof(SPvarsStruct) << " - " << sizeof(SimMatInfo) << " - " << SP::consts._maxFourierTransforms << " * " << sizeof(FourierTransform::FTinfo) << " = k *" << sizeof(CustomisableSprite::SpriteInfo) << std::endl;
+    std::cout << "Check for corruption: " << fileSize << " - " << sizeof(VisVariables) << " - " << sizeof(SimMatInfo) << " - " << Vis::consts._maxFourierTransforms << " * " << sizeof(FourierTransform::FTinfo) << " = k *" << sizeof(CustomisableSprite::SpriteInfo) << std::endl;
 
-    if ((fileSize - sizeof(SPvarsStruct) - sizeof(SimMatInfo) - (SP::consts._maxFourierTransforms * sizeof(FourierTransform::FTinfo))) % sizeof(CustomisableSprite::SpriteInfo) != 0) {
+    if ((fileSize - sizeof(VisVariables) - sizeof(SimMatInfo) - (Vis::consts._maxFourierTransforms * sizeof(FourierTransform::FTinfo))) % sizeof(CustomisableSprite::SpriteInfo) != 0) {
         Vengine::warning("Corrupted config file");
         UIglobalFeatures::queueError("Corrupted config file");
         return false;
     }
 
 
-    //get SPvars data
-    unsigned char* SPvarsBuffer = new unsigned char[sizeof(SPvarsStruct)];
+    //get vars data
+    unsigned char* visVarsBuffer = new unsigned char[sizeof(VisVariables)];
 
-    if (!in.read((char*)SPvarsBuffer, sizeof(SPvarsStruct))) {
+    if (!in.read((char*)visVarsBuffer, sizeof(VisVariables))) {
         Vengine::warning("Could not read SPvars from config file");
         return false;
     }
 
-    SP::vars = *reinterpret_cast<SPvarsStruct*>(SPvarsBuffer); //lol
+    Vis::vars = *reinterpret_cast<VisVariables*>(visVarsBuffer); //lol
 
-    delete[] SPvarsBuffer;
+    delete[] visVarsBuffer;
     //set backgrounf colour
-    glClearColor(SP::vars._clearColour[0], SP::vars._clearColour[1], SP::vars._clearColour[2], 1.0f);
+    glClearColor(Vis::vars._clearColour[0], Vis::vars._clearColour[1], Vis::vars._clearColour[2], 1.0f);
 
     //get SimMat data
     unsigned char* SMinfoBuffer = new unsigned char[sizeof(SimMatInfo)];
@@ -112,7 +112,7 @@ bool ConfigManager::initVisualiserFromConfig(std::string configPath)
     //get FT data
     FourierTransformManager::clearFourierTransforms(); //reset fts
 
-    for (int id = 0; id < SP::consts._maxFourierTransforms; id++) {
+    for (int id = 0; id < Vis::consts._maxFourierTransforms; id++) {
         unsigned char* FTbuffer = new unsigned char[sizeof(FourierTransform::FTinfo)];
 
         if (!in.read((char*)FTbuffer, sizeof(FourierTransform::FTinfo))) {
@@ -143,7 +143,7 @@ bool ConfigManager::initVisualiserFromConfig(std::string configPath)
     //get sprite data
     SpriteManager::reset(); //remove any existing sprites
 
-    int numSprites = (fileSize - sizeof(SPvarsStruct) - sizeof(SimMatInfo) - (SP::consts._maxFourierTransforms * sizeof(FourierTransform::FTinfo))) / sizeof(CustomisableSprite::SpriteInfo);
+    int numSprites = (fileSize - sizeof(VisVariables) - sizeof(SimMatInfo) - (Vis::consts._maxFourierTransforms * sizeof(FourierTransform::FTinfo))) / sizeof(CustomisableSprite::SpriteInfo);
     int sizeLeft = fileSize;
     for (int i = 0; i < numSprites; i++){
         unsigned char* spriteBuffer = new unsigned char[sizeof(CustomisableSprite::SpriteInfo)];

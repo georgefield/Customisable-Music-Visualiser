@@ -13,7 +13,6 @@ struct PlaybackInfo {
 	bool doSignalProcessing;
 
 	bool isAudioPlaying = false;
-	bool isAudioFinished = false;
 	bool isAudioLoaded = false;
 	bool isAudioLoadedThisFrame = false;
 };
@@ -65,14 +64,15 @@ private:
 	static int _totalNewSamples;
 	static int _historyStartPosition;
 	static std::string _loopbackDeviceName;
+	static int _sampleCounterOffset;
 
 	static float _volume;
-	static int _lagTimerId;
-	static bool _lagDetected;
+	static int _loopbacklagTimerId;
+	static int _numLagsInTimeWindow;
 
-	static void updateSampleCounterOfLoadedAudio();
+	static int _fileAudioLagTimerId;
 
-	static void resetLoopback();
+	static void resetLoopback(int sample);
 	static void initLoopbackPI();
 	static void initLoadedAudioPI();
 };

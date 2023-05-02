@@ -49,6 +49,8 @@ private:
 	float* _loadedAudioData;
 	int _loadedAudioDataLength;
 
+	int _currentSampleTimerId;
+
 	bool initEngine();
 	bool initDecoderFromFile();
 	bool initSoundFromFile();

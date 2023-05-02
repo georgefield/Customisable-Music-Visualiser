@@ -5,12 +5,13 @@
 #include <functional>
 
 #include "VisualiserShaderManager.h"
-#include "SPvars.h"
+
+#include "VisVars.h"
 
 Master::Master() :
 	_audioDataPtr(nullptr),
 
-	_fftwAPI(SP::consts._STFTsamples),
+	_fftwAPI(Vis::consts._STFTsamples),
 	_fftHistory(7),//store 7 previous fourier transforms
 
 	_sampleFftLastCalculated(-1),
@@ -19,7 +20,7 @@ Master::Master() :
 	_peakAmplitude(0),
 	_sampleOfLastPeak(0),
 	_energy(0),
-	_energyHistory(SP::consts._generalHistorySize)
+	_energyHistory(Vis::consts._generalHistorySize)
 {
 }
 
@@ -69,7 +70,7 @@ float hanningWindow(float frac){ //reduces noise
 
 void Master::calculateFourierTransform() {
 
-	if (SP::consts._STFTsamples > _audioDataLength) {
+	if (Vis::consts._STFTsamples > _audioDataLength) {
 		return; //not enough space to calculate
 	}
 
@@ -79,7 +80,7 @@ void Master::calculateFourierTransform() {
 	}
 	_sampleFftLastCalculated = _currentSample;
 
-	_fftwAPI.calculate(_audioDataPtr, 0, _fftHistory.workingArray(), SP::vars._masterFTgain, hanningWindow); //use fftw api to calculate fft
+	_fftwAPI.calculate(_audioDataPtr, 0, _fftHistory.workingArray(), Vis::vars._masterFTgain, hanningWindow); //use fftw api to calculate fft
 	_fftHistory.addWorkingArrayToHistory();
 	//updates _fftHistory ^^^
 }
@@ -87,34 +88,34 @@ void Master::calculateFourierTransform() {
 //accounts for hanning window so calculations from samples and transforms are equivalent
 void Master::calculateEnergy()
 {
-	if (SP::consts._STFTsamples > _audioDataLength) {
+	if (Vis::consts._STFTsamples > _audioDataLength) {
 		return; //not enough space to calculate
 	}
 
 	_energy = 0;
 	float hanningWindowFactor = 0;
 
-	for (int i = 0; i < SP::consts._STFTsamples; i++) {
-		hanningWindowFactor = hanningWindow(float(i - _currentSample) / float(SP::consts._STFTsamples));
+	for (int i = 0; i < Vis::consts._STFTsamples; i++) {
+		hanningWindowFactor = hanningWindow(float(i - _currentSample) / float(Vis::consts._STFTsamples));
 		_energy += _audioDataPtr[i] * _audioDataPtr[i] * hanningWindowFactor * hanningWindowFactor;
 	}
-	_energy /= SP::consts._STFTsamples;
+	_energy /= Vis::consts._STFTsamples;
 	_RMS = sqrt(_energy);
 	_energyHistory.add(_energy);
 }
 
 void Master::calculatePeakAmplitude()
 {
-	if (SP::consts._peakAmplitudeWindowSizeInSamples > _audioDataLength) {
+	if (Vis::consts._peakAmplitudeWindowSizeInSamples > _audioDataLength) {
 		std::cout << "not enough space";
 		return; //not enough space to calculate
 	}
 
 	if (_currentSample - _sampleOfLastPeak > _sampleRate * 0.1f) { //after waiting 0.1 seconds at peak
-		_peakAmplitude *= expf(-30.0f / SP::vars._desiredCPS); //0->-30db in 1 second
+		_peakAmplitude *= expf(-30.0f / Vis::vars._desiredCPS); //0->-30db in 1 second
 	}
 	
-	for (int i = 0; i < SP::consts._peakAmplitudeWindowSizeInSamples; i++) {
+	for (int i = 0; i < Vis::consts._peakAmplitudeWindowSizeInSamples; i++) {
 		if (fabsf(_audioDataPtr[i]) > _peakAmplitude) {
 			_peakAmplitude = fabsf(_audioDataPtr[i]);
 			_sampleOfLastPeak = i;
@@ -128,7 +129,7 @@ void Master::calculatePeakAmplitude()
 
 void Master::audioIsPaused()
 {
-	_peakAmplitude *= expf(-30.0f / SP::vars._desiredCPS); //0->-30db in 1 second
+	_peakAmplitude *= expf(-30.0f / Vis::vars._desiredCPS); //0->-30db in 1 second
 	_peakAmplitudeDb = log(_peakAmplitude);
 }
 
@@ -137,21 +138,6 @@ void Master::endCalculations() {
 	_previousSample = _currentSample;
 }
 
-
-//*** helper functions ***
-
-//used to create a new history which is smoothed
-//better than a rolling average as big individual values are first added with a small constant (for hill shaped kernels atleast)
-float Master::sumOfConvolutionOfHistory(History<float>* history, int entries, Kernel kernel) {
-
-	if (entries == 0) entries = history->totalSize();//default convolve all history
-
-	float conv = 0;
-	for (int i = 0; i < entries; i++) {
-		conv += history->get(i) * Kernels::apply(kernel, i, entries); //integral of the multiplication = dot product   (in discrete space)
-	}
-	return conv;
-}
 
 //simple getters--
 float* Master::getBaseFftOutput() { return _fftHistory.newest(); }

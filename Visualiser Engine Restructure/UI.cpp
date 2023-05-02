@@ -3,10 +3,9 @@
 #include "VisualiserManager.h"
 #include "VisualiserShaderManager.h"
 #include "FourierTransformManager.h"
-#include "Tools.h"
 #include <algorithm>
 #include "UIglobalFeatures.h"
-#include "VisVars.h"
+#include "VisPaths.h"
 
 #include "PFDapi.h"
 
@@ -180,6 +179,7 @@ void UI::toolbar() {
 			std::string chosenAudio;
 			PFDapi::fileChooser("Choose audio", Vengine::IOManager::getProjectDirectory(), chosenAudio, { "Audio files", "*.wav *.mp3 *.flac" }, true);
 			AudioManager::load(chosenAudio);
+			SignalProcessingManager::reset();
 		}
 
 		//music name
@@ -245,9 +245,9 @@ void UI::toolbar() {
 
 
 	//background colour picker--
-	ImGui::ColorEdit3("Background colour", SP::vars._clearColour, ImGuiColorEditFlags_NoInputs);
+	ImGui::ColorEdit3("Background colour", Vis::vars._clearColour, ImGuiColorEditFlags_NoInputs);
 	if (ImGui::IsItemEdited()) {
-		glClearColor(SP::vars._clearColour[0], SP::vars._clearColour[1], SP::vars._clearColour[2], 1.0f);
+		glClearColor(Vis::vars._clearColour[0], Vis::vars._clearColour[1], Vis::vars._clearColour[2], 1.0f);
 	}
 	//--
 
@@ -374,11 +374,6 @@ void UI::processInput()
 			if (AudioManager::_currentPlaybackInfo->isAudioPlaying) {
 				AudioManager::pause();
 			}
-			else if (AudioManager::_currentPlaybackInfo->isAudioFinished) {
-				//restart
-				AudioManager::seekToSample(0);
-				AudioManager::play();
-			}
 			else {
 				AudioManager::play();
 			}
@@ -504,7 +499,7 @@ void UI::shaderVariablesUi()
 
 void UI::createShaderUi()
 {
-	if (VisualiserManager::path() == VisVars::_startupVisualiserPath) {
+	if (VisualiserManager::path() == VisPaths::_startupVisualiserPath) {
 		UIglobalFeatures::queueError("Cannot create shader without loading or creating new visualiser first");
 		_showCreateShaderUi = false;
 		return;
@@ -555,31 +550,33 @@ void UI::generalSignalProcessingUi()
 {
 	ImGui::Begin("General", &_showGeneralSignalProcessingUi, ImGuiWindowFlags_AlwaysAutoResize);
 
-	ImGui::Checkbox("Compute Fourier Transforms", &SP::vars._computeFourierTransform);
-	ImGui::Checkbox("Compute Note Onset", &SP::vars._computeNoteOnset);
-	ImGui::Checkbox("Compute Tempo Detection", &SP::vars._computeTempoDetection);
-	ImGui::Checkbox("Compute MFCCs", &SP::vars._computeMFCCs);
-	ImGui::Checkbox("Compute Self Similarity Matrix", &SP::vars._computeSimilarityMatrix);
+	ImGui::Checkbox("Compute Frequency Bands", &Vis::vars._computeFrequencyBands);
+	ImGui::Checkbox("Compute Note Onset", &Vis::vars._computeNoteOnset);
+	ImGui::Checkbox("Compute Tempo Detection", &Vis::vars._computeTempoDetection);
+	ImGui::Checkbox("Compute MFCCs", &Vis::vars._computeMFCCs);
+	ImGui::Checkbox("Compute Self Similarity Matrix", &Vis::vars._computeSimilarityMatrix);
 
 	ImGui::Separator();
 
 	std::string fpsInfo = "FPS: " + std::to_string(int(Vengine::MyTiming::getFPS()));
 	ImGui::Text(fpsInfo.c_str());
 
-	std::string cpsInfo = "Audio calculations per second (CPS): " + std::to_string(int(SP::vars._desiredCPS));
+	std::string cpsInfo = "Audio calculations per second (CPS): " + std::to_string(int(Vis::vars._desiredCPS));
 	ImGui::Text(cpsInfo.c_str());
-	ImGui::Text("Can auto decrease if calculations fall behind");
+	ImGui::Text("Will auto decrease if too much lag");
 
-	static float CPS = SP::vars._desiredCPS;
-	if (SP::vars._wasCPSautoDecreased) {
-		CPS = SP::vars._desiredCPS;
+	static float CPS = Vis::vars._desiredCPS;
+	if (Vis::comms._wasCPSautoDecreased) {
+		CPS = Vis::vars._desiredCPS;
 	}
 
 	ImGui::SliderFloat("CPS", &CPS, 10, 120, "%.1f");
-	if (CPS != SP::vars._desiredCPS && ImGui::Button("Set CPS")) {
-		SP::vars._desiredCPS = CPS;
+	if (CPS != Vis::vars._desiredCPS && ImGui::Button("Set CPS")) {
+		Vis::vars._desiredCPS = CPS;
 		SignalProcessingManager::reset();
 	}
+
+	ImGui::Text(("Estimated maximum CPS: " + std::to_string(1.0f / Vis::comms._calculationFrameTime)).c_str());
 
 	//add ability to change fourier transform window size; use combo to choose from 1024 samples to 16192
 
@@ -597,7 +594,9 @@ void UI::generalSignalProcessingUi()
 
 		ImGui::Text((sampleRateInfoStr + ", " + currentSampleInfoStr).c_str());
 
-		ImGui::PlotLines("data", &(AudioManager::_currentPlaybackInfo->sampleDataArrayPtr[AudioManager::_currentPlaybackInfo->sampleDataArrayStartPosition]), SP::consts._finalLoopbackStorageSize, 0, 0, -1, 1, ImVec2(350, 40));
+		if (AudioManager::_currentPlaybackInfo->sampleDataArrayLength - AudioManager::_currentPlaybackInfo->sampleDataArrayStartPosition > Vis::consts._finalLoopbackStorageSize) {
+			ImGui::PlotLines("data", &(AudioManager::_currentPlaybackInfo->sampleDataArrayPtr[AudioManager::_currentPlaybackInfo->sampleDataArrayStartPosition]), Vis::consts._finalLoopbackStorageSize, 0, 0, -1, 1, ImVec2(350, 40));
+		}
 	}
 	else {
 		ImGui::Text("No audio loaded");
@@ -610,7 +609,7 @@ void UI::fourierTransformsUi()
 {
 	ImGui::Begin("Frequency Bands", &_showFourierTransformUi, ImGuiWindowFlags_AlwaysAutoResize);
 
-	ImGui::Checkbox("Compute frequeny bands", &SP::vars._computeFourierTransform);
+	ImGui::Checkbox("Compute frequeny bands", &Vis::vars._computeFrequencyBands);
 
 	//get id array
 	std::vector<int> fourierTransformIds = FourierTransformManager::idArr();
@@ -707,7 +706,8 @@ void UI::fourierTransformsUi()
 
 	//*** create another transform ***
 	if (FourierTransformManager::availiableIdArr().size() == 0) {
-		return; //if at max then do show creation ui
+		ImGui::End();
+		return; //if at max then dont show creation ui
 	}
 
 
@@ -743,45 +743,65 @@ void UI::noteOnsetUi()
 {
 	ImGui::Begin("Note Onset", &_showNoteOnsetUi, ImGuiWindowFlags_AlwaysAutoResize);
 
-	ImGui::Checkbox("Compute note onset", &SP::vars._computeNoteOnset);
+	ImGui::Checkbox("Compute note onset", &Vis::vars._computeNoteOnset);
 
 	ImGui::Text("Onset detection function:");
-	ImGui::RadioButton("Energy", &SP::vars._onsetDetectionFunctionEnum, NoteOnset::ENERGY);
-	ImGui::RadioButton("Derivative of log energy", &SP::vars._onsetDetectionFunctionEnum, NoteOnset::DER_OF_LOG_ENERGY);
-	ImGui::RadioButton("HFC derivative of log energy", &SP::vars._onsetDetectionFunctionEnum, NoteOnset::HFC_DER_OF_LOG_ENERGY);
-	ImGui::RadioButton("Spectral distance", &SP::vars._onsetDetectionFunctionEnum, NoteOnset::SPECTRAL_DISTANCE);
-	ImGui::RadioButton("Weighted phase deviation", &SP::vars._onsetDetectionFunctionEnum, NoteOnset::SPECTRAL_DISTANCE_WITH_PHASE);
-	ImGui::RadioButton("Similarity matrix", &SP::vars._onsetDetectionFunctionEnum, NoteOnset::SIM_MATRIX_MFCC);
-	ImGui::RadioButton("Combination (fast)", &SP::vars._onsetDetectionFunctionEnum, NoteOnset::COMBINATION_FAST);
-	ImGui::RadioButton("Combination", &SP::vars._onsetDetectionFunctionEnum, NoteOnset::COMBINATION);
+	ImGui::RadioButton("Energy", &Vis::vars._onsetDetectionFunctionEnum, NoteOnset::ENERGY);
+	ImGui::RadioButton("Derivative of log energy", &Vis::vars._onsetDetectionFunctionEnum, NoteOnset::DER_OF_LOG_ENERGY);
+	ImGui::RadioButton("HFC derivative of log energy", &Vis::vars._onsetDetectionFunctionEnum, NoteOnset::HFC_DER_OF_LOG_ENERGY);
+	ImGui::RadioButton("Spectral distance", &Vis::vars._onsetDetectionFunctionEnum, NoteOnset::SPECTRAL_DISTANCE);
+	ImGui::RadioButton("Weighted phase deviation", &Vis::vars._onsetDetectionFunctionEnum, NoteOnset::SPECTRAL_DISTANCE_WITH_PHASE);
+	ImGui::RadioButton("Combination", &Vis::vars._onsetDetectionFunctionEnum, NoteOnset::COMBINATION);
 
-	ImGui::Checkbox("Convolve onset detection", &SP::vars._convolveOnsetDetection);
-	if (SP::vars._convolveOnsetDetection) {
-		ImGui::SliderInt("Convolve window size", &SP::vars._convolveWindowSize, 1, 100);
+	if (Vis::vars._onsetDetectionFunctionEnum == NoteOnset::COMBINATION && ImGui::CollapsingHeader("Combination editor")) {
+		bool hasBeenEdit = false;
+		ImGui::SliderFloat("Energy mix amount", &Vis::vars._energyMixAmount, 0, 1);
+		if (ImGui::IsItemEdited()) hasBeenEdit = true;
+		ImGui::SliderFloat("Derivative of log energy mix amount", &Vis::vars._doleMixAmount, 0, 1);
+		if (ImGui::IsItemEdited()) hasBeenEdit = true;
+		ImGui::SliderFloat("HFC derivative of log energy mix amount", &Vis::vars._HFCdoleMixAmount, 0, 1);
+		if (ImGui::IsItemEdited()) hasBeenEdit = true;
+		ImGui::SliderFloat("Spectral distance mix amount", &Vis::vars._sdMixAmount, 0, 1);
+		if (ImGui::IsItemEdited()) hasBeenEdit = true;
+		ImGui::SliderFloat("Weighted phase deviation mix amount", &Vis::vars._wpdMixAmount, 0, 1);
+		if (ImGui::IsItemEdited()) hasBeenEdit = true;
+		if (hasBeenEdit) {
+			Vis::vars._leftoverConstantFactor =
+				(1 - Vis::vars._energyMixAmount) *
+				(1 - Vis::vars._doleMixAmount) *
+				(1 - Vis::vars._HFCdoleMixAmount) *
+				(1 - Vis::vars._sdMixAmount) *
+				(1 - Vis::vars._wpdMixAmount);
+		}
+	}
+
+	ImGui::Checkbox("Convolve onset detection", &Vis::vars._convolveOnsetDetection);
+	if (Vis::vars._convolveOnsetDetection) {
+		ImGui::SliderInt("Convolve window size", &Vis::vars._convolveWindowSize, 1, 25);
 	}
 
 	ImGui::Text("Onset detection function:");
-	imguiHistoryPlotter(SignalProcessingManager::_noteOnset->getOnsetHistory(SP::vars._convolveOnsetDetection), 0, 1);
+	imguiHistoryPlotter(SignalProcessingManager::_noteOnset->getOnsetHistory(Vis::vars._convolveOnsetDetection), 0, 1);
 	ImGui::Text("Inferred peaks (passed to tempo):");
 	imguiHistoryPlotter(SignalProcessingManager::_noteOnset->getDisplayPeaks(), 0, 1);
 
 	//detection function compression--
 	if (ImGui::CollapsingHeader("Compression")) {
-		ImGui::SliderFloat("Gain", &SP::vars._detectionFunctionGain, 0.0f, 10.0f, "%.2f");
-		ImGui::SliderFloat("Compression Threshold", &SP::vars._detectionFunctionCompressionThreshold, 0.0f, 1.0f, "%.2f");
-		ImGui::SliderFloat("Compression Ratio", &SP::vars._detectionFunctionCompressionRatio, 0.01f, 10.0f, "%.2f");
-		ImGui::Checkbox("Clamp", &SP::vars._clampBetween0and1);
+		ImGui::SliderFloat("Gain", &Vis::vars._detectionFunctionGain, 0.0f, 10.0f, "%.2f");
+		ImGui::SliderFloat("Compression Threshold", &Vis::vars._detectionFunctionCompressionThreshold, 0.0f, 1.0f, "%.2f");
+		ImGui::SliderFloat("Compression Ratio", &Vis::vars._detectionFunctionCompressionRatio, 0.01f, 10.0f, "%.2f");
+		ImGui::Checkbox("Clamp", &Vis::vars._clampBetween0and1);
 
 		if (ImGui::Button("Reset")) {
-			SP::vars._detectionFunctionGain = 1.0f;
-			SP::vars._detectionFunctionCompressionThreshold = 1.0f;
-			SP::vars._detectionFunctionCompressionRatio = 1.0f;
-			SP::vars._clampBetween0and1 = false;
+			Vis::vars._detectionFunctionGain = 1.0f;
+			Vis::vars._detectionFunctionCompressionThreshold = 1.0f;
+			Vis::vars._detectionFunctionCompressionRatio = 1.0f;
+			Vis::vars._clampBetween0and1 = false;
 		}
 	}
 	//--
 
-	ImGui::SliderFloat("Peak threshold (top X%)", &SP::vars._thresholdPercentForPeak, 1.0f, 25.0f);
+	ImGui::SliderFloat("Peak threshold (top X%)", &Vis::vars._thresholdPercentForPeak, 1.0f, 25.0f);
 
 	ImGui::End();
 }
@@ -790,7 +810,7 @@ void UI::tempoDetectionUi()
 {
 	ImGui::Begin("Tempo", &_showTempoDetectionUi, ImGuiWindowFlags_AlwaysAutoResize);
 
-	ImGui::Checkbox("Compute Tempo", &SP::vars._computeTempoDetection);
+	ImGui::Checkbox("Compute Tempo", &Vis::vars._computeTempoDetection);
 
 	std::string tempo = "Tempo guess: " + std::to_string(SignalProcessingManager::_tempoDetection->getTempo());
 	ImGui::Text(tempo.c_str());
@@ -816,18 +836,18 @@ void UI::tempoDetectionUi()
 	std::string timeSinceLastBeat = "Time since last beat: " + std::to_string(SignalProcessingManager::_tempoDetection->getTimeSinceLastBeat());
 	ImGui::Text(timeSinceLastBeat.c_str());
 
-	ImGui::SliderFloat("Max Tempo", &SP::vars.MAX_TEMPO, 30, 250, "%.1f");
-	if (ImGui::IsItemEdited() && SP::vars.MAX_TEMPO < SP::vars.MIN_TEMPO) {
-		SP::vars.MIN_TEMPO = SP::vars.MAX_TEMPO;
+	ImGui::SliderFloat("Max Tempo", &Vis::vars.MAX_TEMPO, 30, 250, "%.1f");
+	if (ImGui::IsItemEdited() && Vis::vars.MAX_TEMPO < Vis::vars.MIN_TEMPO) {
+		Vis::vars.MIN_TEMPO = Vis::vars.MAX_TEMPO;
 	}
-	ImGui::SliderFloat("Min Tempo", &SP::vars.MIN_TEMPO, 30, 250, "%.1f");
-	if (ImGui::IsItemEdited() && SP::vars.MAX_TEMPO < SP::vars.MIN_TEMPO) {
-		SP::vars.MAX_TEMPO = SP::vars.MIN_TEMPO;
+	ImGui::SliderFloat("Min Tempo", &Vis::vars.MIN_TEMPO, 30, 250, "%.1f");
+	if (ImGui::IsItemEdited() && Vis::vars.MAX_TEMPO < Vis::vars.MIN_TEMPO) {
+		Vis::vars.MAX_TEMPO = Vis::vars.MIN_TEMPO;
 	}
 
 
 	static bool showDebug = false;
-	ImGui::Checkbox("Debug", &showDebug);
+	ImGui::Checkbox("Agent information", &showDebug);
 	if (showDebug) {
 		ImGui::BeginChild("debug", ImVec2(500, 350), true);
 		std::vector < std::string> debugInfo;
@@ -845,7 +865,7 @@ void UI::mfccUi()
 {
 	ImGui::Begin("MFCCs", &_showMFCCsUi, ImGuiWindowFlags_AlwaysAutoResize);
 
-	ImGui::Checkbox("Compute MFCCs", &SP::vars._computeMFCCs);
+	ImGui::Checkbox("Compute MFCCs", &Vis::vars._computeMFCCs);
 
 	ImGui::Separator();
 
@@ -864,7 +884,7 @@ void UI::selfSimilarityMatrixUi()
 {
 	ImGui::Begin("Self Similarity Matrix", &_showSelfSimilarityMatrixUi, ImGuiWindowFlags_AlwaysAutoResize);
 
-	ImGui::Checkbox("Compute Self Similarity Matrix", &SP::vars._computeSimilarityMatrix);
+	ImGui::Checkbox("Compute Self Similarity Matrix", &Vis::vars._computeSimilarityMatrix);
 
 
 	if (UIglobalFeatures::_uiSMinfo != SignalProcessingManager::_similarityMatrix->_SMinfo || SignalProcessingManager::_similarityMatrix->_SMinfo._linkedTo == NONE) {
@@ -879,7 +899,6 @@ void UI::selfSimilarityMatrixUi()
 	ImGui::BeginChild("Matrix settings", ImVec2(360, 440), true);
 
 	//which one to calculate (future or real time)--
-	ImGui::Text("Link to:");
 	ImGui::RadioButton("Real time", (int*)&UIglobalFeatures::_uiSMinfo._useFuture, int(false)); ImGui::SameLine();
 	ImGui::RadioButton("Future (file audio only)", (int*)&UIglobalFeatures::_uiSMinfo._useFuture, int(true));
 	//--
@@ -890,7 +909,7 @@ void UI::selfSimilarityMatrixUi()
 		ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "Recommend using downscale");
 	}
 	ImGui::SliderInt("Downscale", &UIglobalFeatures::_uiSMinfo._downscale, 1, 5);
-	std::string timeOverInfo = "covers " + std::to_string((float(UIglobalFeatures::_uiSMinfo._matrixSize) / SP::vars._desiredCPS) * (float)UIglobalFeatures::_uiSMinfo._downscale).substr(0, 4) + "s";
+	std::string timeOverInfo = "covers " + std::to_string((float(UIglobalFeatures::_uiSMinfo._matrixSize) / Vis::vars._desiredCPS) * (float)UIglobalFeatures::_uiSMinfo._downscale).substr(0, 4) + "s";
 	ImGui::Text(timeOverInfo.c_str());
 	//--
 
@@ -909,13 +928,13 @@ void UI::selfSimilarityMatrixUi()
 		ImGui::Text("MFCCs coefficients: ");
 
 		ImGui::PushID(0);
-		ImGui::SliderInt("##", &UIglobalFeatures::_uiSMinfo._coeffLow, 1, SP::consts._numMelBands);
+		ImGui::SliderInt("##", &UIglobalFeatures::_uiSMinfo._coeffLow, 1, Vis::consts._numMelBands);
 		ImGui::PopID();
 
 		ImGui::Text("to");
 
 		ImGui::PushID(1);
-		ImGui::SliderInt("##", &UIglobalFeatures::_uiSMinfo._coeffHigh, 1, SP::consts._numMelBands);
+		ImGui::SliderInt("##", &UIglobalFeatures::_uiSMinfo._coeffHigh, 1, Vis::consts._numMelBands);
 		ImGui::PopID();
 	}
 	if (UIglobalFeatures::_uiSMinfo._linkedTo == 3) {	// link to fourier transform vv
@@ -932,9 +951,9 @@ void UI::selfSimilarityMatrixUi()
 		SignalProcessingManager::_similarityMatrix->_SMinfo = UIglobalFeatures::_uiSMinfo;
 		SignalProcessingManager::_similarityMatrix->reInit();
 	}
-	if (SP::vars._wasCPSautoDecreased) {
-		UIglobalFeatures::_uiSMinfo._matrixSize *= SP::consts._CPSreduceFactor;
-		SignalProcessingManager::_similarityMatrix->_SMinfo._matrixSize *= SP::consts._CPSreduceFactor;
+	if (Vis::comms._wasCPSautoDecreased && false) {
+		UIglobalFeatures::_uiSMinfo._matrixSize *= Vis::consts._CPSreduceFactor;
+		SignalProcessingManager::_similarityMatrix->_SMinfo._matrixSize *= Vis::consts._CPSreduceFactor;
 
 		if (UIglobalFeatures::_uiSMinfo == SignalProcessingManager::_similarityMatrix->_SMinfo) { //reinit if only thing changed was cps
 			SignalProcessingManager::_similarityMatrix->reInit();
@@ -942,38 +961,41 @@ void UI::selfSimilarityMatrixUi()
 	}
 
 	// changes that dont require reinit--
-	//measure type of similarity matrix
+	/*measure type of similarity matrix NO LONGER USED, SIMILARITY ONLY
 	ImGui::Text("Matrix measure type:");
 	ImGui::RadioButton("Similarity", (int*)&SignalProcessingManager::_similarityMatrix->_SMinfo._measureType, SIMILARITY); ImGui::SameLine();
 	ImGui::RadioButton("Percussion", (int*)&SignalProcessingManager::_similarityMatrix->_SMinfo._measureType, PERCUSSION);
-	UIglobalFeatures::_uiSMinfo._measureType = SignalProcessingManager::_similarityMatrix->_SMinfo._measureType;
+	UIglobalFeatures::_uiSMinfo._measureType = SignalProcessingManager::_similarityMatrix->_SMinfo._measureType;*/
+	
+	ImGui::Separator();
 
 	//compute texture
-	ImGui::Checkbox("Create texture", &SP::vars._computeTexture);
+	ImGui::Checkbox("Create texture", &Vis::vars._computeTexture);
 
 	//contrast
-	ImGui::SliderFloat("Contrast Factor", &SignalProcessingManager::_similarityMatrix->_SMinfo._contrastFactor, 1, 100, "%.3f", ImGuiSliderFlags_Logarithmic);
+	ImGui::SliderFloat("Contrast factor", &SignalProcessingManager::_similarityMatrix->_SMinfo._contrastFactor, 1, 100, "%.3f", ImGuiSliderFlags_Logarithmic);
 	UIglobalFeatures::_uiSMinfo._contrastFactor = SignalProcessingManager::_similarityMatrix->_SMinfo._contrastFactor;
 	// --
 
 	ImGui::EndChild();
 	//***
 
+	ImGui::Text("Novelty value");
 	imguiHistoryPlotter(SignalProcessingManager::_similarityMatrix->matrix.getSimilarityMeasureHistory());
 
 	ImGui::End();
 }
 
 void UI::endSPui() {
-	SP::vars._wasSignalProcessingReset = false;
-	SP::vars._wasCPSautoDecreased = false;
+	Vis::comms._wasSignalProcessingReset = false;
+	Vis::comms._wasCPSautoDecreased = false;
 }
 //***
 
 void UI::processFileMenuSelection()
 {
 	//have to save as if not loaded a visualiser
-	if (_save && VisualiserManager::path() == VisVars::_startupVisualiserPath) {
+	if (_save && VisualiserManager::path() == VisPaths::_startupVisualiserPath) {
 		_save = false;
 		_saveAs = true;
 	}

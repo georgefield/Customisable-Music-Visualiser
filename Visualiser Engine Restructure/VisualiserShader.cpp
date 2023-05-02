@@ -1,7 +1,7 @@
 #include "VisualiserShader.h"
 #include "VisualiserShaderManager.h"
 #include "VisualiserManager.h"
-#include "VisVars.h"
+#include "VisPaths.h"
 #include "UIglobalFeatures.h"
 #include <fstream>
 
@@ -124,7 +124,7 @@ Vengine::GLSLProgram* VisualiserShader::compile()
 	Vengine::IOManager::outputToTextFile(_interpretedShaderSourcePath, sourceCode, true);
 
 	std::string errorOut;
-	Vengine::GLSLProgram* program = Vengine::ResourceManager::reloadShaderProgram(VisVars::_commonVertShaderPath, _interpretedShaderSourcePath, errorOut);
+	Vengine::GLSLProgram* program = Vengine::ResourceManager::reloadShaderProgram(VisPaths::_commonVertShaderPath, _interpretedShaderSourcePath, errorOut);
 	if (program == nullptr) {
 		fixErrorMessage(errorOut);
 		UIglobalFeatures::addSyntaxErrorToWindow(errorOut);

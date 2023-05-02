@@ -1,7 +1,6 @@
 #include "MFCCs.h"
 #include <math.h>
-#include "Tools.h"
-
+#include "MyMaths.h"
 
 void MFCCs::calculateNext()
 {
@@ -61,8 +60,8 @@ void MFCCs::createMelLinearlySpacedFilters(int numFilters, float lowerHz, float 
 		fractionHigh = fractionLow + (2*fractionIncrement);
 
 		_filterBank.add(
-			melInverse(Tools::lerp(mel(lowerHz), mel(upperHz), fractionLow)), 
-			melInverse(Tools::lerp(mel(lowerHz), mel(upperHz), fractionHigh)), 1.0f
+			melInverse(MyMaths::lerp(mel(lowerHz), mel(upperHz), fractionLow)), 
+			melInverse(MyMaths::lerp(mel(lowerHz), mel(upperHz), fractionHigh)), 1.0f
 		);
 	}
 }

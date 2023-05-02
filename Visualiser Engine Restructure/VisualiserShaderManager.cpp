@@ -1,6 +1,7 @@
 #include "VisualiserShaderManager.h"
 #include "VisualiserManager.h"
 #include "SignalProcessingManager.h"
+#include "VisPaths.h"
 #include "VisVars.h"
 #include <Vengine/IOManager.h>
 
@@ -26,10 +27,10 @@ GLuint VisualiserShaderManager::_userVarsSSBOid;
 
 void VisualiserShaderManager::init()
 {
-	Vengine::IOManager::readTextFileToString(VisVars::_shaderPrefixPath, _commonShaderPrefix);
+	Vengine::IOManager::readTextFileToString(VisPaths::_shaderPrefixPath, _commonShaderPrefix);
 
 	std::string errorOut;
-	Vengine::GLSLProgram* prefixProgram = Vengine::ResourceManager::getShaderProgram(VisVars::_commonVertShaderPath, VisVars::_uniformNameScraperShaderPath, errorOut);
+	Vengine::GLSLProgram* prefixProgram = Vengine::ResourceManager::getShaderProgram(VisPaths::_commonVertShaderPath, VisPaths::_uniformNameScraperShaderPath, errorOut);
 	if (errorOut != "")
 		Vengine::fatalError(errorOut);
 
@@ -47,8 +48,8 @@ void VisualiserShaderManager::init()
 	_defaultSSBOnamesAndBindings["vis_MFCCs"] = 8;
 
 	//initialise user vars SSBO to 0
-	float* zeros = new float[VisVars::_availiableUserVars];
-	memset(zeros, 0.0f, VisVars::_availiableUserVars * sizeof(float));
+	float* zeros = new float[Vis::consts._availiableScriptingVars];
+	memset(zeros, 0.0f, Vis::consts._availiableScriptingVars * sizeof(float));
 	Vengine::DrawFunctions::createSSBO(_userVarsSSBOid, 9, zeros, sizeof(float) * 3, GL_STATIC_COPY);
 	delete[] zeros;
 }
@@ -86,28 +87,29 @@ std::string VisualiserShaderManager::getCommonShaderPrefix()
 
 bool VisualiserShaderManager::createShader(std::string name)
 {
-	std::string newFileName = VisualiserManager::shadersFolder() + "/" + name + VisVars::_visShaderExtension;
+	std::string newFileName = VisualiserManager::shadersFolder() + "/" + name + VisPaths::_visShaderExtension;
 	if (Vengine::IOManager::fileExists(newFileName)) {
 		return false;
 	}
 
-	return Vengine::IOManager::copyFile(VisVars::_defaultFragShaderPath, newFileName);
+	return Vengine::IOManager::copyFile(VisPaths::_defaultFragShaderPath, newFileName);
 }
 
-void VisualiserShaderManager::recompileShader(std::string fragPath) {
+bool VisualiserShaderManager::recompileShader(std::string fragPath) {
 	if (_shaderCache.find(fragPath) == _shaderCache.end()) {
 		Vengine::warning("No loaded shader named " + fragPath + " to recompile");
-		return;
+		return false;
 	}
 
 	_shaderCache.erase(fragPath);
 	if (!_shaderCache[fragPath].init(fragPath, _currentVisualiserPath)) {
 		_shaderCache.erase(fragPath);
 		Vengine::warning("Shader did not recompile: error in code");
-		return;
+		return false;
 	}
 
 	std::cout << "Shader " + fragPath + " recompiled" << std::endl;
+	return true;
 }
 
 //***

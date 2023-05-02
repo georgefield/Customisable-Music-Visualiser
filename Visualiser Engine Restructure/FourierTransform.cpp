@@ -14,7 +14,7 @@ FourierTransform::FourierTransform(int historySize, float cutOffLow, float cutOf
 	_current(nullptr),
 	_next(nullptr),
 
-	_energyOfFt(SP::consts._generalHistorySize)
+	_energyOfFt(Vis::consts._generalHistorySize)
 {
 	_FTinfo.cutoffLow = cutOffLow;
 	_FTinfo.cutoffHigh = cutOffHigh;
@@ -292,10 +292,13 @@ void FourierTransform::applyFreqConvolving(float* in, float* out)
 
 	memset(out, 0.0f, sizeof(float) * _numHarmonics);
 
+	Kernel kernel;
+	kernel.setUp(LINEAR_PYRAMID, _FTinfo.freqWindowSize);
+
 	for (int i = 0; i < _numHarmonics; i++) {
 		int jStart = std::max(i - (_FTinfo.freqWindowSize / 2), 0);
 		for (int j = jStart; j < std::min(i + (_FTinfo.freqWindowSize / 2), _numHarmonics); j++) {
-			out[i] += in[j] * Kernels::apply(LINEAR_PYRAMID, j - jStart, _FTinfo.freqWindowSize);
+			out[i] += in[j] * kernel.getValueAt(j - jStart);
 		}
 	}
 }
@@ -340,9 +343,12 @@ void FourierTransform::applyTimeConvolving(FourierTransformHistory* in, float* o
 
 	memset(out, 0.0f, sizeof(float) * _numHarmonics);
 
+	Kernel kernel;
+	kernel.setUp(LINEAR_PYRAMID, _FTinfo.timeWindowSize);
+
 	for (int i = 0; i < _FTinfo.timeWindowSize; i++) {
 		for (int j = 0; j < _numHarmonics; j++) {
-			out[j] += in->get(i)[j] * Kernels::apply(LINEAR_PYRAMID, i, _FTinfo.timeWindowSize); //overwrite oldest
+			out[j] += in->get(i)[j] * kernel.getValueAt(i);
 		}
 	}
 }

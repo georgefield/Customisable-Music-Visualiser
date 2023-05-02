@@ -1,4 +1,0 @@
-void main(){
-
-    vis_oytputColour = vis_inColour;
-}

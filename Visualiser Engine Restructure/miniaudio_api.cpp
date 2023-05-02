@@ -1,11 +1,12 @@
 #include "miniaudio_api.h"
-#include "SPvars.h"
+#include "VisVars.h"
 
 #define MINIAUDIO_IMPLEMENTATION
 #include <miniaudio.h>
 
 #include <cassert>
 #include <Vengine/MyErrors.h>
+#include <Vengine/MyTiming.h>
 
 ma_engine _engine;
 
@@ -19,7 +20,8 @@ miniaudio_api::miniaudio_api() :
     _fileLoaded(false),
     _memoryAllocated(false),
     _filePath(""),
-    _loadedAudioData(nullptr)
+    _loadedAudioData(nullptr),
+    _currentSampleTimerId(-1)
 {
 }
 
@@ -30,6 +32,7 @@ miniaudio_api::~miniaudio_api()
 
 void miniaudio_api::init(){
     _initialised = initEngine();
+    Vengine::MyTiming::createTimer(_currentSampleTimerId);
 }
 
 bool miniaudio_api::loadAudio(const std::string& filePath)
@@ -74,6 +77,11 @@ bool miniaudio_api::loadAudio(const std::string& filePath)
         Vengine::warning("frames read =/= num frames, possible problem, file still loaded");
     }
 
+    std::cout << ma_engine_get_sample_rate(&_engine) << " Engine sample rate" << std::endl;
+    std::cout << _decoder.outputSampleRate << " Decoder sample rate" << std::endl;
+
+    Vengine::MyTiming::resetTimer(_currentSampleTimerId);
+
     _fileLoaded = true;
     return true;
 }
@@ -84,6 +92,7 @@ void miniaudio_api::unloadAudio()
     _filePath = "";
 
     if (_decoderInitialised) {
+        std::cout << "uninit decoder";
         ma_result decResult = ma_decoder_uninit(&_decoder);
         if (decResult != MA_SUCCESS) {
             Vengine::warning("Error unloading decoder");
@@ -92,6 +101,7 @@ void miniaudio_api::unloadAudio()
     }
 
     if (_soundInitialised) {
+        std::cout << "uninit sound";
         ma_sound_uninit(&_sound);
         _soundInitialised = false;
     }
@@ -106,7 +116,8 @@ void miniaudio_api::playAudio()
 {
     assert(_fileLoaded);
 
-    ma_sound_start(&_sound);   
+    ma_sound_start(&_sound);
+    Vengine::MyTiming::startTimer(_currentSampleTimerId);
 }
 
 void miniaudio_api::pauseAudio()
@@ -114,6 +125,7 @@ void miniaudio_api::pauseAudio()
     assert(_fileLoaded);
 
     ma_sound_stop(&_sound);
+    Vengine::MyTiming::stopTimer(_currentSampleTimerId);
 }
 
 void miniaudio_api::seekToSample(int sample)
@@ -122,7 +134,10 @@ void miniaudio_api::seekToSample(int sample)
     assert(sample >= 0);
     assert(sample < _loadedAudioDataLength);
 
+    Vengine::MyTiming::setTimer(_currentSampleTimerId, float(sample) / float(getSampleRate()));
     ma_sound_seek_to_pcm_frame(&_sound, sample);
+    if (isPlaying())
+        Vengine::MyTiming::startTimer(_currentSampleTimerId);
 }
 
 bool miniaudio_api::isPlaying()
@@ -155,6 +170,8 @@ int miniaudio_api::getCurrentSample() {
 
     assert(_fileLoaded);
 
+    //fuck off with your inconsistent current sample reading
+    /*
     ma_uint64 sample = ma_sound_get_time_in_pcm_frames(&_sound);
     if (sample > INT32_MAX) {
         Vengine::warning("Audio played for longer than max audio allowed (2,147,483,647 samples)");
@@ -162,6 +179,8 @@ int miniaudio_api::getCurrentSample() {
     }
 
     return int(sample);
+    */
+    return min(int(Vengine::MyTiming::readTimer(_currentSampleTimerId) * getSampleRate()), getAudioDataLength());
 }
 
 float* miniaudio_api::getAudioData()
@@ -181,7 +200,7 @@ int miniaudio_api::getAudioDataLength()
 int miniaudio_api::getSampleRate() {
 
     assert(_fileLoaded);
-
+    //std::cout << _decoder.outputSampleRate << std::endl;
     return _decoder.outputSampleRate;
 }
 
@@ -206,6 +225,7 @@ bool miniaudio_api::initEngine()
 bool miniaudio_api::initDecoderFromFile()
 {
     _decoderConfig = ma_decoder_config_init(ma_format_f32, 1, 0);
+    std::cout << "initing" << std::endl;
 
     ma_result result = ma_decoder_init_file(_filePath.c_str(), &_decoderConfig, &_decoder);
     if (result != MA_SUCCESS) {
@@ -221,6 +241,7 @@ bool miniaudio_api::initSoundFromFile()
     assert(_initialised);
 
     ma_result result = ma_sound_init_from_file(&_engine, _filePath.c_str(), MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_NO_SPATIALIZATION, NULL, NULL, &_sound);
+    
     if (result != MA_SUCCESS) {
         Vengine::warning("Failed to load sound '" + _filePath + "'");
         return false;
@@ -231,7 +252,7 @@ bool miniaudio_api::initSoundFromFile()
 
 //loopback recording (completely separate) ---
 
-History<float> _loopbackAudioData(SP::consts._requiredLoopbackCacheLength + SP::consts._loopbackCacheSafetyBuffer);
+History<float> _loopbackAudioData(Vis::consts._requiredLoopbackCacheLength + Vis::consts._loopbackCacheSafetyBuffer);
 int _samplesAddedSinceGetLoopbackDataCall= 0;
 
 void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)

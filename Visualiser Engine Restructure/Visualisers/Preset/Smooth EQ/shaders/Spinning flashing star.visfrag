@@ -1,0 +1,14 @@
+void main(){
+
+    //get polar coordinates
+    float radius = sqrt(pow(vis_fragmentPosition.x, 2) + pow(vis_fragmentPosition.y, 2));
+    float theta = acos(vis_fragmentPosition.x / radius); //cosine angle formula
+    if (vis_fragmentPosition.y < 0)
+        theta = (2*3.1415) - theta;
+
+    theta += vis_timeSinceLoad;
+
+    float wiggle = cos(theta * 20);
+
+    vis_outputColour = vis_inColour * radius * wiggle * max(1 - 2 * vis_timeSinceLastBeat, 0);
+}

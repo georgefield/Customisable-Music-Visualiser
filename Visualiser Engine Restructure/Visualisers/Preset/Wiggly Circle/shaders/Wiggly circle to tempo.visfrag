@@ -1,0 +1,27 @@
+void main(){
+
+    const float innerRadius = 0.3;
+    const float outerRadius = 0.5;    
+
+    vec2 localPos = vec2(vis_fragmentUV.x * 2 - 1, vis_fragmentUV.y * 2 - 1);
+
+    //get polar coordinates
+    float radius = sqrt(pow(localPos.x, 2) + pow(localPos.y, 2));
+    float theta = acos(localPos.x / radius); //cosine angle formula
+    if (localPos.y < 0)
+        theta = (2*3.1415) - theta;
+
+    //audio feature usage
+    theta += vis_timeInAudio; //circle rotates with time
+    float wiggleSize = 0.05 * 1.5 * vis_timeSinceLastBeat; //wiggle size tracks with volume
+    const float wiggleFrequency = 20;
+
+    //create wiggly circle
+    float radiusWithWiggle = radius + (wiggleSize*cos(theta * wiggleFrequency));
+    if (radiusWithWiggle > innerRadius && radiusWithWiggle < outerRadius){
+        vis_outputColour = vis_inColour;
+    }
+    else{
+        vis_outputColour = vec4(0,0,0,0);
+    }
+}

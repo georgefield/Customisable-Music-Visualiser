@@ -1,5 +1,4 @@
 #pragma once
-#include "Tools.h"
 #include "Master.h"
 #include "RollingAverage.h"
 

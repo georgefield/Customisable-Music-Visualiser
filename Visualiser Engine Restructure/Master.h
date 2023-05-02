@@ -7,7 +7,7 @@
 #include "FFTWapi.h"
 #include "History.h"
 #include "FourierTransformHistory.h"
-#include "Kernels.h"
+#include "Kernel.h"
 
 #include <cassert>
 
@@ -46,9 +46,6 @@ public:
 	void calculateEnergy();
 	void calculatePeakAmplitude();
 	void audioIsPaused();
-
-	//helper functions
-	float sumOfConvolutionOfHistory(History<float>* history, int entries = 0, Kernel kernel = LINEAR_PYRAMID);
 
 	float* getBaseFftOutput();
 	MyComplex* getBaseFftComplexOutput();

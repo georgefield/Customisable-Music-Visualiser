@@ -7,7 +7,7 @@
 
 #include "NoteOnset.h"
 #include "Peak.h"
-#include "Tools.h"
+#include "MyMaths.h"
 
 struct DixonAlgVars {
 	static float CLUSTER_RADIUS_SECONDS;
@@ -26,8 +26,8 @@ struct DixonAlgVars {
 //returns false if interval too big too small (implies tempo out of range), used in structures and tempoDetection.cpp
 struct DixonAlgFunc {
 	static bool intervalImpliesValidTempo(int interval, int sampleRate) {
-		if (interval >= (60.0f / SP::vars.MAX_TEMPO) * sampleRate &&
-			interval <= (60.0f / SP::vars.MIN_TEMPO) * sampleRate) {
+		if (interval >= (60.0f / Vis::vars.MAX_TEMPO) * sampleRate &&
+			interval <= (60.0f / Vis::vars.MIN_TEMPO) * sampleRate) {
 			return true;
 		}
 		return false;
@@ -269,8 +269,10 @@ struct AgentSet {
 
 	AgentSet(int sampleRate) :
 		_sampleRate(sampleRate),
-		_highestScoringAgent(nullptr),
-		_highestScoringAgentExists(false),
+		_bestAgentBeatInterval(0),
+		_bestAgentLastPeakOnset(0),
+		_bestAgentScore(0),
+		_bestAgentVarsSet(false),
 		_confidenceInBestAgent(0.0f),
 		_sortedBy(UNSORTED)
 	{
@@ -284,7 +286,9 @@ struct AgentSet {
 		COMPOUND_SCORE
 	};
 
-	Agent* _highestScoringAgent;
+	int _bestAgentBeatInterval;
+	int _bestAgentLastPeakOnset;
+	float _bestAgentScore;
 	float _confidenceInBestAgent;
 	std::list<Agent*> set;
 	SortedBy _sortedBy;
@@ -304,7 +308,7 @@ struct AgentSet {
 	}
 	*/
 	void debug3(std::vector<std::string>& debugInfo, int sampleRate) {
-		sortAgentsByScoresAccountingForIntervalScores();
+		sortAgentsByScores();
 
 		int count = 1;
 		for (auto it = set.rbegin(); it != set.rend(); it++) {
@@ -314,8 +318,8 @@ struct AgentSet {
 		}
 	}
 
-	bool highestScoringAgentExists() {
-		return _highestScoringAgentExists;
+	bool bestAgentVarsSet() {
+		return _bestAgentVarsSet;
 	}
 
 	void prepareForCompute() {
@@ -428,13 +432,15 @@ struct AgentSet {
 		}
 	}
 
-	void calculateScoresAccountingForClusterIntervalScores(ClusterSet* clusters) {
+	void calculateScoresAndSetBestAgent(ClusterSet* clusters) {
 		if (set.size() == 0) {
 			Vengine::warning("No agents in set");
 			return;
 		}
 
 		float bestClusterScore = clusters->bestCluster()->_score;
+
+		_bestAgentVarsSet = false; //false to get a new best agent
 
 		std::list<Cluster>::iterator nearest;
 		bool isNearestAbove;
@@ -455,14 +461,16 @@ struct AgentSet {
 				DixonAlgVars::ACCOUNT_FOR_CLUSTER_SCORE * score * clusterScore;
 
 			//set highest scoring agent variable
-			if (_highestScoringAgent == nullptr || (*it)->_accountingForIntervalScore > _highestScoringAgent->_accountingForIntervalScore) {
-				_highestScoringAgentExists = true;
-				_highestScoringAgent = (*it);
+			if (!_bestAgentVarsSet || (*it)->_accountingForIntervalScore > _bestAgentScore) {
+				_bestAgentVarsSet = true;
+				_bestAgentBeatInterval = (*it)->_beatInterval;
+				_bestAgentLastPeakOnset = (*it)->_peakHistory->newest().onset;
+				_bestAgentScore = (*it)->_accountingForIntervalScore;
 			}
 		}
 	}
 
-	void sortAgentsByScoresAccountingForIntervalScores() {
+	void sortAgentsByScores() {
 		set.sort([](const Agent* a, const Agent* b) { return a->_accountingForIntervalScore < b->_accountingForIntervalScore; });
 		_sortedBy = COMPOUND_SCORE;
 	}
@@ -490,7 +498,7 @@ struct AgentSet {
 		}
 		auto it = set.end();
 		it--;
-		int bestInterval = _highestScoringAgent->_beatInterval;
+		int bestInterval = _bestAgentBeatInterval;
 		int skips = 0;
 		do {
 			
@@ -506,13 +514,12 @@ struct AgentSet {
 
 		float secondBestScore = (*it)->_accountingForIntervalScore; //first agent with interval not near best agent interval
 
-		_confidenceInBestAgent = (1.0f - (secondBestScore / _highestScoringAgent->_accountingForIntervalScore)) * std::min(_highestScoringAgent->_accountingForIntervalScore / 2000.0f, 1.0f); //vs 2nd best thats very different & also making sure good minimum score
-		//_confidenceInBestAgent *= 1.5f; //even in best case not better than 2/3 because half tempo always
+		_confidenceInBestAgent = (1.0f - powf((secondBestScore / _bestAgentScore), 2.0f)) * std::min(_bestAgentScore / 1000.0f, 1.0f); //vs 2nd best thats very different & also making sure good minimum score
 	}
 
 	void shrinkSetToSize(int size) {
 		if (_sortedBy != COMPOUND_SCORE) {
-			sortAgentsByScoresAccountingForIntervalScores();
+			sortAgentsByScores();
 		}
 
 		if (set.size() <= size) {
@@ -530,14 +537,11 @@ struct AgentSet {
 			(*it)->_score *= factor;
 		}
 	}
-
-	void endCalculationRound() {
-	}
 private:
 	//duplicate thresholds
 	int _tempoMinDifference;
 	int _phaseMinDifference;
-	bool _highestScoringAgentExists;
+	bool _bestAgentVarsSet;
 
 	int _sampleRate;
 

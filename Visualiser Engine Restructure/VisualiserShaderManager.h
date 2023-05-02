@@ -28,7 +28,7 @@ public:
 
 	static bool createShader(std::string name);
 
-	static void recompileShader(std::string fragPath);
+	static bool recompileShader(std::string fragPath);
 	//--
 
 	//ssbo managing--

@@ -4,7 +4,7 @@
 #include <Vengine/IOManager.h>
 #include <assert.h>
 #include "SignalProcessingManager.h"
-#include "SPvars.h"
+#include "VisVars.h"
 #include "UIglobalFeatures.h"
 
 #include "imgui.h"
@@ -18,17 +18,19 @@ int AudioManager::_stickySample = -1;
 
 PlaybackInfo* AudioManager::_currentPlaybackInfo;
 PlaybackInfo AudioManager::_loadedAudioInfo;
-PlaybackInfo AudioManager::_loopbackInfo; 
+PlaybackInfo AudioManager::_loopbackInfo;
 
 bool AudioManager::_isUsingLoopback = false;
 int AudioManager::_loopbackTimerId;
 int AudioManager::_totalNewSamples = 0;
 int AudioManager::_historyStartPosition = 0;
 std::string AudioManager::_loopbackDeviceName = "";
+int AudioManager::_sampleCounterOffset = 0;
 
 float AudioManager::_volume = 1.0f;
-int AudioManager::_lagTimerId;
-bool AudioManager::_lagDetected = false;
+int AudioManager::_loopbacklagTimerId;
+int AudioManager::_numLagsInTimeWindow = 0;
+int AudioManager::_fileAudioLagTimerId;
 
 
 void AudioManager::init()
@@ -43,7 +45,8 @@ void AudioManager::init()
 
 	setUseLoopback(false); //default using loaded audio
 
-	Vengine::MyTiming::createTimer(_lagTimerId);
+	Vengine::MyTiming::createTimer(_loopbacklagTimerId);
+	Vengine::MyTiming::createTimer(_fileAudioLagTimerId);
 	Vengine::MyTiming::createTimer(_currentSampleExtraPrecisionTimerId);
 	Vengine::MyTiming::createTimer(_loopbackTimerId);
 }
@@ -51,8 +54,8 @@ void AudioManager::init()
 void AudioManager::initLoopbackPI() {
 	_loopbackInfo.isAudioLoaded = true;
 	_loopbackInfo.isAudioPlaying = true;
-	_loopbackInfo.sampleDataArrayPtr = new float[SP::consts._finalLoopbackStorageSize];
-	_loopbackInfo.sampleDataArrayLength = SP::consts._finalLoopbackStorageSize;
+	_loopbackInfo.sampleDataArrayPtr = new float[Vis::consts._finalLoopbackStorageSize];
+	_loopbackInfo.sampleDataArrayLength = Vis::consts._finalLoopbackStorageSize;
 	_loopbackInfo.sampleCounter = 0;
 	_loopbackInfo.sampleDataArrayStartPosition = 0;
 	_loopbackInfo.sampleRate = -1;
@@ -63,12 +66,11 @@ void AudioManager::initLoadedAudioPI() {
 	load(STARTUP_MUSIC_FILEPATH); //program works by always having a song loaded
 }
 
-void AudioManager::resetLoopback()
+void AudioManager::resetLoopback(int sample)
 {
-	_loopbackInfo.nextCalculationSample = 0;
-	_totalNewSamples = 0;
-	Vengine::MyTiming::resetTimer(_loopbackTimerId);
-	Vengine::MyTiming::startTimer(_loopbackTimerId);
+	_loopbackInfo.nextCalculationSample = sample + _loopbackInfo.sampleRate / Vis::vars._desiredCPS;
+	_totalNewSamples = sample;
+	_sampleCounterOffset = sample - (_loopbackInfo.sampleRate * Vengine::MyTiming::readTimer(_loopbackTimerId));
 }
 
 std::string AudioManager::getLoopbackDeviceName()
@@ -80,35 +82,28 @@ void AudioManager::updateCurrentAudioInfo() {
 
 	//update sample counter--
 	if (isUsingLoopback()) {
-		_loopbackInfo.sampleCounter = _loopbackInfo.sampleRate * Vengine::MyTiming::readTimer(_loopbackTimerId);
-	}
-	else {
-		updateSampleCounterOfLoadedAudio();
-	}
-	//--
+		_loopbackInfo.sampleCounter = _loopbackInfo.sampleRate * Vengine::MyTiming::readTimer(_loopbackTimerId) + _sampleCounterOffset;
 
-	//update nextcalculationsample and then decide whether to do signal processing--
-	if (_currentPlaybackInfo->doSignalProcessing) //if did signal processing last frame
-		_currentPlaybackInfo->nextCalculationSample += _currentPlaybackInfo->sampleRate / SP::vars._desiredCPS; //increment calculation sample
+		//update nextcalculationsample and then decide whether to do signal processing--
+		if (_loopbackInfo.doSignalProcessing) //if did signal processing last frame
+			_loopbackInfo.nextCalculationSample += _loopbackInfo.sampleRate / Vis::vars._desiredCPS; //increment calculation sample
 
-	//will only do calculation if sample counter bigger than calculation sample and will wait for loopback samples to catch up if not
-	_currentPlaybackInfo->doSignalProcessing = (_currentPlaybackInfo->nextCalculationSample <= _currentPlaybackInfo->sampleCounter);
+		//will only do calculation if sample counter bigger than calculation sample and will wait for loopback samples to catch up if not
+		_loopbackInfo.doSignalProcessing = (_loopbackInfo.nextCalculationSample <= _loopbackInfo.sampleCounter);
+		if (!_loopbackInfo.doSignalProcessing) {
+			Vengine::MyTiming::resetTimer(_fileAudioLagTimerId);
+			return;
+		}
+		//--
 
-	if (!_currentPlaybackInfo->doSignalProcessing) {
-		Vengine::MyTiming::resetTimer(_lagTimerId);
-		return;
-	}
-	//--
-
-	if (isUsingLoopback()) {
 		int numNewSamples = 0;
 		History<float>* loopbackDataPtr = miniaudio.getLoopbackDataHistoryPtr(numNewSamples);
 
 		_totalNewSamples += numNewSamples;
 
 		//total new samples is the offset of the array from the very first sample (because using history), so we take next calculation sample and remove the offset
-		_historyStartPosition = _totalNewSamples - _loopbackInfo.nextCalculationSample + SP::consts._loopbackCacheSafetyBuffer;
-		
+		_historyStartPosition = _totalNewSamples - _loopbackInfo.nextCalculationSample + Vis::consts._loopbackCacheSafetyBuffer;
+
 		//if goes too out of phase set to a bunch of 0s
 		if (_historyStartPosition < 0) {
 			Vengine::warning("Sample gathering offset below 0 (not enough new samples)");
@@ -118,64 +113,86 @@ void AudioManager::updateCurrentAudioInfo() {
 			}
 			_totalNewSamples += _loopbackInfo.nextCalculationSample - _totalNewSamples;
 
-			_historyStartPosition = SP::consts._loopbackCacheSafetyBuffer; //reevaluate start position
+			_historyStartPosition = Vis::consts._loopbackCacheSafetyBuffer; //reevaluate start position
 		}
 
-		if (_historyStartPosition >= SP::consts._requiredLoopbackCacheLength - SP::consts._loopbackCacheSafetyBuffer) {
+		if (_historyStartPosition >= Vis::consts._requiredLoopbackCacheLength - Vis::consts._loopbackCacheSafetyBuffer) {
 			Vengine::warning("sample gathering offset too high (calculation sample not kept up with new samples)");
-			resetLoopback();
-			SignalProcessingManager::reset();
+			resetLoopback(_totalNewSamples);
 
-			//2 resets in less than 1 seconds then assume lagging and decrease CPS
-			if (Vengine::MyTiming::readTimer(_lagTimerId) < SP::consts._lagTimeBeforeReducingCPS) {
-				if (_lagDetected) {
-					SP::vars._wasCPSautoDecreased = true;
-					SP::vars._desiredCPS *= SP::consts._CPSreduceFactor; //decrease desired cps
-
-					UIglobalFeatures::queueError("Cannot reach desired audio calculations per second (CPS), reducing CPS to " + std::to_string(SP::vars._desiredCPS)); //show error
-				}
-				else {
-					_lagDetected = true;
-					Vengine::MyTiming::startTimer(_lagTimerId);
-				}
+			if (_numLagsInTimeWindow == 0) {
+				Vengine::MyTiming::resetTimer(_loopbacklagTimerId);
+				Vengine::MyTiming::startTimer(_loopbacklagTimerId);
+				Vengine::warning("Starting lag check");
 			}
-			
-			return;
-		}
-		else {
-			//not lagging and been above 2 seconds
-			if (Vengine::MyTiming::readTimer(_lagTimerId) >= SP::consts._lagTimeBeforeReducingCPS) {
-				_lagDetected = false;
-				Vengine::MyTiming::resetTimer(_lagTimerId);
+
+			_numLagsInTimeWindow++;
+
+			//more resets than allowed in time window then assume lagging and reduce CPS
+			if (Vengine::MyTiming::readTimer(_loopbacklagTimerId) < Vis::consts._timeWindowForLag && _numLagsInTimeWindow >= Vis::consts._numLagsBeforeReducingCPS) {
+				Vis::comms._wasCPSautoDecreased = true;
+				Vis::vars._desiredCPS *= Vis::consts._CPSreduceFactor; //decrease desired cps
+
+				Vengine::warning("Lag detected!");
+				UIglobalFeatures::queueError("Cannot reach desired audio calculations per second (CPS), reducing CPS to " + std::to_string(Vis::vars._desiredCPS)); //show error
+
+				_numLagsInTimeWindow = 0;
+				Vengine::MyTiming::resetTimer(_loopbacklagTimerId);
 			}
 		}
 
+		if (_numLagsInTimeWindow > 0 && Vengine::MyTiming::readTimer(_loopbacklagTimerId) >= Vis::consts._timeWindowForLag) {
+			//not lagging and been above time window
+			Vengine::MyTiming::resetTimer(_loopbacklagTimerId);
+			Vengine::warning("Finished lag check- " + std::to_string(_numLagsInTimeWindow) + " resets in " + std::to_string(Vis::consts._timeWindowForLag) + "s");
+			_numLagsInTimeWindow = 0;
+		}
 		//get reverse and put it into sample data array
-		for (int i = _historyStartPosition; i < _historyStartPosition + SP::consts._finalLoopbackStorageSize; i++) {
-			_loopbackInfo.sampleDataArrayPtr[_historyStartPosition + SP::consts._finalLoopbackStorageSize - 1 - i] = _volume * miniaudio.getLoopbackDataHistoryPtr(numNewSamples)->get(i);
+		for (int i = _historyStartPosition; i < _historyStartPosition + Vis::consts._finalLoopbackStorageSize; i++) {
+			_loopbackInfo.sampleDataArrayPtr[_historyStartPosition + Vis::consts._finalLoopbackStorageSize - 1 - i] = _volume * miniaudio.getLoopbackDataHistoryPtr(numNewSamples)->get(i);
 		}
+
+		return;
 	}
-	else {
-		_loadedAudioInfo.sampleDataArrayStartPosition = _loadedAudioInfo.nextCalculationSample;
-		_loadedAudioInfo.isAudioLoadedThisFrame = false;
 
-		//if next calculation sample behind for too long then assume lagging
-		if (_loadedAudioInfo.nextCalculationSample < _loadedAudioInfo.sampleCounter) {
-			Vengine::MyTiming::startTimer(_lagTimerId);
-		}
-		if (_loadedAudioInfo.nextCalculationSample > _loadedAudioInfo.sampleCounter) {
-			Vengine::MyTiming::resetTimer(_lagTimerId);
-		}
+	//if not using loopback ---------
 
-		if (Vengine::MyTiming::readTimer(_lagTimerId) > SP::consts._lagTimeBeforeReducingCPS) {
-			SP::vars._desiredCPS *= SP::consts._CPSreduceFactor; //decrease desired cps
-			UIglobalFeatures::queueError("Cannot reach desired audio calculations per second (CPS), reducing CPS to " + std::to_string(SP::vars._desiredCPS)); //show error
+	_loadedAudioInfo.sampleCounter = miniaudio.getCurrentSample();
+	if (miniaudio.isFinished()) {
+		_loadedAudioInfo.isAudioPlaying = false;
+	}
 
-			SP::vars._wasCPSautoDecreased = true;
-			Vengine::MyTiming::resetTimer(_lagTimerId);
+	//update nextcalculationsample and then decide whether to do signal processing--
+	if (_loadedAudioInfo.doSignalProcessing) //if did signal processing last frame
+		_loadedAudioInfo.nextCalculationSample += miniaudio.getSampleRate() / Vis::vars._desiredCPS; //increment calculation sample
 
-			SignalProcessingManager::reset();
-		}
+	//will only do calculation if sample counter bigger than calculation sample and will wait for loopback samples to catch up if not
+	_loadedAudioInfo.doSignalProcessing = (_loadedAudioInfo.nextCalculationSample <= _loadedAudioInfo.sampleCounter);
+	if (!_loadedAudioInfo.doSignalProcessing)
+		Vengine::MyTiming::resetTimer(_fileAudioLagTimerId);
+	//--
+
+	_loadedAudioInfo.sampleDataArrayStartPosition = _loadedAudioInfo.nextCalculationSample;
+	_loadedAudioInfo.isAudioLoadedThisFrame = false;
+
+	//if next calculation sample behind for too long then assume lagging
+	if (_loadedAudioInfo.nextCalculationSample < _loadedAudioInfo.sampleCounter) {
+		Vengine::MyTiming::startTimer(_fileAudioLagTimerId);
+	}
+	if (_loadedAudioInfo.nextCalculationSample > _loadedAudioInfo.sampleCounter) {
+		Vengine::MyTiming::resetTimer(_fileAudioLagTimerId);
+	}
+
+	if (_loadedAudioInfo.sampleCounter - _loadedAudioInfo.nextCalculationSample > Vis::consts._minAmountNextCalculationSampleBehind &&
+		Vengine::MyTiming::readTimer(_fileAudioLagTimerId) > Vis::consts._minTimeNextCalculationSampleBehind)
+	{
+		Vis::vars._desiredCPS *= Vis::consts._CPSreduceFactor; //decrease desired cps
+		UIglobalFeatures::queueError("Cannot reach desired audio calculations per second (CPS), reducing CPS to " + std::to_string(Vis::vars._desiredCPS)); //show error
+
+		Vis::comms._wasCPSautoDecreased = true;
+		Vengine::MyTiming::resetTimer(_fileAudioLagTimerId);
+
+		SignalProcessingManager::reset();
 	}
 }
 
@@ -188,12 +205,17 @@ void AudioManager::setUseLoopback(bool useLoopback) {
 
 		miniaudio.stopLoopback();
 		miniaudio.startLoopback(_loopbackInfo.sampleRate, _loopbackDeviceName);
+
 		_currentPlaybackInfo = &_loopbackInfo;
 
+		Vengine::MyTiming::resetTimer(_loopbackTimerId);
+		Vengine::MyTiming::startTimer(_loopbackTimerId);
 		audioInterruptOccured(0);
 	}
 	else {
+
 		miniaudio.stopLoopback();
+
 		_loopbackDeviceName = "Not using loopback";
 
 		_currentPlaybackInfo = &_loadedAudioInfo;
@@ -228,7 +250,6 @@ bool AudioManager::load(std::string filePath)
 
 	_loadedAudioInfo.isAudioLoadedThisFrame = true;
 	_loadedAudioInfo.isAudioLoaded = true;
-	_loadedAudioInfo.isAudioFinished = false;
 	_loadedAudioInfo.isAudioPlaying = false;
 
 	_loadedAudioInfo.sampleRate = miniaudio.getSampleRate();
@@ -249,26 +270,27 @@ void AudioManager::play()
 		return;
 	}
 
-	_loadedAudioInfo.isAudioPlaying = true;
-	if (_loadedAudioInfo.isAudioLoaded) {
-		miniaudio.playAudio();
+	if (miniaudio.isFinished()) {
+		seekToSample(0);
 	}
 
-	audioInterruptOccured(_loadedAudioInfo.sampleCounter);
+	_loadedAudioInfo.isAudioPlaying = true;
+	miniaudio.playAudio();
+
+	audioInterruptOccured(getCurrentSample());
 }
 
 void AudioManager::pause()
 {
 	_loadedAudioInfo.isAudioPlaying = false;
-	if (_loadedAudioInfo.isAudioLoaded) {
-		miniaudio.pauseAudio();
-	}
-	audioInterruptOccured(_loadedAudioInfo.sampleCounter);
+	miniaudio.pauseAudio();
+
+	audioInterruptOccured(getCurrentSample());
 }
 
 void AudioManager::seekToSample(int sample) {
 
-	if (_loadedAudioInfo.isAudioLoaded){
+	if (_loadedAudioInfo.isAudioLoaded) {
 		//sanitise input
 		if (sample < 0)
 			sample = 0;
@@ -277,34 +299,7 @@ void AudioManager::seekToSample(int sample) {
 
 		miniaudio.seekToSample(sample);
 
-		//reset current sample
-		_loadedAudioInfo.sampleCounter = sample;
-		_stickySample = -1;
-
 		audioInterruptOccured(sample);
-	}
-}
-
-void AudioManager::updateSampleCounterOfLoadedAudio()
-{
-	if (_loadedAudioInfo.isAudioLoaded && _loadedAudioInfo.isAudioPlaying) {
-			if (_stickySample != miniaudio.getCurrentSample()) { //if mini audio not stuck on same sample
-				_stickySample = miniaudio.getCurrentSample(); //update sticky sample
-
-				Vengine::MyTiming::resetTimer(_currentSampleExtraPrecisionTimerId); //start timer to get extra 
-				Vengine::MyTiming::startTimer(_currentSampleExtraPrecisionTimerId);
-			}
-
-			//add extra samples for extra precision
-			int extraSamples = Vengine::MyTiming::readTimer(_currentSampleExtraPrecisionTimerId) * _loadedAudioInfo.sampleRate;
-			_loadedAudioInfo.sampleCounter = miniaudio.getCurrentSample() + extraSamples;
-			
-			//check not over num samples
-			if (_loadedAudioInfo.sampleCounter > _loadedAudioInfo.sampleDataArrayLength) {
-				_loadedAudioInfo.sampleCounter = _loadedAudioInfo.sampleDataArrayLength;
-				_loadedAudioInfo.isAudioFinished = true;
-				pause();
-			}
 	}
 }
 
@@ -323,7 +318,10 @@ void AudioManager::audioInterruptOccured(int currentSample)
 	_currentPlaybackInfo->sampleCounter = currentSample;
 
 	if (isUsingLoopback()) {
-		resetLoopback();
+		resetLoopback(currentSample);
+	}
+	else {
+		_loadedAudioInfo.sampleDataArrayStartPosition = currentSample;
 	}
 }
 

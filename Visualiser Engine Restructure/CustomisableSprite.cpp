@@ -1,11 +1,11 @@
 #include "CustomisableSprite.h"
 #include <Vengine/MyImgui.h>
 
-#include "Tools.h"
+#include "WindowCoordinateConversions.h"
 #include "VisualiserManager.h"
 #include "VisualiserShaderManager.h"
 #include "PFDapi.h"
-#include "VisVars.h"
+#include "VisPaths.h"
 #include "SignalProcessingManager.h"
 #include "UIglobalFeatures.h"
 #include "SpriteManager.h"
@@ -40,7 +40,7 @@ void CustomisableSprite::init(SpriteInfo spriteInfo) {
 	_justCreated = true;
 
 	if (_spriteInfo.shaderFilename[0] == NULL)
-		strcpy_s(_spriteInfo.shaderFilename, sizeof(SpriteInfo::shaderFilename), VisVars::_defaultFragShaderPath.substr(VisVars::_defaultFragShaderPath.find_last_of("/") + 1).c_str());
+		strcpy_s(_spriteInfo.shaderFilename, sizeof(SpriteInfo::shaderFilename), VisPaths::_defaultFragShaderPath.substr(VisPaths::_defaultFragShaderPath.find_last_of("/") + 1).c_str());
 
 	if (_spriteInfo.textureFilename[0] == NULL)
 		assert(_spriteInfo.useSimilarityMatrixTexture || !_spriteInfo.applyTexture);
@@ -54,8 +54,8 @@ void CustomisableSprite::init(SpriteInfo spriteInfo) {
 	//--
 
 	//set up ui vars--
-	Vengine::IOManager::getFilesInDir(VisualiserManager::texturesFolder(), _textureFileNames);
-	Vengine::IOManager::getFilesInDir(VisualiserManager::shadersFolder(), _shaderFileNames, true, VisVars::_visShaderExtension);
+	Vengine::IOManager::getFilesInDir(VisualiserManager::texturesFolder(), _textureFileNames, true, ".png");
+	Vengine::IOManager::getFilesInDir(VisualiserManager::shadersFolder(), _shaderFileNames, true, VisPaths::_visShaderExtension);
 
 	Vengine::MyTiming::createTimer(_timerID); //timer for selection ui
 	//--
@@ -82,8 +82,8 @@ void CustomisableSprite::drawUi() {
 
 	//-- using set next is faster
 	updateOptionsRect();
-	glm::vec2 optionsTLpx = Tools::openGLposToPx({ _optionsRect.x, _optionsRect.y + _optionsRect.w }, _window, _viewport);
-	glm::vec2 optionsSizePx = Tools::openGLdimToPx({ _optionsRect.z, _optionsRect.w }, _window, _viewport);
+	glm::vec2 optionsTLpx = WCC::openGLposToPx({ _optionsRect.x, _optionsRect.y + _optionsRect.w }, _window, _viewport);
+	glm::vec2 optionsSizePx = WCC::openGLdimToPx({ _optionsRect.z, _optionsRect.w }, _window, _viewport);
 
 	ImGui::SetNextWindowPos(ImVec2(optionsTLpx.x, optionsTLpx.y));
 	ImGui::SetNextWindowSize(ImVec2(optionsSizePx.x, optionsSizePx.y));
@@ -116,7 +116,7 @@ void CustomisableSprite::drawUi() {
 		updateShader();
 	}
 	//if shader contains texture uniform then
-	if (ImGui::CollapsingHeader("Sprite texture")){
+	if (ImGui::CollapsingHeader("Sprite texture")) {
 		textureChooser();
 		updateTexture();
 	}
@@ -127,7 +127,7 @@ void CustomisableSprite::drawUi() {
 	//choose pos--
 	//convert to pixel coords
 	glm::vec2 pixelPos;
-	pixelPos = Tools::openGLposToPx(glm::vec2(modelRect.x, modelRect.y), _window, _viewport, true);
+	pixelPos = WCC::openGLposToPx(glm::vec2(modelRect.x, modelRect.y), _window, _viewport, true);
 	static int pos[2];
 	pos[0] = pixelPos.x;
 	pos[1] = pixelPos.y;
@@ -138,7 +138,7 @@ void CustomisableSprite::drawUi() {
 	}
 	//convert to opengl coords
 	if (ImGui::IsItemDeactivatedAfterEdit()) {
-		glm::vec2 openGLpos = Tools::pxPosToOpenGL(glm::vec2(pos[0], pos[1]), _window, _viewport, true);
+		glm::vec2 openGLpos = WCC::pxPosToOpenGL(glm::vec2(pos[0], pos[1]), _window, _viewport, true);
 		_spriteInfo.pos[0] = openGLpos.x;
 		_spriteInfo.pos[1] = openGLpos.y;
 		setModelPos(getPos());
@@ -149,12 +149,12 @@ void CustomisableSprite::drawUi() {
 	ImGui::SliderInt2("##", pos, 0, _window->getScreenWidth());
 	ImGui::PopID();
 	if (ImGui::IsItemEdited()) {
-		glm::vec2 openGLpos = Tools::pxPosToOpenGL(glm::vec2(pos[0], pos[1]), _window, _viewport, true);
+		glm::vec2 openGLpos = WCC::pxPosToOpenGL(glm::vec2(pos[0], pos[1]), _window, _viewport, true);
 		_spriteInfo.pos[0] = openGLpos.x;
 		_spriteInfo.pos[1] = openGLpos.y;
 		setModelPos(getPos());
 	}
-	
+
 	//--
 
 	ImGui::Separator();
@@ -162,7 +162,7 @@ void CustomisableSprite::drawUi() {
 	//choose size--
 	//convert to pixel coords
 	glm::vec2 pixelSize;
-	pixelSize = Tools::openGLdimToPx(glm::vec2(modelRect.z, modelRect.w), _window, _viewport, true);
+	pixelSize = WCC::openGLdimToPx(glm::vec2(modelRect.z, modelRect.w), _window, _viewport, true);
 	static int dim[2];
 	dim[0] = pixelSize.x;
 	dim[1] = pixelSize.y;
@@ -173,17 +173,17 @@ void CustomisableSprite::drawUi() {
 	}
 	//convert to opengl coords
 	if (ImGui::IsItemDeactivatedAfterEdit()) {
-		glm::vec2 openGLsize = Tools::pxDimToOpenGL(glm::vec2(dim[0], dim[1]), _window, _viewport, true);
+		glm::vec2 openGLsize = WCC::pxDimToOpenGL(glm::vec2(dim[0], dim[1]), _window, _viewport, true);
 		_spriteInfo.dim[0] = openGLsize.x;
 		_spriteInfo.dim[1] = openGLsize.y;
 		setModelDim(getDim());
 	}
-	
+
 	//slider
 	ImGui::PushID(1);
 	ImGui::SliderInt2("##", dim, 0, _window->getScreenWidth());
 	if (ImGui::IsItemEdited()) {
-		glm::vec2 openGLsize = Tools::pxDimToOpenGL(glm::vec2(dim[0], dim[1]), _window, _viewport, true);
+		glm::vec2 openGLsize = WCC::pxDimToOpenGL(glm::vec2(dim[0], dim[1]), _window, _viewport, true);
 		_spriteInfo.dim[0] = openGLsize.x;
 		_spriteInfo.dim[1] = openGLsize.y;
 		setModelDim(getDim());
@@ -243,7 +243,7 @@ void CustomisableSprite::updateShader()
 	//always need simple.visfrag
 	if (!Vengine::IOManager::fileExists(VisualiserManager::shadersFolder() + "/simple.visfrag")) {
 		Vengine::warning("No simple.visfrag in new visualiser: had to copy from resources");
-		Vengine::IOManager::copyFile(VisVars::_defaultFragShaderPath, VisualiserManager::shadersFolder() + "/simple.visfrag");
+		Vengine::IOManager::copyFile(VisPaths::_defaultFragShaderPath, VisualiserManager::shadersFolder() + "/simple.visfrag");
 	}
 
 	auto tmp = VisualiserShaderManager::getShader(VisualiserManager::shadersFolder() + "/" + _spriteInfo.shaderFilename);
@@ -260,7 +260,7 @@ void CustomisableSprite::updateShader()
 void CustomisableSprite::updateTexture()
 {
 	if (!_spriteInfo.applyTexture) {
-		_texture = Vengine::ResourceManager::getTexture(VisVars::_1x1WhiteTexturePath);
+		_texture = Vengine::ResourceManager::getTexture(VisPaths::_1x1WhiteTexturePath);
 		return;
 	}
 	if (_spriteInfo.useSimilarityMatrixTexture) {
@@ -350,7 +350,7 @@ void CustomisableSprite::shaderChooser()
 
 	//select shader folder
 	if (ImGui::Button("Refresh")) {
-		Vengine::IOManager::getFilesInDir(VisualiserManager::shadersFolder(), _shaderFileNames, true, VisVars::_visShaderExtension);
+		Vengine::IOManager::getFilesInDir(VisualiserManager::shadersFolder(), _shaderFileNames, true, VisPaths::_visShaderExtension);
 	}
 
 	ImGui::SameLine();
@@ -358,13 +358,13 @@ void CustomisableSprite::shaderChooser()
 	//add shader from outside project folder
 	if (ImGui::Button("Add another shader")) {
 		std::string chosenFile = "";
-		if (PFDapi::fileChooser("Choose shader to add", Vengine::IOManager::getProjectDirectory(), chosenFile, { "Visualiser frag ( " + VisVars::_visShaderExtension + ")", " * " + VisVars::_visShaderExtension }, true)) {
+		if (PFDapi::fileChooser("Choose shader to add", Vengine::IOManager::getProjectDirectory(), chosenFile, { "Visualiser frag ( " + VisPaths::_visShaderExtension + ")", " * " + VisPaths::_visShaderExtension }, true)) {
 
 			//copy to shaders folder and then set that texture
 			strcpy_s(_spriteInfo.shaderFilename, sizeof(SpriteInfo::shaderFilename), VisualiserManager::externalToInternalShader(chosenFile).c_str());
 			_resetShaderCombo = true;
 
-			Vengine::IOManager::getFilesInDir(VisualiserManager::shadersFolder(), _shaderFileNames, true, VisVars::_visShaderExtension); //refresh
+			Vengine::IOManager::getFilesInDir(VisualiserManager::shadersFolder(), _shaderFileNames, true, VisPaths::_visShaderExtension); //refresh
 		}
 	}
 
@@ -383,7 +383,7 @@ void CustomisableSprite::shaderChooser()
 
 	//choose shader from shader project folder
 	if (UIglobalFeatures::ImGuiBetterCombo(_shaderFileNames, shaderIndex, 1)) {
-		
+
 		if (_shaderFileNames[shaderIndex].length() > sizeof(SpriteInfo::shaderFilename)) {
 			UIglobalFeatures::queueError("Shader filename too long " + std::to_string(_shaderFileNames[shaderIndex].length()) + "/" + std::to_string(sizeof(SpriteInfo::shaderFilename)));
 			return;
@@ -394,56 +394,67 @@ void CustomisableSprite::shaderChooser()
 
 	ImGui::SameLine();
 	if (ImGui::Button("Recompile")) {
-		VisualiserShaderManager::recompileShader(VisualiserManager::shadersFolder() + "/" + _shaderFileNames[shaderIndex]);
+		if (!VisualiserShaderManager::recompileShader(VisualiserManager::shadersFolder() + "/" + _shaderFileNames[shaderIndex])) {
+			strcpy_s(_spriteInfo.shaderFilename, sizeof(SpriteInfo::shaderFilename), "simple.visfrag"); //if it fails go back to simple .visfrag
+		}
 	}
 }
 
+//useful function used in processInput(...)
+bool posWithinRect(glm::vec2 pos, glm::vec4 rect)
+{
+	if (pos.x >= rect.x && pos.x <= rect.x + rect.z
+		&& pos.y >= rect.y && pos.y <= rect.y + rect.w) {
+		return true;
+	}
+	return false;
+}
 
 void CustomisableSprite::processInput(Vengine::InputManager* inputManager) {
 
 	//opengl mouse pos
-	glm::vec2 mousePos = Tools::pxPosToOpenGL(inputManager->getMouseCoords(), _window, _viewport);
+	glm::vec2 mousePos = WCC::pxPosToOpenGL(inputManager->getMouseCoords(), _window, _viewport);
 
+	//ignore any input on the frame it is created
+	if (_justCreated) {
+		_justCreated = false;
+		return;
+	}
+
+	//check for delete
 	if (inputManager->isKeyPressed(SDLK_DELETE)) {
 		setDeleted();
+		return;
 	}
 
-	//click down
-	if (!_justCreated) {
-		if (inputManager->isKeyPressed(SDL_BUTTON_LEFT)) {
-			if (Tools::posWithinRect(mousePos, getModelBoundingBox())) { //pos within sprite bounding box
-				Vengine::MyTiming::resetTimer(_timerID);
-				Vengine::MyTiming::startTimer(_timerID);
-				_posOfMouseAtClick = mousePos;
-				_posOfSpriteAtClick = getModelPos();
-				_isNotDraggingSprite = false;
-			}
-			else if (Tools::posWithinRect(mousePos, _optionsRect) && _selected) {
-				//do nothing if pos within settings rect
-			}
-			else {
-				_selected = false;
-			}
+	//left click pressed
+	if (inputManager->isKeyPressed(SDL_BUTTON_LEFT)) {
+		if (posWithinRect(mousePos, getModelBoundingBox())) { //click within sprite bounding box
+			Vengine::MyTiming::resetTimer(_timerID);
+			Vengine::MyTiming::startTimer(_timerID); //start timer to decide whether dragging or not
+			_posOfMouseAtClick = mousePos; //initialised variables used to calculate dragging
+			_posOfSpriteAtClick = getModelPos();
+			_isNotDraggingSprite = false;
 		}
-
-		//dragging while held down, selected
-		if (_selected && inputManager->isKeyDown(SDL_BUTTON_LEFT) && Tools::posWithinRect(mousePos, getModelBoundingBox())) {
-			_spriteInfo.pos[0] = (_posOfSpriteAtClick + (mousePos - _posOfMouseAtClick)).x;
-			_spriteInfo.pos[1] = (_posOfSpriteAtClick + (mousePos - _posOfMouseAtClick)).y;
-			setModelPos(getPos());
-		}
-
-		if (inputManager->isKeyReleased(SDL_BUTTON_LEFT) && Tools::posWithinRect(mousePos, getModelBoundingBox())) {
-			_isNotDraggingSprite = true;
-			if (Vengine::MyTiming::readTimer(_timerID) < 0.2) {
-				_selected = !_selected;
-			}
+		else if (!posWithinRect(mousePos, _optionsRect) && _selected) { //click outside of sprite: deselect
+			_selected = false;
 		}
 	}
-	else {
-		_justCreated = false; //_justCreated used so it doesnt immediantly deselect
+
+	//left click down
+	if (_selected && inputManager->isKeyDown(SDL_BUTTON_LEFT) && posWithinRect(mousePos, getModelBoundingBox())) {
+		_spriteInfo.pos[0] = (_posOfSpriteAtClick + (mousePos - _posOfMouseAtClick)).x;
+		_spriteInfo.pos[1] = (_posOfSpriteAtClick + (mousePos - _posOfMouseAtClick)).y;
+		setModelPos(getPos());
 	}
 
+	//left click released
+	if (inputManager->isKeyReleased(SDL_BUTTON_LEFT) && posWithinRect(mousePos, getModelBoundingBox())) {
+		_isNotDraggingSprite = true;
+		if (Vengine::MyTiming::readTimer(_timerID) < 0.2) {
+			_selected = !_selected;
+		}
+	}
 }
 
 

@@ -14,7 +14,9 @@ class Threshold {
 public:
 	Threshold(int numValuesToAverageOver) :
 		_valuesAddedInTimeOrder(numValuesToAverageOver),
-		aboveThreshold(false)
+		aboveThreshold(false),
+		hasReturnedPeak(false),
+		goneBelowFractionOfThreshold(true)
 	{}
 
 	void addValue(float value, int sample = -1) {
@@ -38,13 +40,14 @@ public:
 	}
 
 	bool getLastPeak(float topXpercent, Peak& out) {
-
+ 
 		//when first above threshold clear vectors
 		if (goneBelowFractionOfThreshold && testThreshold(_valuesAddedInTimeOrder.newest().value, topXpercent)) {
 			samplesOfPointsAboveThreshold.clear();
 			valuesOfPointsAboveThreshold.clear();
 			aboveThreshold = true;
 			goneBelowFractionOfThreshold = false;
+			hasReturnedPeak = false;
 		}
 
 		if (!testThreshold(_valuesAddedInTimeOrder.newest().value, topXpercent)) {
@@ -56,18 +59,20 @@ public:
 		}
 
 		//only choose peak onset and salience after value goes to below half the threshold
-		if (goneBelowFractionOfThreshold) {
+		if (!hasReturnedPeak && !aboveThreshold) {
 			float integral = 0;
 			float weightedSum = 0;
 			float max = 0;
 			for (int i = 0; i < valuesOfPointsAboveThreshold.size(); i++) {
 				max = std::max(max, valuesOfPointsAboveThreshold.at(i));
-				integral += valuesOfPointsAboveThreshold.at(i);
-				weightedSum += valuesOfPointsAboveThreshold.at(i) * samplesOfPointsAboveThreshold.at(i);
+				float topXpercentValue = getTopXpercentValue(topXpercent);
+				integral += valuesOfPointsAboveThreshold.at(i) - topXpercentValue;
+				weightedSum += (valuesOfPointsAboveThreshold.at(i) - topXpercentValue) * samplesOfPointsAboveThreshold.at(i);
 			}
 			out.onset = int(weightedSum / integral);
 			out.salience = max;
 
+			hasReturnedPeak = true;
 			return true;
 		}
 
@@ -106,6 +111,7 @@ private:
 
 	bool goneBelowFractionOfThreshold;
 	bool aboveThreshold;
+	bool hasReturnedPeak;
 	std::vector<int> samplesOfPointsAboveThreshold;
 	std::vector<float> valuesOfPointsAboveThreshold;
 	int lastPeakSample;

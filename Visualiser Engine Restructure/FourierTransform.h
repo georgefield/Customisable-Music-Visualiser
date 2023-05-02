@@ -2,7 +2,7 @@
 #include "Master.h"
 #include "FourierTransformHistory.h"
 #include "Energy.hpp"
-#include "SPvars.h"
+#include "VisVars.h"
 
 class FourierTransform {
 public:
@@ -62,7 +62,7 @@ public:
 		_FTinfo.attack = attack; _FTinfo.release = release; _FTinfo.maxAccelerationPerSecond = maxAccelerationPerSecond;
 	}
 
-	void setTimeConvolvingVars(int previousXtransform, Kernel kernel = LINEAR_PYRAMID) {
+	void setTimeConvolvingVars(int previousXtransform) {
 		_FTinfo.timeWindowSize = previousXtransform;
 	}
 	//--
