@@ -1,6 +1,10 @@
 #pragma once
-#include "SelfSimilarityMatrix.h"
+#include "SimilarityMatrix.h"
+#include "SimMatrixStructs.h"
 #include "FFTWapi.h"
+#include "Master.h"
+#include "MFCCs.h"
+#include "FourierTransform.h"
 
 class SimilarityMatrixHandler
 {
@@ -9,7 +13,7 @@ public:
 	SimilarityMatrixHandler(bool useSetters);
 	~SimilarityMatrixHandler();
 
-	void init(Master* master);
+	void init(Master* master, MFCCs* mfccs);
 	void reInit();
 
 	void calculateNext();
@@ -21,26 +25,25 @@ public:
 	void linkToMelSpectrogram();
 	void linkToFourierTransform(float cutoffLow = -1.0f, float cutoffHigh = -1.0f, float smoothFactor = 0.0f);
 
-	SelfSimilarityMatrix matrix;
+	SimMatInfo _SMinfo;
+	SimilarityMatrix* _SM;
 
 	//getters
-	bool isRealTime() { return _samplesAheadForFutureMatrix == 0; }
 	LinkedTo isLinkedTo() { return _SMinfo._linkedTo; }
 
-	SimMatInfo _SMinfo;
 private:
 
 	Master* _master;
-	Master _futureMaster;
-	MFCCs _futureMFCCs;
+	MFCCs* _mfccsPtr;
 
 	FourierTransform* _fourierTransform;
 
-	int _samplesAheadForFutureMatrix;
 	bool _useSetters;
 
 	int _counterForDownscale;
 
+	float similarityMeasureGetter();
+	float matrixStartGetter();
 	void initUpdaters();
 	void removeUpdaters();
 };

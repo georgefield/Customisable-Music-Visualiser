@@ -13,7 +13,8 @@
 MainProgram::MainProgram() :
 	_gameState(ProgramState::RUNNING),
 	_UI(),
-	_viewport(Vis::consts.defaultSW, Vis::consts.defaultSH)
+	_viewport(Vis::consts.defaultSW, Vis::consts.defaultSH),
+	_calculationFrameTimeAvg(100)
 {
 }
 
@@ -50,8 +51,8 @@ void MainProgram::initSystems() {
 
 
 	//timing and fps managing
-	Vengine::MyTiming::setNumSamplesForFPS(100);
-	Vengine::MyTiming::setFPSlimit(200);
+	Vengine::MyTiming::setNumSamplesForFPS(120);
+	Vengine::MyTiming::setFPSlimit(2400); //so large it is irrelevant
 
 	Vengine::MyTiming::createTimer(_timeSinceLoadTimerId);
 	Vengine::MyTiming::startTimer(_timeSinceLoadTimerId);
@@ -152,7 +153,9 @@ void MainProgram::gameLoop() {
 			if (_inputManager.isKeyPressed(SDL_BUTTON_LEFT)) {
 				printf("%f fps\n", Vengine::MyTiming::getFPS());
 			}
-		
+
+			//calculate audio features
+			SignalProcessingManager::calculate();
 
 			drawVis(); //visualiser first to draw ui on top of visualiser
 			drawUi();
@@ -174,6 +177,12 @@ void MainProgram::endFrame() {
 	//needs to update information every frame
 	AudioManager::updateCurrentAudioInfo();
 
+	//get average time of a frame where audio features are calculated
+	if (Vis::comms._isCalculationFrame) {
+		_calculationFrameTimeAvg.add(Vengine::MyTiming::getCurrentFrameDuration());
+		Vis::comms._calculationFrameTime = _calculationFrameTimeAvg.get();
+	}
+
 	//to count frame timings
 	Vengine::MyTiming::frameDone();
 }
@@ -185,9 +194,6 @@ void MainProgram::drawVis() {
 
 	_viewport.setDim(_UI.getViewport().getDim());
 	glViewport(0,0,_viewport.width,_viewport.height);
-
-	//signal processing tmp
-	SignalProcessingManager::calculate();
 
 	//set vis values that will be sent to shader
 	VisualiserShaderManager::updateUniformValuesToOutput();

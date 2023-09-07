@@ -1,41 +1,66 @@
 c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\vc143.pdb
 c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\vc143.idb
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\spvars.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\spritemanager.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\selfsimilaritymatrix.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\signalprocessingmanager.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\master.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\mainprogram.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\main.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\noteonset.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\mfccs.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\similaritymatrixhandler.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\miniaudio_api.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\fouriertransformmanager.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\fftwapi.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\fouriertransform.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\dixonalgvariabledefinitions.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\datatexturecreator.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\customisablesprite.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\configmanager.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\visvars.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\visualisershadermanager.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\visualisermanager.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\visualisershader.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\visualiser.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\uiglobalfeatures.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\ui.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\tempodetection.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\pfdapi.obj
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\audiomanager.obj
-c:\users\george\documents\3rd year project\project\debug\visualiser engine restructure.exe
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\visualiser engine restructure.ilk
-c:\users\george\documents\3rd year project\project\debug\visualiser engine restructure.pdb
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\dixonalgvariabledefinitions.new.obj.enc
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\mfccs.obj.enc
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\visualis.3eb8fefa.tlog\cl.command.1.tlog
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\visualis.3eb8fefa.tlog\cl.read.1.tlog
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\visualis.3eb8fefa.tlog\cl.write.1.tlog
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\visualis.3eb8fefa.tlog\link.command.1.tlog
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\visualis.3eb8fefa.tlog\link.read.1.tlog
-c:\users\george\documents\3rd year project\project\visualiser engine restructure\debug\visualis.3eb8fefa.tlog\link.write.1.tlog
+e:\customisable-music-visualiser\visualiser engine restructure\debug\vc143.pdb
+e:\customisable-music-visualiser\visualiser engine restructure\debug\vc143.idb
+e:\customisable-music-visualiser\visualiser engine restructure\debug\tempodetection.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\spritemanager.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\selfsimilaritymatrix.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\signalprocessingmanager.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\pfdapi.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\master.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\mainprogram.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\main.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\noteonset.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\mfccs.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\similaritymatrixhandler.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\miniaudio_api.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\fouriertransformmanager.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\fftwapi.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\fouriertransform.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\dixonalgvariabledefinitions.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\datatexturecreator.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\customisablesprite.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\configmanager.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\audiomanager.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\visvars.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\vispaths.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\visualisershadermanager.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\visualisermanager.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\visualisershader.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\visualiser.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\uiglobalfeatures.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\ui.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\similaritymatrix.obj
+e:\customisable-music-visualiser\debug\visualiser engine restructure.exe
+e:\customisable-music-visualiser\visualiser engine restructure\debug\visualiser engine restructure.ilk
+e:\customisable-music-visualiser\debug\visualiser engine restructure.pdb
+e:\customisable-music-visualiser\visualiser engine restructure\debug\loopback_miniaudio_api.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\spvars.obj
+e:\customisable-music-visualiser\visualiser engine restructure\debug\audiomanager.obj.enc
+e:\customisable-music-visualiser\visualiser engine restructure\debug\configmanager.obj.enc
+e:\customisable-music-visualiser\visualiser engine restructure\debug\customisablesprite.obj.enc
+e:\customisable-music-visualiser\visualiser engine restructure\debug\dixonalgvariabledefinitions.obj.enc
+e:\customisable-music-visualiser\visualiser engine restructure\debug\fouriertransform.obj.enc
+e:\customisable-music-visualiser\visualiser engine restructure\debug\fouriertransformmanager.obj.enc
+e:\customisable-music-visualiser\visualiser engine restructure\debug\main.obj.enc
+e:\customisable-music-visualiser\visualiser engine restructure\debug\mainprogram.obj.enc
+e:\customisable-music-visualiser\visualiser engine restructure\debug\master.obj.enc
+e:\customisable-music-visualiser\visualiser engine restructure\debug\mfccs.obj.enc
+e:\customisable-music-visualiser\visualiser engine restructure\debug\miniaudio_api.obj.enc
+e:\customisable-music-visualiser\visualiser engine restructure\debug\noteonset.obj.enc
+e:\customisable-music-visualiser\visualiser engine restructure\debug\selfsimilaritymatrix.obj.enc
+e:\customisable-music-visualiser\visualiser engine restructure\debug\signalprocessingmanager.obj.enc
+e:\customisable-music-visualiser\visualiser engine restructure\debug\similaritymatrixhandler.obj.enc
+e:\customisable-music-visualiser\visualiser engine restructure\debug\spritemanager.obj.enc
+e:\customisable-music-visualiser\visualiser engine restructure\debug\tempodetection.obj.enc
+e:\customisable-music-visualiser\visualiser engine restructure\debug\ui.obj.enc
+e:\customisable-music-visualiser\visualiser engine restructure\debug\visualiser.obj.enc
+e:\customisable-music-visualiser\visualiser engine restructure\debug\visualisershader.obj.enc
+e:\customisable-music-visualiser\visualiser engine restructure\debug\visualisershadermanager.obj.enc
+e:\customisable-music-visualiser\visualiser engine restructure\debug\visualis.3eb8fefa.tlog\cl.command.1.tlog
+e:\customisable-music-visualiser\visualiser engine restructure\debug\visualis.3eb8fefa.tlog\cl.items.tlog
+e:\customisable-music-visualiser\visualiser engine restructure\debug\visualis.3eb8fefa.tlog\cl.read.1.tlog
+e:\customisable-music-visualiser\visualiser engine restructure\debug\visualis.3eb8fefa.tlog\cl.write.1.tlog
+e:\customisable-music-visualiser\visualiser engine restructure\debug\visualis.3eb8fefa.tlog\link.command.1.tlog
+e:\customisable-music-visualiser\visualiser engine restructure\debug\visualis.3eb8fefa.tlog\link.read.1.tlog
+e:\customisable-music-visualiser\visualiser engine restructure\debug\visualis.3eb8fefa.tlog\link.write.1.tlog

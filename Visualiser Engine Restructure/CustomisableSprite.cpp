@@ -39,18 +39,11 @@ void CustomisableSprite::init(SpriteInfo spriteInfo) {
 	Sprite::init(_spriteInfo.model, getPos(), getDim(), _spriteInfo.depth);
 	_justCreated = true;
 
-	if (_spriteInfo.shaderFilename[0] == NULL)
-		strcpy_s(_spriteInfo.shaderFilename, sizeof(SpriteInfo::shaderFilename), VisPaths::_defaultFragShaderPath.substr(VisPaths::_defaultFragShaderPath.find_last_of("/") + 1).c_str());
-
-	if (_spriteInfo.textureFilename[0] == NULL)
-		assert(_spriteInfo.useSimilarityMatrixTexture || !_spriteInfo.applyTexture);
-
 	setModelColour(_spriteInfo.colour);
-	//apply texture and shader
 
+	//apply texture and shader
 	updateTexture();
 	updateShader();
-
 	//--
 
 	//set up ui vars--
@@ -68,8 +61,9 @@ void CustomisableSprite::draw() {
 		drawUi();
 	}
 
-	if (_spriteInfo.useSimilarityMatrixTexture) {
-		_texture = SignalProcessingManager::_similarityMatrix->matrix.getMatrixTexture();
+	//update similarity matrix texture if using it
+	if (_spriteInfo.textureOption == TextureOption::SIMILARITY_MATRIX_TEXTURE) {
+		_texture = SignalProcessingManager::_similarityMatrix->_SM->getMatrixTexture();
 	}
 
 	//draw sprite
@@ -112,12 +106,12 @@ void CustomisableSprite::drawUi() {
 
 	//choose shader for sprite
 	if (ImGui::CollapsingHeader("Sprite shader")) {
-		shaderChooser();
+		shaderChooserUi();
 		updateShader();
 	}
 	//if shader contains texture uniform then
 	if (ImGui::CollapsingHeader("Sprite texture")) {
-		textureChooser();
+		textureChooserUi();
 		updateTexture();
 	}
 
@@ -239,49 +233,79 @@ void CustomisableSprite::drawUi() {
 
 void CustomisableSprite::updateShader()
 {
-	assert(_spriteInfo.shaderFilename[0] != NULL);
-	//always need simple.visfrag
+	//copy simple.visfrag to shader folder if it doesnt exist
 	if (!Vengine::IOManager::fileExists(VisualiserManager::shadersFolder() + "/simple.visfrag")) {
 		Vengine::warning("No simple.visfrag in new visualiser: had to copy from resources");
 		Vengine::IOManager::copyFile(VisPaths::_defaultFragShaderPath, VisualiserManager::shadersFolder() + "/simple.visfrag");
 	}
 
+	//if shaderFilenames empty, use simple.visfrag
+	if (_spriteInfo.shaderFilename[0] == NULL)
+		strcpy_s(_spriteInfo.shaderFilename, sizeof(SpriteInfo::shaderFilename), VisPaths::_defaultFragShaderPath.substr(VisPaths::_defaultFragShaderPath.find_last_of("/") + 1).c_str());
+
+	//get shader ptr using shader manager class
 	auto tmp = VisualiserShaderManager::getShader(VisualiserManager::shadersFolder() + "/" + _spriteInfo.shaderFilename);
 	if (tmp != nullptr) {
 		_visualiserShader = tmp;
 	}
 	else {
+		//shader = nullptr implies shader will name specified not found. display error
+		std::string error = _spriteInfo.shaderFilename; error += ": shader does not exist, defaulting to simple.visfrag";
+		UIglobalFeatures::queueError(error);
+
+		//use simple.visfrag
 		_resetShaderCombo = true;
 		strcpy_s(_spriteInfo.shaderFilename, sizeof("simple.visfrag"), "simple.visfrag");
 		_visualiserShader = VisualiserShaderManager::getShader(VisualiserManager::shadersFolder() + "/" + _spriteInfo.shaderFilename);
+
+		//if shader still nullptr, then simple.visfrag broken (fatal)
+		if (_visualiserShader == nullptr) { Vengine::fatalError("Shader could not be used for a sprite. Most likely 'simple.visfrag' broken"); }
 	}
+
+	
 }
 
 void CustomisableSprite::updateTexture()
 {
-	if (!_spriteInfo.applyTexture) {
+	//if not applying texture, use the 1x1 white so shader has something to work with
+	if (_spriteInfo.textureOption == TextureOption::NO_TEXTURE) {
 		_texture = Vengine::ResourceManager::getTexture(VisPaths::_1x1WhiteTexturePath);
 		return;
 	}
-	if (_spriteInfo.useSimilarityMatrixTexture) {
-		_texture = SignalProcessingManager::_similarityMatrix->matrix.getMatrixTexture();
+	//if using sim mat texture
+	if (_spriteInfo.textureOption == TextureOption::SIMILARITY_MATRIX_TEXTURE) {
+		_texture = SignalProcessingManager::_similarityMatrix->_SM->getMatrixTexture();
 		return;
 	}
-	if (_spriteInfo.textureFilename[0] != NULL) {
+	//if using texture file
+	if (_spriteInfo.textureOption == TextureOption::TEXTURE_FILE) {
+		//but texture filename null
+		if (_spriteInfo.textureFilename[0] == NULL) {
+			_texture = Vengine::ResourceManager::getTexture(VisPaths::_1x1WhiteTexturePath); //default to 1x1 white
+			return;
+		}
+
+		//filename not null
 		_texture = Vengine::ResourceManager::getTexture(VisualiserManager::texturesFolder() + "/" + _spriteInfo.textureFilename);
+		if (!_texture.valid()) {
+			Vengine::warning("Texture " + std::string(_spriteInfo.textureFilename) + " not valid, most likely file does not exist");
+			_texture = Vengine::ResourceManager::getTexture(VisPaths::_1x1WhiteTexturePath); //default to 1x1 white
+		}
+		return;
 	}
 }
 
-void CustomisableSprite::textureChooser()
+void CustomisableSprite::textureChooserUi()
 {
 	ImGui::Text("Set texture to pass to shader:");
 
-	//choose whether texture or not
-	ImGui::Checkbox("Apply Texture", &_spriteInfo.applyTexture);
-	if (!_spriteInfo.applyTexture) {
-		_spriteInfo.useSimilarityMatrixTexture = false;
-		return;
-	}
+	int tOpt = (int)_spriteInfo.textureOption;
+	if (ImGui::RadioButton("No Texture", tOpt == (int)TextureOption::NO_TEXTURE)) { _spriteInfo.textureOption = TextureOption::NO_TEXTURE; }
+	if (ImGui::RadioButton("Similarity Matrix", tOpt == (int)TextureOption::SIMILARITY_MATRIX_TEXTURE)) { _spriteInfo.textureOption = TextureOption::SIMILARITY_MATRIX_TEXTURE; }
+	if (ImGui::RadioButton("Texture File", tOpt == (int)TextureOption::TEXTURE_FILE)) { _spriteInfo.textureOption = TextureOption::TEXTURE_FILE; }
+
+	//dont continue if not using a file
+	if (_spriteInfo.textureOption != TextureOption::TEXTURE_FILE) { return; }
 
 	//refresh texture list
 	if (ImGui::Button("Refresh")) {
@@ -297,22 +321,11 @@ void CustomisableSprite::textureChooser()
 
 			//copy to textures folder and then set that texture
 			strcpy_s(_spriteInfo.textureFilename, sizeof(SpriteInfo::textureFilename), VisualiserManager::externalToInternalTexture(chosenFile).c_str());
-			_spriteInfo.applyTexture = true;
 			_resetTextureCombo = true;
 
 			//refresh files
 			Vengine::IOManager::getFilesInDir(VisualiserManager::texturesFolder(), _textureFileNames, true, ".png"); //refresh
 		}
-	}
-
-	//choose between file or similarity matrix texture
-	static int textureType = 0;
-	ImGui::RadioButton("Texture file", &textureType, 0);
-	ImGui::RadioButton("Similarity matrix texture", &textureType, 1);
-
-	_spriteInfo.useSimilarityMatrixTexture = (textureType == 1);
-	if (_spriteInfo.useSimilarityMatrixTexture) {
-		return;
 	}
 
 	static int textureIndex = -1;
@@ -339,12 +352,11 @@ void CustomisableSprite::textureChooser()
 		}
 
 		strcpy_s(_spriteInfo.textureFilename, sizeof(SpriteInfo::textureFilename), _textureFileNames[textureIndex].c_str());
-		_spriteInfo.applyTexture = true;
-	}
+ 	}
 
 }
 
-void CustomisableSprite::shaderChooser()
+void CustomisableSprite::shaderChooserUi()
 {
 	ImGui::Text("Set sprite shader:");
 
@@ -455,6 +467,14 @@ void CustomisableSprite::processInput(Vengine::InputManager* inputManager) {
 			_selected = !_selected;
 		}
 	}
+}
+
+VisualiserShader* CustomisableSprite::getVisualiserShader()
+{
+	if (_visualiserShader == nullptr) {
+		std::cout << "FAIL";
+	}
+	return _visualiserShader;
 }
 
 

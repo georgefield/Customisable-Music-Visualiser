@@ -42,7 +42,7 @@ void VisualiserShader::updateShaderName(std::string path)
 }
 
 //vvv lots of string manip
-void VisualiserShader::fixErrorMessage(std::string& errorMsg)
+bool VisualiserShader::fixErrorMessage(std::string& errorMsg)
 {
 	std::string errorMsgSave = errorMsg; //save in case of failure
 
@@ -87,7 +87,7 @@ void VisualiserShader::fixErrorMessage(std::string& errorMsg)
 		catch(std::exception e){
 			Vengine::warning("Shader error conversion failed: " + (std::string)e.what());
 			errorMsg = errorMsgSave;
-			return;
+			return false;
 		}
 
 		it = prefix + std::to_string(errorLineNumI) + postfix;
@@ -110,6 +110,7 @@ void VisualiserShader::fixErrorMessage(std::string& errorMsg)
 		errorMsg += it + "\n";
 		count++;
 	}
+	return true;
 }
 
 Vengine::GLSLProgram* VisualiserShader::compile()
@@ -126,7 +127,10 @@ Vengine::GLSLProgram* VisualiserShader::compile()
 	std::string errorOut;
 	Vengine::GLSLProgram* program = Vengine::ResourceManager::reloadShaderProgram(VisPaths::_commonVertShaderPath, _interpretedShaderSourcePath, errorOut);
 	if (program == nullptr) {
-		fixErrorMessage(errorOut);
+		//first fix error message for the glsl to be relative to the .visfrag (if possible), if not show raw error
+		if (!fixErrorMessage(errorOut)) { Vengine::warning("Fixing error for .visfrag failed, showing raw error:\n" + errorOut); }
+		else { Vengine::warning("Error fixed to be relative to .visfrag:\n" + errorOut); }
+
 		UIglobalFeatures::addSyntaxErrorToWindow(errorOut);
 	}
 	return program;

@@ -35,6 +35,11 @@ void MyTiming::frameDone() {
 	_frameTimings.at(_frameCount % _numFPSsamples) = MyTiming::ticksSinceEpoch();
 }
 
+float Vengine::MyTiming::getCurrentFrameDuration()
+{
+	return ticksToSeconds(MyTiming::ticksSinceEpoch() - _frameTimings.at(_frameCount % _numFPSsamples));
+}
+
 
 float MyTiming::getFPS() {
 
@@ -43,7 +48,7 @@ float MyTiming::getFPS() {
 	float fps = 0;
 	float prevDeltaT = ticksToSeconds(_frameTimings.at((_frameCount) % _numFPSsamples) - _frameTimings.at((_frameCount + 1) % _numFPSsamples));
 	//frame count + 1 oldest, frame count newest
-	fps += 1.0f / prevDeltaT * (count - 1); //(count - 1 as for 10 samples there are 9 differences to average)
+	fps += 1.0f / prevDeltaT * (float)(count - 1); //(count - 1 as for 10 samples there are 9 differences to average)
 	//1/total of difference between frame times of last [_numFPSsamples] frames, = fps
 	return fps;
 }

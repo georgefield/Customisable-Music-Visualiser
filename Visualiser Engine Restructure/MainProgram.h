@@ -50,6 +50,8 @@ private:
 
 	int _timeSinceLoadTimerId;
 
+	RollingAverage _calculationFrameTimeAvg;
+
 	//uniform updater functions
 	float getTimeSinceLoad() { return Vengine::MyTiming::readTimer(_timeSinceLoadTimerId); }
 	float getTimeInAudio() { return float(AudioManager::getCurrentSample()) / float(AudioManager::getSampleRate()); }

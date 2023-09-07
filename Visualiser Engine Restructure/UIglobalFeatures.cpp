@@ -1,5 +1,6 @@
 #include "UIglobalFeatures.h"
 #include <Vengine/MyTiming.h>
+#include <Vengine/MyErrors.h>
 
 #include "imgui.h"
 
@@ -13,6 +14,7 @@ bool UIglobalFeatures::_showUI = true;
 void UIglobalFeatures::queueError(std::string message)
 {
 	_errorQueue.push_back(message);
+	Vengine::warning(message); //put warning in console also
 }
 
 const float ERROR_MESSAGE_DISPLAY_TIME = 3.0f;

@@ -9,7 +9,6 @@ void DataTextureCreator::createTexture(int width, int height, float* data)
 		Vengine::warning("Already created texture from data");
 		return;
 	}
-	std::cout << "AYO";
 
 	// Generate texture
 	_texture.width = width;

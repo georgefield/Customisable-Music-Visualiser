@@ -13,21 +13,12 @@ TempoDetection* SignalProcessingManager::_tempoDetection = nullptr;
 MFCCs* SignalProcessingManager::_mfccs = nullptr;
 SimilarityMatrixHandler* SignalProcessingManager::_similarityMatrix = nullptr;
 
-bool SignalProcessingManager::_isFirstReset = true;
-int SignalProcessingManager::_lagTimerId = -1;
-int SignalProcessingManager::_calculationFrameTimerId = -1;
-RollingAverage SignalProcessingManager::_calculationFrameTimeAvg(250); //average over last 250 calculations ~2.5 seconds
-
-
 void SignalProcessingManager::init() {
 
 	if (!AudioManager::_currentPlaybackInfo->isAudioLoaded) {
 		Vengine::warning("Cannot init with no audio loaded");
 		return;
 	}
-
-	Vengine::MyTiming::createTimer(_lagTimerId);
-	Vengine::MyTiming::createTimer(_calculationFrameTimerId);
 
 	_master = new Master();
 	_master->init(AudioManager::_currentPlaybackInfo->sampleRate);
@@ -68,13 +59,12 @@ void SignalProcessingManager::calculate()
 
 	//dependencies
 	if (Vis::vars._computeTempoDetection) { Vis::vars._computeNoteOnset = true; }
-	if (Vis::vars._computeSimilarityMatrix && _similarityMatrix->isRealTime()) { Vis::vars._computeMFCCs = true; }
+	if (Vis::vars._computeSimilarityMatrix) { Vis::vars._computeMFCCs = true; }
 
 
 	//if audio has not caught up with audio hop size on this frame, skip frame
-	if (!AudioManager::_currentPlaybackInfo->doSignalProcessing) {
-		Vengine::MyTiming::resetTimer(_calculationFrameTimerId);
-		Vengine::MyTiming::startTimer(_calculationFrameTimerId);
+	Vis::comms._isCalculationFrame = AudioManager::_currentPlaybackInfo->doSignalProcessing;
+	if (!Vis::comms._isCalculationFrame) {
 		return;
 	}
 
@@ -105,11 +95,6 @@ void SignalProcessingManager::calculate()
 	//--
 
 	_master->endCalculations();
-
-
-	//get frame time for a calculation frame
-	_calculationFrameTimeAvg.add(Vengine::MyTiming::readTimer(_calculationFrameTimerId));
-	Vis::comms._calculationFrameTime = _calculationFrameTimeAvg.get();
 }
 
 
@@ -161,7 +146,7 @@ void SignalProcessingManager::initAlgorithmObjects(bool noteOnset, bool tempoDet
 		}
 		else {
 			_similarityMatrix = new SimilarityMatrixHandler(true);
-			_similarityMatrix->init(_master);
+			_similarityMatrix->init(_master, _mfccs);
 		}
 	}
 }

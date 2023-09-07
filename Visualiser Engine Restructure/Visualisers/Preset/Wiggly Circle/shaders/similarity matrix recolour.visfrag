@@ -1,6 +1,6 @@
 void main(){
 
-    float value = vis_inColour.r * 2 * (pow(cos(vis_timeInAudio + vis_fragmentPosition.x), 2) + 0.1);
+    float value = vFunc_similarityMatrixAt(vis_fragmentUV) * 2 * (pow(cos(vis_timeInAudio + vis_fragmentPosition.x), 2) + 0.1);
     vis_outputColour.r = mix(0.1, 1, value);
     vis_outputColour.g = mix(0, 1, -max(value, 1-value) + 1);
     vis_outputColour.b = mix(1, 0, value) * sin(vis_timeInAudio * sqrt(2));

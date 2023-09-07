@@ -90,7 +90,18 @@ uniform int vis_numMelBands;
 
 // -- SIMILARITY MATRIX --
 uniform sampler2D vis_similarityMatrixTexture;
+uniform float vis_matrixStartNormalised;
 uniform float vis_similarityMeasure;
+float vFunc_similarityMatrixAt(vec2 uv){
+	vec2 actualUV = vec2(uv.x + vis_matrixStartNormalised, uv.y + vis_matrixStartNormalised);
+	//modulus between -1 and 1
+	if (actualUV.x < -1) actualUV.x += 2;
+	if (actualUV.y < -1) actualUV.y += 2;
+	if (actualUV.x > 1) actualUV.x -= 2;
+	if (actualUV.y > 1) actualUV.y -= 2;
+
+	return texture(vis_similarityMatrixTexture, actualUV).r;
+}
 // --
 
 
@@ -103,7 +114,7 @@ layout(std430, binding = 9) buffer userVars {
 };
 void main(){
 
-    float value = vis_inColour.r * 2 * (pow(cos(vis_timeInAudio + vis_fragmentPosition.x), 2) + 0.1);
+    float value = vFunc_similarityMatrixAt(vis_fragmentUV) * 2 * (pow(cos(vis_timeInAudio + vis_fragmentPosition.x), 2) + 0.1);
     vis_outputColour.r = mix(0.1, 1, value);
     vis_outputColour.g = mix(0, 1, -max(value, 1-value) + 1);
     vis_outputColour.b = mix(1, 0, value) * sin(vis_timeInAudio * sqrt(2));

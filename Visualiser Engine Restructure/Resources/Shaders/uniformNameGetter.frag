@@ -4,6 +4,7 @@
 out vec4 vis_outputColour;
 // --
 
+
 // -- BASE SPRITE INFO --
 in vec2 vis_fragmentPosition;
 in vec2 vis_fragmentUV;
@@ -18,6 +19,7 @@ vec4 vis_inColour = texture(vis_spriteTexture, vis_fragmentUV) * mat4(
 																		0, 0, 0, vis_spriteColour.a
 																	);
 // --
+
 
 // -- FOURIER TRANSFORM INFORMATION --
 //  contains the frequency magnitude of every harmonic in the fourier transform
@@ -128,5 +130,6 @@ void main(){
     vis_numMelBands +
     vis_similarityMeasure;
 
-    vis_outputColour = vec4(1,1,1,1);
+
+    vis_outputColour = vec4(useAllFloatAndIntUniformsSoTheyAreRecognised,1,1,1);
 }

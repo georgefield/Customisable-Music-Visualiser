@@ -90,7 +90,18 @@ uniform int vis_numMelBands;
 
 // -- SIMILARITY MATRIX --
 uniform sampler2D vis_similarityMatrixTexture;
+uniform float vis_matrixStartNormalised;
 uniform float vis_similarityMeasure;
+float vFunc_similarityMatrixAt(vec2 uv){
+	vec2 actualUV = vec2(uv.x + vis_matrixStartNormalised, uv.y + vis_matrixStartNormalised);
+	//modulus between -1 and 1
+	if (actualUV.x < -1) actualUV.x += 2;
+	if (actualUV.y < -1) actualUV.y += 2;
+	if (actualUV.x > 1) actualUV.x -= 2;
+	if (actualUV.y > 1) actualUV.y -= 2;
+
+	return texture(vis_similarityMatrixTexture, actualUV).r;
+}
 // --
 
 

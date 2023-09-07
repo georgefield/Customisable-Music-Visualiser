@@ -91,6 +91,7 @@ struct VisGlobal {
 	bool _wasCPSautoDecreased = false;
 	bool _wasSignalProcessingReset = false;
 	float _calculationFrameTime = 0.01;
+	bool _isCalculationFrame = false;
 };
 
 struct Vis {

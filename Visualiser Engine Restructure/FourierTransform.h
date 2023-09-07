@@ -72,7 +72,7 @@ public:
 	float* getOutput() const { return _current->newest(); }
 	int getNumHarmonics() const { return _current->numHarmonics(); }
 
-	float* getLowResOutput() const { return _lowResOutputLogScale; }
+	float* getLowResOutput();
 	int getLowResOutputSize() const { return _lowResOutputSize; }
 
 	Master* getMasterPtr() const { return _m; }
@@ -99,15 +99,17 @@ private:
 	void applyFunction(FunctionType type); //must be called in every frame to work
 	void applyFunctions(FunctionType* args, int numArgs);
 
-	//state vars
+	//state vars (not needed in FT info)
 	Master* _m;
 	bool _initialised;
 	bool _useSetters;
 
 	//low res output config
-	int _maxLowResOutputSize;
-	int _lowResOutputSize;
+	int _lowResOutputSize; //min 50 & num harmonics
 	float* _lowResOutputLogScale;
+	bool _lowResOutputCalculatedThisFrame;
+	void initLowResOutput();
+	void calculateLowResOutput();
 
 	//fourier transform descriptors vars
 	int _numHarmonics;

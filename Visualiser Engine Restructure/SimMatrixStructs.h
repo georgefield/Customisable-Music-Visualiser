@@ -14,9 +14,8 @@ static enum MeasureType {
 };
 
 struct SimMatInfo {
-	bool _useFuture = false;
 	LinkedTo _linkedTo = LinkedTo::MFCC;
-	int _matrixSize = 100;
+	int _matrixSize = 80;
 	int _coeffLow = 1;
 	int _coeffHigh = 10;
 	float _cutoffLow = 0;
@@ -27,8 +26,7 @@ struct SimMatInfo {
 	float _contrastFactor = 5.0f;
 
 	friend bool operator==(SimMatInfo info1, SimMatInfo info2) {
-		bool isEqual = info1._useFuture == info2._useFuture &&
-			info1._linkedTo == info2._linkedTo &&
+		bool isEqual = info1._linkedTo == info2._linkedTo &&
 			info1._matrixSize == info2._matrixSize &&
 			info1._downscale == info2._downscale;
 

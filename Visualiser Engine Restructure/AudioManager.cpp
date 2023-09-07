@@ -312,7 +312,7 @@ void AudioManager::setVolume(float volume)
 
 void AudioManager::audioInterruptOccured(int currentSample)
 {
-	std::cout << "Interrupt, next calc. sample = " << currentSample << std::endl;
+	Vengine::debugMessage("Interrupt, next calc. sample = " + std::to_string(currentSample));
 
 	_currentPlaybackInfo->nextCalculationSample = currentSample;
 	_currentPlaybackInfo->sampleCounter = currentSample;

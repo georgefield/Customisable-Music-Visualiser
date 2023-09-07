@@ -1,31 +1,32 @@
-c:\users\george\documents\3rd year project\project\vengine\debug\shadercache.obj
-c:\users\george\documents\3rd year project\project\vengine\debug\resourcemanager.obj
-c:\users\george\documents\3rd year project\project\vengine\debug\picopng.obj
-c:\users\george\documents\3rd year project\project\vengine\debug\mytiming.obj
-c:\users\george\documents\3rd year project\project\vengine\debug\iomanager.obj
-c:\users\george\documents\3rd year project\project\vengine\debug\inputmanager.obj
-c:\users\george\documents\3rd year project\project\vengine\debug\glslprogram.obj
-c:\users\george\documents\3rd year project\project\vengine\debug\myerrors.obj
-c:\users\george\documents\3rd year project\project\vengine\debug\model.obj
-c:\users\george\documents\3rd year project\project\vengine\debug\drawfunctions.obj
-c:\users\george\documents\3rd year project\project\vengine\debug\computeshader.obj
-c:\users\george\documents\3rd year project\project\vengine\debug\audio.obj
-c:\users\george\documents\3rd year project\project\vengine\debug\imgui_widgets.obj
-c:\users\george\documents\3rd year project\project\vengine\debug\imgui_tables.obj
-c:\users\george\documents\3rd year project\project\vengine\debug\imgui_impl_sdlrenderer.obj
-c:\users\george\documents\3rd year project\project\vengine\debug\imgui_impl_sdl.obj
-c:\users\george\documents\3rd year project\project\vengine\debug\imgui_impl_opengl3.obj
-c:\users\george\documents\3rd year project\project\vengine\debug\imgui_draw.obj
-c:\users\george\documents\3rd year project\project\vengine\debug\imgui_demo.obj
-c:\users\george\documents\3rd year project\project\vengine\debug\imgui.obj
-c:\users\george\documents\3rd year project\project\vengine\debug\window.obj
-c:\users\george\documents\3rd year project\project\vengine\debug\texturecache.obj
-c:\users\george\documents\3rd year project\project\vengine\debug\spritebatch.obj
-c:\users\george\documents\3rd year project\project\vengine\debug\sprite.obj
-c:\users\george\documents\3rd year project\project\debug\vengine.lib
-c:\users\george\documents\3rd year project\project\vengine\debug\vengine.tlog\cl.command.1.tlog
-c:\users\george\documents\3rd year project\project\vengine\debug\vengine.tlog\cl.read.1.tlog
-c:\users\george\documents\3rd year project\project\vengine\debug\vengine.tlog\cl.write.1.tlog
-c:\users\george\documents\3rd year project\project\vengine\debug\vengine.tlog\lib-link.read.1.tlog
-c:\users\george\documents\3rd year project\project\vengine\debug\vengine.tlog\lib-link.write.1.tlog
-c:\users\george\documents\3rd year project\project\vengine\debug\vengine.tlog\lib.command.1.tlog
+e:\customisable-music-visualiser\vengine\debug\shadercache.obj
+e:\customisable-music-visualiser\vengine\debug\resourcemanager.obj
+e:\customisable-music-visualiser\vengine\debug\picopng.obj
+e:\customisable-music-visualiser\vengine\debug\mytiming.obj
+e:\customisable-music-visualiser\vengine\debug\iomanager.obj
+e:\customisable-music-visualiser\vengine\debug\inputmanager.obj
+e:\customisable-music-visualiser\vengine\debug\glslprogram.obj
+e:\customisable-music-visualiser\vengine\debug\myerrors.obj
+e:\customisable-music-visualiser\vengine\debug\model.obj
+e:\customisable-music-visualiser\vengine\debug\drawfunctions.obj
+e:\customisable-music-visualiser\vengine\debug\computeshader.obj
+e:\customisable-music-visualiser\vengine\debug\audio.obj
+e:\customisable-music-visualiser\vengine\debug\imgui_widgets.obj
+e:\customisable-music-visualiser\vengine\debug\imgui_tables.obj
+e:\customisable-music-visualiser\vengine\debug\imgui_impl_sdlrenderer.obj
+e:\customisable-music-visualiser\vengine\debug\imgui_impl_sdl.obj
+e:\customisable-music-visualiser\vengine\debug\imgui_impl_opengl3.obj
+e:\customisable-music-visualiser\vengine\debug\imgui_draw.obj
+e:\customisable-music-visualiser\vengine\debug\imgui_demo.obj
+e:\customisable-music-visualiser\vengine\debug\imgui.obj
+e:\customisable-music-visualiser\vengine\debug\window.obj
+e:\customisable-music-visualiser\vengine\debug\texturecache.obj
+e:\customisable-music-visualiser\vengine\debug\spritebatch.obj
+e:\customisable-music-visualiser\vengine\debug\sprite.obj
+e:\customisable-music-visualiser\debug\vengine.lib
+e:\customisable-music-visualiser\vengine\debug\vengine.tlog\cl.command.1.tlog
+e:\customisable-music-visualiser\vengine\debug\vengine.tlog\cl.items.tlog
+e:\customisable-music-visualiser\vengine\debug\vengine.tlog\cl.read.1.tlog
+e:\customisable-music-visualiser\vengine\debug\vengine.tlog\cl.write.1.tlog
+e:\customisable-music-visualiser\vengine\debug\vengine.tlog\lib-link.read.1.tlog
+e:\customisable-music-visualiser\vengine\debug\vengine.tlog\lib-link.write.1.tlog
+e:\customisable-music-visualiser\vengine\debug\vengine.tlog\lib.command.1.tlog

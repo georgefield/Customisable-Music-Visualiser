@@ -1,3 +1,134 @@
-﻿C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(517,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (Visualiser.vcxproj).  This can lead to incorrect clean and rebuild behavior.
-  VisPaths.cpp
-  Visualiser Engine Restructure.vcxproj -> C:\Users\George\Documents\3rd year project\Project\Debug\Visualiser Engine Restructure.exe
+﻿E:\Visual Studio\IDE\MSBuild\Microsoft\VC\v170\Microsoft.CppBuild.targets(531,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (Visualiser.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  CustomisableSprite.cpp
+E:\Customisable-Music-Visualiser\Vengine\Viewport.h(18,14): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
+          with
+          [
+              T=float
+          ]
+E:\Customisable-Music-Visualiser\Vengine\Viewport.h(19,15): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
+          with
+          [
+              T=float
+          ]
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\WindowCoordinateConversions.h(40,38): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\WindowCoordinateConversions.h(41,39): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\WindowCoordinateConversions.h(46,28): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\WindowCoordinateConversions.h(47,29): warning C4244: '*=': conversion from 'double' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\WindowCoordinateConversions.h(95,38): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\WindowCoordinateConversions.h(96,39): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\WindowCoordinateConversions.h(101,28): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\WindowCoordinateConversions.h(102,29): warning C4244: '/=': conversion from 'double' to 'T', possible loss of data
+          with
+          [
+              T=float
+          ]
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\Kernel.h(13,2): warning C4091: 'static ': ignored on left of 'KernelType' when no variable is declared
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\Kernel.h(72,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\Kernel.h(81,26): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\Kernel.h(85,12): warning C4244: 'return': conversion from 'double' to 'float', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\Threshold.h(57,61): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\Threshold.h(66,22): warning C4018: '<': signed/unsigned mismatch
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\Threshold.h(91,50): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\VisVars.h(49,28): warning C4305: 'initializing': truncation from 'double' to 'float'
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\VisVars.h(49,33): warning C4305: 'initializing': truncation from 'double' to 'float'
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\VisVars.h(49,38): warning C4305: 'initializing': truncation from 'double' to 'float'
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\VisVars.h(78,33): warning C4305: 'initializing': truncation from 'double' to 'const float'
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\VisVars.h(93,32): warning C4305: 'initializing': truncation from 'double' to 'float'
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\FourierTransform.h(14,3): warning C4091: 'static ': ignored on left of 'FourierTransform::FunctionType' when no variable is declared
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\FourierTransform.h(33,18): warning C4305: 'initializing': truncation from 'double' to 'float'
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\FilterBank.h(22,15): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\FilterBank.h(32,23): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\FilterBank.h(33,23): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\MFCCs.h(43,25): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\MFCCs.h(44,27): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\MFCCs.h(56,25): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\MFCCs.h(57,27): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\SimMatrixStructs.h(9,2): warning C4091: 'static ': ignored on left of 'LinkedTo' when no variable is declared
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\SimMatrixStructs.h(14,2): warning C4091: 'static ': ignored on left of 'MeasureType' when no variable is declared
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\NoteOnset.h(25,3): warning C4091: 'static ': ignored on left of 'NoteOnset::DataExtractionAlg' when no variable is declared
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\DixonAlgorithmStructures.h(52,23): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\DixonAlgorithmStructures.h(61,23): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\DixonAlgorithmStructures.h(166,28): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\DixonAlgorithmStructures.h(171,46): warning C4244: '=': conversion from 'float' to 'int', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\DixonAlgorithmStructures.h(175,24): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\DixonAlgorithmStructures.h(176,24): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\DixonAlgorithmStructures.h(242,32): warning C4244: '+=': conversion from 'float' to 'int', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\DixonAlgorithmStructures.h(279,30): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\DixonAlgorithmStructures.h(280,30): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\DixonAlgorithmStructures.h(391,36): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\DixonAlgorithmStructures.h(496,37): warning C4244: '=': conversion from 'unsigned int' to 'float', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\DixonAlgorithmStructures.h(510,35): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\DixonAlgorithmStructures.h(513,39): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\DixonAlgorithmStructures.h(525,18): warning C4018: '<=': signed/unsigned mismatch
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\CustomisableSprite.cpp(31,35): warning C4305: 'initializing': truncation from 'double' to 'float'
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\CustomisableSprite.cpp(126,19): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
+          with
+          [
+              T=float
+          ]
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\CustomisableSprite.cpp(127,19): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
+          with
+          [
+              T=float
+          ]
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\CustomisableSprite.cpp(130,20): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
+          with
+          [
+              T=float
+          ]
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\CustomisableSprite.cpp(131,20): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
+          with
+          [
+              T=float
+          ]
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\CustomisableSprite.cpp(161,20): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
+          with
+          [
+              T=float
+          ]
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\CustomisableSprite.cpp(162,20): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
+          with
+          [
+              T=float
+          ]
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\CustomisableSprite.cpp(165,21): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
+          with
+          [
+              T=float
+          ]
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\CustomisableSprite.cpp(166,21): warning C4244: '=': conversion from 'T' to 'int', possible loss of data
+          with
+          [
+              T=float
+          ]
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\CustomisableSprite.cpp(334,21): warning C4018: '<': signed/unsigned mismatch
+E:\Customisable-Music-Visualiser\Visualiser Engine Restructure\CustomisableSprite.cpp(387,21): warning C4018: '<': signed/unsigned mismatch
+  Visualiser Engine Restructure.vcxproj -> E:\Customisable-Music-Visualiser\Debug\Visualiser Engine Restructure.exe

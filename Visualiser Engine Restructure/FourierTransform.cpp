@@ -13,6 +13,7 @@ FourierTransform::FourierTransform(int historySize, float cutOffLow, float cutOf
 
 	_current(nullptr),
 	_next(nullptr),
+	_lowResOutputCalculatedThisFrame(false),
 
 	_energyOfFt(Vis::consts._generalHistorySize)
 {
@@ -22,8 +23,6 @@ FourierTransform::FourierTransform(int historySize, float cutOffLow, float cutOf
 	_FTinfo.isMaxCutoffHigh = cutOffHigh < 0;
 	_FTinfo.cutoffSmoothFrac = cutoffSmoothFrac;
 	_FTinfo.historySize = historySize;
-
-	_maxLowResOutputSize = 50;
 }
 
 FourierTransform::~FourierTransform()
@@ -72,10 +71,7 @@ void FourierTransform::init(Master* master, int FTid)
 	_smoothedFtDot = new float[_numHarmonics];
 	memset(_smoothedFtDot, 0.0f, sizeof(float) * _numHarmonics);
 
-	//low res spectrum vars
-	_lowResOutputSize = std::min(_maxLowResOutputSize, _numHarmonics);
-	_lowResOutputLogScale = new float[_lowResOutputSize];
-	memset(_lowResOutputLogScale, 0.0f, _lowResOutputSize * sizeof(float));
+	initLowResOutput();
 
 	//init working historys
 	_working1.init(_numHarmonics);
@@ -108,19 +104,19 @@ void FourierTransform::reInit()
 
 	setFourierTransformFrequencyInfo();
 
-	//delete all arrays with size _numHarmonics (as might have changed size if STFT window changed)
-	delete[] _smoothedFt;
-	delete[] _smoothedFtDot;
-	delete[] _lowResOutputLogScale;
-
 	//recreate and initialise arrays
+	delete[] _smoothedFt;
 	_smoothedFt = new float[_numHarmonics];
 	memset(_smoothedFt, 0.0f, sizeof(float) * _numHarmonics);
 
+	delete[] _smoothedFtDot;
 	_smoothedFtDot = new float[_numHarmonics];
 	memset(_smoothedFtDot, 0.0f, sizeof(float) * _numHarmonics);
 
-	_lowResOutputSize = std::min(_maxLowResOutputSize, _numHarmonics);
+	delete[] _lowResOutputLogScale;
+	initLowResOutput();
+
+	_lowResOutputSize = std::min(50, _numHarmonics);
 	_lowResOutputLogScale = new float[_lowResOutputSize];
 	memset(_lowResOutputLogScale, 0.0f, _lowResOutputSize * sizeof(float));
 
@@ -203,6 +199,15 @@ void FourierTransform::removeSmoothEffect()
 }
 
 
+float* FourierTransform::getLowResOutput()
+{
+	if (!_lowResOutputCalculatedThisFrame) {
+		calculateLowResOutput();
+		_lowResOutputCalculatedThisFrame = true;
+	}
+	return _lowResOutputLogScale;
+}
+
 void FourierTransform::beginCalculation()
 {
 	if (!_initialised) {
@@ -222,35 +227,13 @@ void FourierTransform::beginCalculation()
 
 	//energy calculated from FT before any smoothing otherwise would be inaccurate
 	_energyOfFt.calculateNext(_current->workingArray(), _current->numHarmonics());
+
+	//reset low res output indicator
+	_lowResOutputCalculatedThisFrame = false;
 }
 
 void FourierTransform::endCalculation() {
 	_current->addWorkingArrayToHistory();
-
-	//calculate low res log scale output
-	memset(_lowResOutputLogScale, 0.0f, _lowResOutputSize * sizeof(float));
-
-	float numParentHarmonics = _m->_fftHistory.numHarmonics();
-
-	float logHzFracLow = logf(_harmonicLow + 1.0f) / logf(numParentHarmonics + 1.0f);
-	float logHzFracHigh = logf(_harmonicHigh + 1.0f) / logf(numParentHarmonics + 1.0f);
-
-	int previousOutputIndex = -1;
-	for (int i = _harmonicLow; i <= _harmonicHigh; i++) {
-		float logHzFrac = logf(i + 1.0f) / logf(numParentHarmonics + 1.0f);
-
-		float outputFrac = (logHzFrac - logHzFracLow) / (logHzFracHigh - logHzFracLow);
-		int outputIndex = int(outputFrac * _lowResOutputSize);
-
-		//some frequency convolution
-		_lowResOutputLogScale[outputIndex] += _current->newest()[i - _harmonicLow];
-
-		//in case skipped
-		for (int j = previousOutputIndex + 1; j < outputIndex; j++) {
-			_lowResOutputLogScale[j] = _lowResOutputLogScale[outputIndex];
-		}
-		previousOutputIndex = outputIndex;
-	}
 }
 
 
@@ -396,6 +379,44 @@ float FourierTransform::smoothCutoff(int i)
 	float distanceFromCutoffFrac = float(std::min(i - _harmonicLow, _harmonicHigh - i)) / float(_numHarmonics);
 
 	return std::min((2.0f * distanceFromCutoffFrac) / _FTinfo.cutoffSmoothFrac, 1.0f); //1.0f => pyramid band, 0.5f => trapezium with top side half of bottom, 0.1f => trapezium top side 9/10 of bottom
+}
+
+void FourierTransform::initLowResOutput()
+{
+	//low res spectrum vars
+	_lowResOutputSize = std::min(50, _numHarmonics);
+	_lowResOutputLogScale = new float[_lowResOutputSize];
+	memset(_lowResOutputLogScale, 0.0f, _lowResOutputSize * sizeof(float));
+}
+
+void FourierTransform::calculateLowResOutput()
+{
+	if (_lowResOutputCalculatedThisFrame) { Vengine::warning("Low res output already calculated for this FT this frame. Recalculating anyway."); } //debug
+
+	//calculate low res log scale output
+	memset(_lowResOutputLogScale, 0.0f, _lowResOutputSize * sizeof(float));
+
+	float numParentHarmonics = _m->_fftHistory.numHarmonics();
+
+	float logHzFracLow = logf(_harmonicLow + 1.0f) / logf(numParentHarmonics + 1.0f);
+	float logHzFracHigh = logf(_harmonicHigh + 1.0f) / logf(numParentHarmonics + 1.0f);
+
+	int previousOutputIndex = -1;
+	for (int i = _harmonicLow; i <= _harmonicHigh; i++) {
+		float logHzFrac = logf(i + 1.0f) / logf(numParentHarmonics + 1.0f);
+
+		float outputFrac = (logHzFrac - logHzFracLow) / (logHzFracHigh - logHzFracLow);
+		int outputIndex = int(outputFrac * _lowResOutputSize);
+
+		//some frequency convolution
+		_lowResOutputLogScale[outputIndex] += _current->newest()[i - _harmonicLow];
+
+		//in case skipped
+		for (int j = previousOutputIndex + 1; j < outputIndex; j++) {
+			_lowResOutputLogScale[j] = _lowResOutputLogScale[outputIndex];
+		}
+		previousOutputIndex = outputIndex;
+	}
 }
 
 void FourierTransform::setUpdaters()

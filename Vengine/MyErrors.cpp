@@ -6,8 +6,10 @@
 
 namespace Vengine {
 
-	void fatalError(std::string errorMessage) {
-		std::cout << errorMessage << std::endl;
+	void fatalError(std::string errorMessage)
+	{
+		std::cout << "FATAL: " << errorMessage << std::endl;
+
 		std::cout << "Enter any key to quit: ";
 		int tmp;
 		std::cin >> tmp;
@@ -17,12 +19,18 @@ namespace Vengine {
 
 	void warning(std::string warningMessage, bool pause)
 	{
-		std::cout << warningMessage << std::endl;
+		std::cout << "! " << warningMessage << std::endl;
+
 		if (pause) {
 			std::cout << "Enter any key to resume: ";
 			int tmp;
 			std::cin >> tmp;
 		}
+	}
+
+	void debugMessage(std::string debugMessage)
+	{
+		std::cout << debugMessage << std::endl;
 	}
 
 	void testForGlErrors(std::string messageInCaseOfError) {
@@ -31,7 +39,7 @@ namespace Vengine {
 			Vengine::warning(messageInCaseOfError);
 		}
 		while (code != GL_NO_ERROR) {
-			std::cout << code << ": ";
+			std::cout << " " << code << ": ";
 			std::cout << glewGetErrorString(code) << std::endl;
 			code = glGetError();
 		}

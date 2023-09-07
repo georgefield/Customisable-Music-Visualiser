@@ -142,6 +142,7 @@
     <ClCompile Include="FFTWapi.cpp" />
     <ClCompile Include="FourierTransformManager.cpp" />
     <ClCompile Include="miniaudio_api.cpp" />
+    <ClCompile Include="SimilarityMatrix.cpp" />
     <ClCompile Include="SimilarityMatrixHandler.cpp" />
     <ClCompile Include="MFCCs.cpp" />
     <ClCompile Include="NoteOnset.cpp" />
@@ -150,7 +151,6 @@
     <ClCompile Include="Master.cpp" />
     <ClCompile Include="PFDapi.cpp" />
     <ClCompile Include="SignalProcessingManager.cpp" />
-    <ClCompile Include="SelfSimilarityMatrix.cpp" />
     <ClCompile Include="SpriteManager.cpp" />
     <ClCompile Include="TempoDetection.cpp" />
     <ClCompile Include="UI.cpp" />
@@ -175,6 +175,7 @@
     <ClInclude Include="FourierTransformHistory.h" />
     <ClInclude Include="FourierTransformManager.h" />
     <ClInclude Include="miniaudio_api.h" />
+    <ClInclude Include="SimilarityMatrix.h" />
     <ClInclude Include="SimilarityMatrixHandler.h" />
     <ClInclude Include="SimMatrixStructs.h" />
     <ClInclude Include="VisVars.h" />
@@ -187,9 +188,7 @@
     <ClInclude Include="Peak.h" />
     <ClInclude Include="PFDapi.h" />
     <ClInclude Include="RollingAverage.h" />
-    <ClInclude Include="SelfSimilarityMatrix.h" />
     <ClInclude Include="SignalProcessingManager.h" />
-    <ClInclude Include="SimilarityMatrixStructure.h" />
     <ClInclude Include="SpriteManager.h" />
     <ClInclude Include="SSBOsetter.h" />
     <ClInclude Include="TempoDetection.h" />

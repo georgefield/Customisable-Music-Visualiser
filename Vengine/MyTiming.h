@@ -14,6 +14,7 @@ namespace Vengine {
 		};
 
 		static void frameDone();
+		static float getCurrentFrameDuration();
 		static float getFPS();
 		static void setNumSamplesForFPS(int samples);
 		static int getFrameCount();

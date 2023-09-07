@@ -30,12 +30,12 @@ void VisualiserShaderManager::init()
 	Vengine::IOManager::readTextFileToString(VisPaths::_shaderPrefixPath, _commonShaderPrefix);
 
 	std::string errorOut;
-	Vengine::GLSLProgram* prefixProgram = Vengine::ResourceManager::getShaderProgram(VisPaths::_commonVertShaderPath, VisPaths::_uniformNameScraperShaderPath, errorOut);
+	Vengine::GLSLProgram* nameScraperProgram = Vengine::ResourceManager::getShaderProgram(VisPaths::_commonVertShaderPath, VisPaths::_uniformNameScraperShaderPath, errorOut);
 	if (errorOut != "")
 		Vengine::fatalError(errorOut);
 
-	for (auto& it : *prefixProgram->getUniformNames()) {
-		_defaultUniformNames[it] = prefixProgram->getUniformType(it);
+	for (auto& it : *nameScraperProgram->getUniformNames()) {
+		_defaultUniformNames[it] = nameScraperProgram->getUniformType(it);
 	}
 
 	_defaultSSBOnamesAndBindings["vis_sampleData"] = 4;
@@ -75,7 +75,7 @@ VisualiserShader* VisualiserShaderManager::getShader(std::string fragPath) {
 		Vengine::warning("Shader did not compile properly: error in code");
 		return nullptr;
 	}
-	std::cout << "Shader " + fragPath + " loaded for first time" << std::endl;
+	Vengine::debugMessage("Shader " + fragPath + " loaded for first time");
 
 	return &_shaderCache[fragPath];
 }
@@ -108,7 +108,7 @@ bool VisualiserShaderManager::recompileShader(std::string fragPath) {
 		return false;
 	}
 
-	std::cout << "Shader " + fragPath + " recompiled" << std::endl;
+	Vengine::debugMessage("Shader " + fragPath + " recompiled");
 	return true;
 }
 

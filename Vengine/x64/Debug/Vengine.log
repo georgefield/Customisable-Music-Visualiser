@@ -1,0 +1,160 @@
+﻿  imgui.cpp
+  imgui_demo.cpp
+  imgui_draw.cpp
+  imgui_impl_opengl3.cpp
+  imgui_impl_sdl.cpp
+  imgui_impl_sdlrenderer.cpp
+  imgui_tables.cpp
+  imgui_widgets.cpp
+  Audio.cpp
+  ComputeShader.cpp
+  DrawFunctions.cpp
+  Model.cpp
+E:\Customisable-Music-Visualiser\Vengine\Model.cpp(53,19): warning C4305: 'initializing': truncation from 'double' to 'float'
+E:\Customisable-Music-Visualiser\Vengine\Model.cpp(90,19): warning C4305: 'initializing': truncation from 'double' to 'float'
+  MyErrors.cpp
+  GLSLProgram.cpp
+E:\Customisable-Music-Visualiser\Vengine\GLSLProgram.cpp(99,8): warning C4101: 'i': unreferenced local variable
+E:\Customisable-Music-Visualiser\Vengine\GLSLProgram.cpp(158,20): warning C4018: '<': signed/unsigned mismatch
+E:\Customisable-Music-Visualiser\Vengine\GLSLProgram.cpp(166,20): warning C4018: '<': signed/unsigned mismatch
+  InputManager.cpp
+  IOManager.cpp
+E:\Visual Studio\IDE\VC\Tools\MSVC\14.36.32532\include\filesystem(13): warning STL4038: The contents of <filesystem> are available only with C++17 or later.
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(65,15): warning C4244: 'initializing': conversion from 'std::streamoff' to 'int', possible loss of data
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(67,24): warning C4244: '-=': conversion from 'std::streamoff' to 'int', possible loss of data
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(82,8): error C3083: 'filesystem': the symbol to the left of a '::' must be a type
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(82,20): error C2039: 'copy_file': is not a member of 'std'
+E:\Visual Studio\IDE\VC\Tools\MSVC\14.36.32532\include\iostream(19,1): message : see declaration of 'std'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(82,29): error C3861: 'copy_file': identifier not found
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(94,14): error C3083: 'filesystem': the symbol to the left of a '::' must be a type
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(94,26): error C2039: 'exists': is not a member of 'std'
+E:\Visual Studio\IDE\VC\Tools\MSVC\14.36.32532\include\iostream(19,1): message : see declaration of 'std'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(94,32): error C3861: 'exists': identifier not found
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(174,32): error C3083: 'filesystem': the symbol to the left of a '::' must be a type
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(174,44): error C2039: 'directory_iterator': is not a member of 'std'
+E:\Visual Studio\IDE\VC\Tools\MSVC\14.36.32532\include\iostream(19,1): message : see declaration of 'std'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(174,2): error C2530: 'entry': references must be initialized
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(174,2): error C3531: 'entry': a symbol whose type contains 'auto' must have an initializer
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(174,25): error C2143: syntax error: missing ';' before ':'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(174,2): error C3861: 'directory_iterator': identifier not found
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(174,71): error C2143: syntax error: missing ';' before ')'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(200,7): error C3083: 'filesystem': the symbol to the left of a '::' must be a type
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(200,19): error C2039: 'path': is not a member of 'std'
+E:\Visual Studio\IDE\VC\Tools\MSVC\14.36.32532\include\iostream(19,1): message : see declaration of 'std'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(200,24): error C2146: syntax error: missing ';' before identifier 'directoryPath'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(200,24): error C2065: 'directoryPath': undeclared identifier
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(202,14): error C3083: 'filesystem': the symbol to the left of a '::' must be a type
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(202,26): error C2039: 'exists': is not a member of 'std'
+E:\Visual Studio\IDE\VC\Tools\MSVC\14.36.32532\include\iostream(19,1): message : see declaration of 'std'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(202,33): error C2065: 'directoryPath': undeclared identifier
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(202,32): error C3861: 'exists': identifier not found
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(202,56): error C3083: 'filesystem': the symbol to the left of a '::' must be a type
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(202,68): error C2039: 'is_directory': is not a member of 'std'
+E:\Visual Studio\IDE\VC\Tools\MSVC\14.36.32532\include\iostream(19,1): message : see declaration of 'std'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(202,81): error C2065: 'directoryPath': undeclared identifier
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(202,80): error C3861: 'is_directory': identifier not found
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(207,13): error C3083: 'filesystem': the symbol to the left of a '::' must be a type
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(207,25): error C2039: 'path': is not a member of 'std'
+E:\Visual Studio\IDE\VC\Tools\MSVC\14.36.32532\include\iostream(19,1): message : see declaration of 'std'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(207,30): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(207,30): error C2146: syntax error: missing ';' before identifier 'sourcePath'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(207,30): error C3861: 'sourcePath': identifier not found
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(208,13): error C3083: 'filesystem': the symbol to the left of a '::' must be a type
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(208,25): error C2039: 'path': is not a member of 'std'
+E:\Visual Studio\IDE\VC\Tools\MSVC\14.36.32532\include\iostream(19,1): message : see declaration of 'std'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(208,30): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(208,30): error C2086: 'const int path': redefinition
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(207,30): message : see declaration of 'path'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(208,30): error C2146: syntax error: missing ';' before identifier 'destinationPath'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(208,30): error C3861: 'destinationPath': identifier not found
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(210,12): error C3083: 'filesystem': the symbol to the left of a '::' must be a type
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(210,24): error C2039: 'exists': is not a member of 'std'
+E:\Visual Studio\IDE\VC\Tools\MSVC\14.36.32532\include\iostream(19,1): message : see declaration of 'std'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(210,31): error C2065: 'destinationPath': undeclared identifier
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(210): error C3861: 'exists': identifier not found
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(211,8): error C3083: 'filesystem': the symbol to the left of a '::' must be a type
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(211,20): error C2039: 'create_directory': is not a member of 'std'
+E:\Visual Studio\IDE\VC\Tools\MSVC\14.36.32532\include\iostream(19,1): message : see declaration of 'std'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(211,37): error C2065: 'destinationPath': undeclared identifier
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(211,36): error C3861: 'create_directory': identifier not found
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(214,32): error C3083: 'filesystem': the symbol to the left of a '::' must be a type
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(214,44): error C2039: 'directory_iterator': is not a member of 'std'
+E:\Visual Studio\IDE\VC\Tools\MSVC\14.36.32532\include\iostream(19,1): message : see declaration of 'std'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(214,2): error C2530: 'entry': references must be initialized
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(214,2): error C3531: 'entry': a symbol whose type contains 'auto' must have an initializer
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(214,25): error C2143: syntax error: missing ';' before ':'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(214,63): error C2065: 'sourcePath': undeclared identifier
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(214,2): error C3861: 'directory_iterator': identifier not found
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(214,74): error C2143: syntax error: missing ';' before ')'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(215,20): error C2530: 'path': references must be initialized
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(216,25): error C2065: 'destinationPath': undeclared identifier
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(216,47): error C3536: 'path': cannot be used before it is initialized
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(216,23): error C2530: 'newPath': references must be initialized
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(217,12): error C3083: 'filesystem': the symbol to the left of a '::' must be a type
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(217,24): error C2039: 'is_directory': is not a member of 'std'
+E:\Visual Studio\IDE\VC\Tools\MSVC\14.36.32532\include\iostream(19,1): message : see declaration of 'std'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(217): error C3861: 'is_directory': identifier not found
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(218): error C3536: 'newPath': cannot be used before it is initialized
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(218,9): error C2660: 'Vengine::IOManager::copyDirectory': function does not take 1 arguments
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(206,17): message : see declaration of 'Vengine::IOManager::copyDirectory'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(218,9): message : while trying to match the argument list '()'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(224,10): error C3083: 'filesystem': the symbol to the left of a '::' must be a type
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(224,22): error C2039: 'copy_file': is not a member of 'std'
+E:\Visual Studio\IDE\VC\Tools\MSVC\14.36.32532\include\iostream(19,1): message : see declaration of 'std'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(224,52): error C3083: 'filesystem': the symbol to the left of a '::' must be a type
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(224,64): error C3083: 'copy_options': the symbol to the left of a '::' must be a type
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(224,78): error C2039: 'overwrite_existing': is not a member of 'std'
+E:\Visual Studio\IDE\VC\Tools\MSVC\14.36.32532\include\iostream(19,1): message : see declaration of 'std'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(224,96): error C2065: 'overwrite_existing': undeclared identifier
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(224,31): error C3861: 'copy_file': identifier not found
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(238,7): error C3083: 'filesystem': the symbol to the left of a '::' must be a type
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(238,19): error C2039: 'path': is not a member of 'std'
+E:\Visual Studio\IDE\VC\Tools\MSVC\14.36.32532\include\iostream(19,1): message : see declaration of 'std'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(238,24): error C2146: syntax error: missing ';' before identifier 'parentPath'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(238,24): error C3861: 'parentPath': identifier not found
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(239,7): error C3083: 'filesystem': the symbol to the left of a '::' must be a type
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(239,19): error C2039: 'path': is not a member of 'std'
+E:\Visual Studio\IDE\VC\Tools\MSVC\14.36.32532\include\iostream(19,1): message : see declaration of 'std'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(239,24): error C2146: syntax error: missing ';' before identifier 'filePath'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(239,24): error C3861: 'filePath': identifier not found
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(242,7): error C2065: 'filePath': undeclared identifier
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(243,3): error C2065: 'filePath': undeclared identifier
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(243,19): error C3083: 'filesystem': the symbol to the left of a '::' must be a type
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(243,31): error C2039: 'absolute': is not a member of 'std'
+E:\Visual Studio\IDE\VC\Tools\MSVC\14.36.32532\include\iostream(19,1): message : see declaration of 'std'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(243,40): error C2065: 'filePath': undeclared identifier
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(243,39): error C3861: 'absolute': identifier not found
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(247,2): error C2065: 'parentPath': undeclared identifier
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(247,20): error C3083: 'filesystem': the symbol to the left of a '::' must be a type
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(247,32): error C2039: 'canonical': is not a member of 'std'
+E:\Visual Studio\IDE\VC\Tools\MSVC\14.36.32532\include\iostream(19,1): message : see declaration of 'std'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(247,42): error C2065: 'parentPath': undeclared identifier
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(247,41): error C3861: 'canonical': identifier not found
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(248,2): error C2065: 'filePath': undeclared identifier
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(248,18): error C3083: 'filesystem': the symbol to the left of a '::' must be a type
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(248,30): error C2039: 'canonical': is not a member of 'std'
+E:\Visual Studio\IDE\VC\Tools\MSVC\14.36.32532\include\iostream(19,1): message : see declaration of 'std'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(248,40): error C2065: 'filePath': undeclared identifier
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(248,39): error C3861: 'canonical': identifier not found
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(251,9): error C2065: 'filePath': undeclared identifier
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(251,32): error C2065: 'parentPath': undeclared identifier
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(256,14): error C3083: 'filesystem': the symbol to the left of a '::' must be a type
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(256,26): error C2039: 'current_path': is not a member of 'std'
+E:\Visual Studio\IDE\VC\Tools\MSVC\14.36.32532\include\iostream(19,1): message : see declaration of 'std'
+E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(256,38): error C3861: 'current_path': identifier not found
+  MyTiming.cpp
+E:\Customisable-Music-Visualiser\Vengine\MyTiming.cpp(73,28): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+E:\Customisable-Music-Visualiser\Vengine\MyTiming.cpp(173,17): warning C4244: 'return': conversion from 'float' to '__int64', possible loss of data
+  picoPNG.cpp
+  ResourceManager.cpp
+  ShaderCache.cpp
+  Generating Code...
+E:\Customisable-Music-Visualiser\Vengine\GLSLProgram.cpp(48): warning C4715: 'Vengine::GLSLProgram::compileShaders': not all control paths return a value
+  Compiling...
+  Sprite.cpp
+  SpriteBatch.cpp
+  TextureCache.cpp
+  Window.cpp
+E:\Customisable-Music-Visualiser\Vengine\Window.cpp(4,10): fatal  error C1083: Cannot open include file: 'imgui.h': No such file or directory
+  Generating Code...
+E:\Customisable-Music-Visualiser\Vengine\Sprite.cpp(34): warning C4715: 'getModelObject': not all control paths return a value

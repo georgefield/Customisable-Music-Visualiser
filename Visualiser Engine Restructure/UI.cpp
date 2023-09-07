@@ -558,6 +558,7 @@ void UI::generalSignalProcessingUi()
 
 	ImGui::Separator();
 
+	//fps & cps info
 	std::string fpsInfo = "FPS: " + std::to_string(int(Vengine::MyTiming::getFPS()));
 	ImGui::Text(fpsInfo.c_str());
 
@@ -565,19 +566,38 @@ void UI::generalSignalProcessingUi()
 	ImGui::Text(cpsInfo.c_str());
 	ImGui::Text("Will auto decrease if too much lag");
 
+	//-- cps limiting --
 	static float CPS = Vis::vars._desiredCPS;
-	if (Vis::comms._wasCPSautoDecreased) {
+	if (Vis::comms._wasCPSautoDecreased)
 		CPS = Vis::vars._desiredCPS;
-	}
 
 	ImGui::SliderFloat("CPS", &CPS, 10, 120, "%.1f");
 	if (CPS != Vis::vars._desiredCPS && ImGui::Button("Set CPS")) {
 		Vis::vars._desiredCPS = CPS;
 		SignalProcessingManager::reset();
 	}
+	//--
 
 	ImGui::Text(("Estimated maximum CPS: " + std::to_string(1.0f / Vis::comms._calculationFrameTime)).c_str());
+	
+	//-- fps limiting --
+	//limit fps checkbox
+	static bool limitFPS = false;
+	static float maxFPS = 240;
+	ImGui::Checkbox("Limit FPS", &limitFPS);
+	if (ImGui::IsItemEdited()) {
+		if (limitFPS) Vengine::MyTiming::setFPSlimit(maxFPS);
+		if (!limitFPS) Vengine::MyTiming::setFPSlimit(2400); //so large it is irrelevant
+	}
 
+	//fps limit slider (only shown when limit fps ticked)
+	if (limitFPS) {
+		ImGui::SliderFloat("FPS limit", &maxFPS, 60, 500, "%.1f");
+		if (ImGui::IsItemEdited())
+			Vengine::MyTiming::setFPSlimit(maxFPS);
+	}
+	//--
+	
 	//add ability to change fourier transform window size; use combo to choose from 1024 samples to 16192
 
 	if (ImGui::Button("Reset signal processing (ctrl+r)")) {
@@ -898,11 +918,6 @@ void UI::selfSimilarityMatrixUi()
 
 	ImGui::BeginChild("Matrix settings", ImVec2(360, 440), true);
 
-	//which one to calculate (future or real time)--
-	ImGui::RadioButton("Real time", (int*)&UIglobalFeatures::_uiSMinfo._useFuture, int(false)); ImGui::SameLine();
-	ImGui::RadioButton("Future (file audio only)", (int*)&UIglobalFeatures::_uiSMinfo._useFuture, int(true));
-	//--
-
 	//matrix size & resolution--
 	ImGui::SliderInt("Matrix Size", &UIglobalFeatures::_uiSMinfo._matrixSize, 1, 500);
 	if (UIglobalFeatures::_uiSMinfo._matrixSize > 300 && UIglobalFeatures::_uiSMinfo._downscale == 1) {
@@ -981,7 +996,7 @@ void UI::selfSimilarityMatrixUi()
 	//***
 
 	ImGui::Text("Novelty value");
-	imguiHistoryPlotter(SignalProcessingManager::_similarityMatrix->matrix.getSimilarityMeasureHistory());
+	imguiHistoryPlotter(SignalProcessingManager::_similarityMatrix->_SM->getSimilarityMeasureHistory());
 
 	ImGui::End();
 }

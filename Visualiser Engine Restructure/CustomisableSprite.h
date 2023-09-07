@@ -5,7 +5,11 @@
 #include <Vengine/Vengine.h>
 
 
-
+enum class TextureOption {
+	NO_TEXTURE = 0,
+	SIMILARITY_MATRIX_TEXTURE = 1,
+	TEXTURE_FILE = 2	
+};
 
 class CustomisableSprite : public Vengine::Sprite
 {
@@ -19,8 +23,7 @@ public:
 		float dim[2] = { 1, 1 };
 		Vengine::ColourRGBA8 colour = { 255, 255, 255, 255 };
 		float depth = 0.0f;
-		bool applyTexture = false;
-		bool useSimilarityMatrixTexture = false;
+		TextureOption textureOption = TextureOption::NO_TEXTURE;
 		char textureFilename[100] = { NULL };
 		char shaderFilename[100] = { NULL };
 		char name[25] = "unnamed sprite";
@@ -39,7 +42,7 @@ public:
 	void setDeleted() { _deleted = true; }
 
 	//getters
-	VisualiserShader* getVisualiserShader() const { return _visualiserShader; };
+	VisualiserShader* getVisualiserShader();
 
 	//ui var getters--
 	bool isSelected() { return _selected; }
@@ -58,8 +61,8 @@ private:
 	void updateTexture();
 
 	//called in draw ui
-	void textureChooser();
-	void shaderChooser();
+	void textureChooserUi();
+	void shaderChooserUi();
 
 	void updateOptionsRect();
 

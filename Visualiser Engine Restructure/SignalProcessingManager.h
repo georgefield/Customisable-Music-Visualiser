@@ -33,10 +33,5 @@ public:
 private:
 	static Master* _master;
 
-	static bool _isFirstReset;
-	static int _lagTimerId;
-	static int _calculationFrameTimerId;
-	static RollingAverage _calculationFrameTimeAvg;
-
 	static void initAlgorithmObjects(bool noteOnset, bool tempoDetection, bool mfccs, bool similarityMatrix);
 };
