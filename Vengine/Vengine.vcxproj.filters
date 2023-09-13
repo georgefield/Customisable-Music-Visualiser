@@ -36,9 +36,6 @@
     <ClCompile Include="MyTiming.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="picoPNG.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ResourceManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -111,9 +108,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MyTiming.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="picoPNG.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ResourceManager.h">

@@ -10,7 +10,7 @@ namespace Vengine {
 	class IOManager//static class
 	{
 	public:
-		static GLtexture loadPNG(const std::string& filepath);
+		static GLtexture loadImage(const std::string& filepath);
 
 		static bool readFileToBuffer(const std::string& filepath, std::vector<unsigned char>& buffer);
 		static bool copyFile(const std::string& sourceFile, const std::string& destinationFile);

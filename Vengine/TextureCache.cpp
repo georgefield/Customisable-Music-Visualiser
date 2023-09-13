@@ -26,7 +26,7 @@ GLtexture TextureCache::getTexture(std::string textureFilepath) {
 		}
 
 		//load texture and insert texture to map
-		GLtexture newTexture = IOManager::loadPNG(textureFilepath);
+		GLtexture newTexture = IOManager::loadImage(textureFilepath);
 		_textureMap.insert(make_pair(textureFilepath, newTexture));
 		return newTexture;
 	}

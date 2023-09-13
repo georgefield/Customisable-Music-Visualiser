@@ -1,5 +1,4 @@
 #include "IOManager.h"
-#include "picoPNG.h"
 #include "MyErrors.h"
 
 #include <fstream>
@@ -10,28 +9,36 @@
 
 using namespace Vengine;
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
-GLtexture IOManager::loadPNG(const std::string& filepath) {
+
+GLtexture Vengine::IOManager::loadImage(const std::string& filepath)
+{
 	GLtexture texture = {}; //init all to 0
+	int width = -1, height = -1;
 
-	std::vector<unsigned char> in;
-	std::vector<unsigned char> out;
-	unsigned long width, height;
+	///stb image.h implementation--
+	int composition; //how many byte make up a pixel
+	const int forceComposition = 4; //force 4 byte pixels (0 if dont force)
 
-	if (readFileToBuffer(filepath, in) == false) {
-		fatalError("failed to load PNG file " + filepath + " to buffer");
+	stbi_set_flip_vertically_on_load(true); //flip image y to work better with openGL where (0,0) is BL instead of TL
+	unsigned char* imageDataPtr = stbi_load(filepath.c_str(), &width, &height, &composition, forceComposition);
+
+	if (imageDataPtr == NULL) { //failed image loading
+		warning(stbi_failure_reason());
+		return {};
 	}
 
-	int errorCode = decodePNG(out, width, height, &(in[0]), in.size()); //picoPNG decoder
-
-	if (errorCode != 0) {
-		fatalError("decodePNG failed with error: " + std::to_string(errorCode));
+	if (composition != forceComposition && forceComposition != 0) { //changed pixel byte count (show warning)
+		warning("Composition of image " + filepath + " forcibly changed from " + std::to_string(composition) + " bytes per pixel to " + std::to_string(forceComposition));
 	}
+	///--
 
 	///-- generate id, bind id to texture_2D, upload image to vram, set parameters, unbind texture_2D
 	glGenTextures(1, &(texture.id)); //generate id for texture
 	glBindTexture(GL_TEXTURE_2D, texture.id); //bind texture id to GL_TEXTURE_2D
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, &(out[0])); //upload to GPU (stored in VRAM)
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageDataPtr); //upload to GPU (stored in VRAM)
 
 	//settings for displaying texture
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -43,10 +50,16 @@ GLtexture IOManager::loadPNG(const std::string& filepath) {
 	glBindTexture(GL_TEXTURE_2D, 0); //unbind texture id from GL_TEXTURE_2D
 	///--
 
+	stbi_image_free(imageDataPtr); //free the image data from heap after uploading to VRAM
+
 	//set texture values (found by decodePNG)
 	texture.width = width;
 	texture.height = height;
 	return texture; //return copy of texture
+
+
+
+	return GLtexture();
 }
 
 

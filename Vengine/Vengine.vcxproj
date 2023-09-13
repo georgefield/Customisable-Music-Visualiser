@@ -156,7 +156,6 @@
     <ClCompile Include="InputManager.cpp" />
     <ClCompile Include="IOManager.cpp" />
     <ClCompile Include="MyTiming.cpp" />
-    <ClCompile Include="picoPNG.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="ShaderCache.cpp" />
     <ClCompile Include="Sprite.cpp" />
@@ -176,7 +175,6 @@
     <ClInclude Include="IOManager.h" />
     <ClInclude Include="MyImgui.h" />
     <ClInclude Include="MyTiming.h" />
-    <ClInclude Include="picoPNG.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="ShaderCache.h" />
     <ClInclude Include="Sprite.h" />
