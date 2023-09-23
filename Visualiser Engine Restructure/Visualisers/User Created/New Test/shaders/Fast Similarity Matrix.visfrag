@@ -1,0 +1,8 @@
+vec2 fmod01(vec2 nums){
+    return vec2(nums.x - floor(nums.x), nums.y - floor(nums.y)); 
+}
+
+void main(){
+
+    vis_outputColour = texture(vis_spriteTexture, fmod01(vis_fragmentUV + vis_matrixTextureStart));
+}

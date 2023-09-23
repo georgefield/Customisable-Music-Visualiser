@@ -25,7 +25,11 @@ public:
 		float depth = 0.0f;
 		TextureOption textureOption = TextureOption::NO_TEXTURE;
 		char textureFilename[100] = { NULL };
-		char shaderFilename[100] = { NULL };
+
+		const int maxShaderChainLength = 5;
+		unsigned int shaderChainLength = 1;
+		char shaderFilenames[5][100] = { { "simple.visfrag" }, { NULL }, { NULL }, { NULL }, { NULL } };
+
 		char name[25] = "unnamed sprite";
 	};
 	SpriteInfo _spriteInfo;
@@ -61,8 +65,8 @@ private:
 	void updateTexture();
 
 	//called in draw ui
-	void textureChooserUi();
 	void shaderChooserUi();
+	void textureChooserUi();
 
 	void updateOptionsRect();
 

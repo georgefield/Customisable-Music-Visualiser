@@ -36,6 +36,7 @@ void VisualiserShaderManager::init()
 
 	for (auto& it : *nameScraperProgram->getUniformNames()) {
 		_defaultUniformNames[it] = nameScraperProgram->getUniformType(it);
+		std::cout << it << std::endl;
 	}
 
 	_defaultSSBOnamesAndBindings["vis_sampleData"] = 4;

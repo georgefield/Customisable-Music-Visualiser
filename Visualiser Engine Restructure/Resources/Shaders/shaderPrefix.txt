@@ -91,6 +91,7 @@ uniform int vis_numMelBands;
 // -- SIMILARITY MATRIX --
 uniform sampler2D vis_similarityMatrixTexture;
 uniform float vis_similarityMeasure;
+uniform float vis_matrixTextureStart;
 // --
 
 

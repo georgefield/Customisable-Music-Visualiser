@@ -91,6 +91,7 @@ uniform int vis_numMelBands;
 // -- SIMILARITY MATRIX --
 uniform sampler2D vis_similarityMatrixTexture;
 uniform float vis_similarityMeasure;
+uniform float vis_matrixTextureStart;
 // --
 
 void main(){
@@ -128,7 +129,8 @@ void main(){
     vis_timeToNextBeat +
 
     vis_numMelBands +
-    vis_similarityMeasure;
+    vis_similarityMeasure + 
+    vis_matrixTextureStart;
 
 
     vis_outputColour = vec4(useAllFloatAndIntUniformsSoTheyAreRecognised,1,1,1);

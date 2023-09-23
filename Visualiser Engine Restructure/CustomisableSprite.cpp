@@ -10,7 +10,7 @@
 #include "UIglobalFeatures.h"
 #include "SpriteManager.h"
 
-//#include <imgui_stdlib.h> //for input text functions
+
 
 CustomisableSprite::CustomisableSprite(int id, Vengine::Viewport* viewport, Vengine::Window* window) :
 	_viewport(viewport),
@@ -33,6 +33,7 @@ CustomisableSprite::CustomisableSprite(int id, Vengine::Viewport* viewport, Veng
 {
 }
 
+
 void CustomisableSprite::init(SpriteInfo spriteInfo) {
 	//set up sprite--
 	memcpy(&_spriteInfo, &spriteInfo, sizeof(SpriteInfo));
@@ -54,6 +55,9 @@ void CustomisableSprite::init(SpriteInfo spriteInfo) {
 	//--
 }
 
+
+///draw functions --
+
 void CustomisableSprite::draw() {
 
 	//draw imgui
@@ -71,6 +75,8 @@ void CustomisableSprite::draw() {
 
 	_uiOpened = false;
 }
+
+
 
 void CustomisableSprite::drawUi() {
 
@@ -231,6 +237,10 @@ void CustomisableSprite::drawUi() {
 	//***
 }
 
+/// --
+
+
+
 void CustomisableSprite::updateShader()
 {
 	//copy simple.visfrag to shader folder if it doesnt exist
@@ -240,23 +250,23 @@ void CustomisableSprite::updateShader()
 	}
 
 	//if shaderFilenames empty, use simple.visfrag
-	if (_spriteInfo.shaderFilename[0] == NULL)
-		strcpy_s(_spriteInfo.shaderFilename, sizeof(SpriteInfo::shaderFilename), VisPaths::_defaultFragShaderPath.substr(VisPaths::_defaultFragShaderPath.find_last_of("/") + 1).c_str());
+	if (_spriteInfo.shaderFilenames[0][0] == NULL)
+		strcpy_s(_spriteInfo.shaderFilenames[0], sizeof(SpriteInfo::shaderFilenames[0]), VisPaths::_defaultFragShaderPath.substr(VisPaths::_defaultFragShaderPath.find_last_of("/") + 1).c_str());
 
 	//get shader ptr using shader manager class
-	auto tmp = VisualiserShaderManager::getShader(VisualiserManager::shadersFolder() + "/" + _spriteInfo.shaderFilename);
+	auto tmp = VisualiserShaderManager::getShader(VisualiserManager::shadersFolder() + "/" + _spriteInfo.shaderFilenames[0]);
 	if (tmp != nullptr) {
 		_visualiserShader = tmp;
 	}
 	else {
 		//shader = nullptr implies shader will name specified not found. display error
-		std::string error = _spriteInfo.shaderFilename; error += ": shader does not exist, defaulting to simple.visfrag";
+		std::string error = _spriteInfo.shaderFilenames[0]; error += ": shader does not exist, defaulting to simple.visfrag";
 		UIglobalFeatures::queueError(error);
 
 		//use simple.visfrag
 		_resetShaderCombo = true;
-		strcpy_s(_spriteInfo.shaderFilename, sizeof("simple.visfrag"), "simple.visfrag");
-		_visualiserShader = VisualiserShaderManager::getShader(VisualiserManager::shadersFolder() + "/" + _spriteInfo.shaderFilename);
+		strcpy_s(_spriteInfo.shaderFilenames[0], sizeof("simple.visfrag"), "simple.visfrag");
+		_visualiserShader = VisualiserShaderManager::getShader(VisualiserManager::shadersFolder() + "/" + _spriteInfo.shaderFilenames[0]);
 
 		//if shader still nullptr, then simple.visfrag broken (fatal)
 		if (_visualiserShader == nullptr) { Vengine::fatalError("Shader could not be used for a sprite. Most likely 'simple.visfrag' broken"); }
@@ -264,6 +274,7 @@ void CustomisableSprite::updateShader()
 
 	
 }
+
 
 void CustomisableSprite::updateTexture()
 {
@@ -294,6 +305,94 @@ void CustomisableSprite::updateTexture()
 		return;
 	}
 }
+
+
+
+
+void CustomisableSprite::shaderChooserUi()
+{
+	ImGui::Text("Set sprite shader:");
+
+	//select shader folder
+	if (ImGui::Button("Refresh")) {
+		Vengine::IOManager::getFilesInDir(VisualiserManager::shadersFolder(), _shaderFileNames, true, VisPaths::_visShaderExtension);
+	}
+
+	ImGui::SameLine();
+
+	//add shader from outside project folder
+	if (ImGui::Button("Add another shader")) {
+		std::string chosenFile = "";
+		if (PFDapi::fileChooser("Choose shader to add", Vengine::IOManager::getProjectDirectory(), chosenFile, { "Visualiser frag ( " + VisPaths::_visShaderExtension + ")", " * " + VisPaths::_visShaderExtension }, true)) {
+
+			//copy to shaders folder
+			VisualiserManager::externalToInternalShader(chosenFile).c_str();
+			_resetShaderCombo = true;
+
+			Vengine::IOManager::getFilesInDir(VisualiserManager::shadersFolder(), _shaderFileNames, true, VisPaths::_visShaderExtension); //refresh dir
+		}
+	}
+
+	/*
+	assert(_shaderFileNames.size() >= 0);
+	static int shaderIndex = -1;
+	//get correct start shader index for combo
+	if (_resetShaderCombo || _uiOpened) {
+		for (int i = 0; i < _shaderFileNames.size(); i++) {
+			if (_shaderFileNames[i] == _spriteInfo.shaderFilename) {
+				shaderIndex = i;
+				_resetShaderCombo = false;
+				break;
+			}
+		}
+	}
+	*/
+
+
+	//choose shader from shader project folder
+	static int comboIndex = -1;
+	if (UIglobalFeatures::ImGuiBetterCombo(_shaderFileNames, comboIndex, 1)) {
+
+		if (_shaderFileNames[comboIndex].length() > sizeof(SpriteInfo::shaderFilenames[0])) {
+			UIglobalFeatures::queueError("Shader filename too long " + std::to_string(_shaderFileNames[comboIndex].length()) + "/" + std::to_string(sizeof(SpriteInfo::shaderFilenames[0])));
+			return;
+		}
+	}
+
+	//add button appears only when can add
+	if (_spriteInfo.shaderChainLength < _spriteInfo.maxShaderChainLength && ImGui::Button("Add")) {
+		strcpy_s(_spriteInfo.shaderFilenames[_spriteInfo.shaderChainLength], sizeof(SpriteInfo::shaderFilenames[_spriteInfo.shaderChainLength]), _shaderFileNames[comboIndex].c_str());
+		_spriteInfo.shaderChainLength++;
+	}
+
+
+	if (ImGui::Button("Recompile")) {
+		if (!VisualiserShaderManager::recompileShader(VisualiserManager::shadersFolder() + "/" + _shaderFileNames[comboIndex])) {
+			//if it fails go back to simple .visfrag
+			strcpy_s(_spriteInfo.shaderFilenames[_spriteInfo.shaderChainLength - 1], sizeof(SpriteInfo::shaderFilenames[_spriteInfo.shaderChainLength - 1]), "simple.visfrag");
+		}
+	}
+
+	ImGui::Text("Shader chain:");
+	for (int i = 0; i < _spriteInfo.maxShaderChainLength; i++) {
+		if (_spriteInfo.shaderFilenames[i][0] != NULL) {
+			std::string shaderFilename = _spriteInfo.shaderFilenames[i];
+			ImGui::TextColored(ImVec4(1.0f, 0.5f, 1.0f, 1.0f), (" " + shaderFilename).c_str()); ImGui::SameLine();
+			//recompile button on right of every shader
+			if (ImGui::Button("Recompile")) {
+				if (!VisualiserShaderManager::recompileShader(VisualiserManager::shadersFolder() + "/" + shaderFilename)) {
+					strcpy_s(_spriteInfo.shaderFilenames[i], sizeof(SpriteInfo::shaderFilenames[i]), "simple.visfrag"); //if it fails go back to simple .visfrag
+				}
+			}
+		}
+	}
+
+	if (ImGui::Button("Remove last")) {
+		strcpy_s(_spriteInfo.shaderFilenames[_spriteInfo.shaderChainLength - 1], sizeof(SpriteInfo::shaderFilenames[_spriteInfo.shaderChainLength - 1]), "");
+		_spriteInfo.shaderChainLength--;
+	}
+}
+
 
 void CustomisableSprite::textureChooserUi()
 {
@@ -356,61 +455,10 @@ void CustomisableSprite::textureChooserUi()
 
 }
 
-void CustomisableSprite::shaderChooserUi()
-{
-	ImGui::Text("Set sprite shader:");
 
-	//select shader folder
-	if (ImGui::Button("Refresh")) {
-		Vengine::IOManager::getFilesInDir(VisualiserManager::shadersFolder(), _shaderFileNames, true, VisPaths::_visShaderExtension);
-	}
 
-	ImGui::SameLine();
 
-	//add shader from outside project folder
-	if (ImGui::Button("Add another shader")) {
-		std::string chosenFile = "";
-		if (PFDapi::fileChooser("Choose shader to add", Vengine::IOManager::getProjectDirectory(), chosenFile, { "Visualiser frag ( " + VisPaths::_visShaderExtension + ")", " * " + VisPaths::_visShaderExtension }, true)) {
 
-			//copy to shaders folder and then set that texture
-			strcpy_s(_spriteInfo.shaderFilename, sizeof(SpriteInfo::shaderFilename), VisualiserManager::externalToInternalShader(chosenFile).c_str());
-			_resetShaderCombo = true;
-
-			Vengine::IOManager::getFilesInDir(VisualiserManager::shadersFolder(), _shaderFileNames, true, VisPaths::_visShaderExtension); //refresh
-		}
-	}
-
-	assert(_shaderFileNames.size() >= 0);
-	static int shaderIndex = -1;
-	//get correct start shader index for combo
-	if (_resetShaderCombo || _uiOpened) {
-		for (int i = 0; i < _shaderFileNames.size(); i++) {
-			if (_shaderFileNames[i] == _spriteInfo.shaderFilename) {
-				shaderIndex = i;
-				_resetShaderCombo = false;
-				break;
-			}
-		}
-	}
-
-	//choose shader from shader project folder
-	if (UIglobalFeatures::ImGuiBetterCombo(_shaderFileNames, shaderIndex, 1)) {
-
-		if (_shaderFileNames[shaderIndex].length() > sizeof(SpriteInfo::shaderFilename)) {
-			UIglobalFeatures::queueError("Shader filename too long " + std::to_string(_shaderFileNames[shaderIndex].length()) + "/" + std::to_string(sizeof(SpriteInfo::shaderFilename)));
-			return;
-		}
-
-		strcpy_s(_spriteInfo.shaderFilename, sizeof(SpriteInfo::shaderFilename), _shaderFileNames[shaderIndex].c_str());
-	}
-
-	ImGui::SameLine();
-	if (ImGui::Button("Recompile")) {
-		if (!VisualiserShaderManager::recompileShader(VisualiserManager::shadersFolder() + "/" + _shaderFileNames[shaderIndex])) {
-			strcpy_s(_spriteInfo.shaderFilename, sizeof(SpriteInfo::shaderFilename), "simple.visfrag"); //if it fails go back to simple .visfrag
-		}
-	}
-}
 
 //useful function used in processInput(...)
 bool posWithinRect(glm::vec2 pos, glm::vec4 rect)

@@ -168,13 +168,16 @@ float SimilarityMatrixHandler::similarityMeasureGetter()
 
 float SimilarityMatrixHandler::matrixStartGetter()
 {
-	return 2 * float(_SM->getDataStart() % _SM->matrixSize()) / float(_SM->matrixSize()) - 1;
+	return float(_SM->getDataStart()) / float(_SM->matrixSize());
 }
 
 void SimilarityMatrixHandler::initUpdaters()
 {
 	std::function<float()> similarityMeasureUpdaterFunction = std::bind(&SimilarityMatrixHandler::similarityMeasureGetter, this);
 	VisualiserShaderManager::Uniforms::setUniformUpdater("vis_similarityMeasure", similarityMeasureUpdaterFunction);
+
+	std::function<float()> matrixStartUpdaterFunction = std::bind(&SimilarityMatrixHandler::matrixStartGetter, this);
+	VisualiserShaderManager::Uniforms::setUniformUpdater("vis_matrixTextureStart", matrixStartUpdaterFunction);
 }
 
 void SimilarityMatrixHandler::removeUpdaters()

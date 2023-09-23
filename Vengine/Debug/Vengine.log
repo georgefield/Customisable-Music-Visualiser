@@ -1,4 +1,3 @@
-﻿  IOManager.cpp
-E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(78,15): warning C4244: 'initializing': conversion from 'std::streamoff' to 'int', possible loss of data
-E:\Customisable-Music-Visualiser\Vengine\IOManager.cpp(80,24): warning C4244: '-=': conversion from 'std::streamoff' to 'int', possible loss of data
+﻿  Sprite.cpp
+E:\Customisable-Music-Visualiser\Vengine\Sprite.cpp(34): warning C4715: 'getModelObject': not all control paths return a value
   Vengine.vcxproj -> E:\Customisable-Music-Visualiser\Debug\Vengine.lib
